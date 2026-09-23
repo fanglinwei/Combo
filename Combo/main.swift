@@ -54,6 +54,10 @@ import Combine
             host.rootView = PanelView(store: store, showSettings: showSettings, height: min(idealHeight, maxHeight))
             popover.contentViewController = host
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            if let window = host.view.window, let screen = button.window?.screen,
+               window.frame.maxY > screen.visibleFrame.maxY {
+                window.setFrameOrigin(NSPoint(x: window.frame.minX, y: screen.visibleFrame.maxY - window.frame.height))
+            }
         }
     }
     @objc func openSettings() {
