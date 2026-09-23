@@ -4,7 +4,7 @@
 
 ## 结论
 
-macOS 27 的状态项由 `MenuBarAgent` 合成绘制，旧的“每项一个 WindowServer 窗口”枚举和把分隔项放大到 10,000 pt 的隐藏法失效。因此，Combo 已获辅助功能权限，但只查询 `ControlCenter` / `SystemUIServer` 的 `AXMenuBar` 得到 `-25212`，**不能推断系统图标不可操作**；应该试 `MenuBarAgent` 和各项目所属应用的 `AXExtrasMenuBar`。Apple 公开的 `NSStatusItem.isVisible` 只控制本应用创建的状态项，并非隐藏别人的图标的 API。来源：[Apple NSStatusItem](https://developer.apple.com/documentation/appkit/nsstatusitem)、[Apple AXExtrasMenuBar](https://developer.apple.com/documentation/applicationservices/kaxextrasmenubarattribute)、[Ice macOS 27 说明](https://github.com/WuColin-1/Ice/blob/macos-27/MACOS27.md)。
+macOS 27 的菜单栏实现发生变化；不能直接认定旧的“每项一个 WindowServer 窗口”枚举或 `10,000 pt` 分隔项仍可用，也不能仅凭 Ice 的兼容性说明认定 Thaw 式机制必然失效。Combo 已获辅助功能权限，但只查询 `ControlCenter` / `SystemUIServer` 的 `AXMenuBar` 得到 `-25212`，**不能推断系统图标不可操作**；还应验证 `MenuBarAgent` 和各项目所属应用的 `AXExtrasMenuBar`。Apple 公开的 `NSStatusItem.isVisible` 只控制本应用创建的状态项，并非隐藏别人的图标的 API。来源：[Apple NSStatusItem](https://developer.apple.com/documentation/appkit/nsstatusitem)、[Apple AXExtrasMenuBar](https://developer.apple.com/documentation/applicationservices/kaxextrasmenubarattribute)、[Ice macOS 27 说明](https://github.com/WuColin-1/Ice/blob/macos-27/MACOS27.md)。
 
 ## 两条已存在的实现路径
 
@@ -23,7 +23,7 @@ A 的具体实现与限制见 [Ice #997（开放 PR，尚未合并）](https://g
 - B 的 assertion 是进程持有的临时状态：应用退出会使限制失效；主动退出、权限被撤销或任何验证失败时仍须明确 `invalidate`，并保留系统设置的手动恢复入口。不要修改系统偏好 plist、关闭 SIP 或 `killall` 系统代理作为常规恢复策略。来源：[MenuBarHider bridge](https://github.com/happy666End/MenuBarHider/blob/main/MenuBarHider/Services/MenuBarAgentBridge.swift)、[Hidden Bar bridge](https://github.com/dwarvesf/hidden/blob/develop/hidden/Features/StatusBar/Engine/Native/NativeVisibilityBridge.swift)。
 - Apple 的 macOS 27 用户指南允许用户在“菜单栏”设置中加入／移除系统图标；这是可靠的**手动兜底**，不等于 Combo 可以用公开 API 替用户切换。来源：[Apple macOS 27 菜单栏指南](https://support.apple.com/guide/mac-help/customize-the-menu-bar-mchl4af84660/27/mac/27)。
 
-## 对 Combo 的建议执行顺序
+## 作为备用方案时的验证顺序
 
 1. 在**当前已授权 Combo 进程**里做只读探针：枚举 `com.apple.MenuBarAgent` 与各 app 的 `AXExtrasMenuBar`，记录**标识／角色／动作和匿名几何**，先确认本机 Wi‑Fi、音量、电池的对象与 0/5/6 的对应关系；不要读菜单内容或发点击。当前 `-25212` 仅说明旧入口不存在。
 2. 先做 A 路径的一个可撤销切换实验，验证该机器能否用 Combo 自己的 spacer 折叠**用户手动移到左侧**的三个系统图标并通过系统 overflow 打开原生菜单。如果成功，可作为无需私有 API 的首个可用版本；UI 应明确“按位置折叠”而非冒称独立自动折叠。
