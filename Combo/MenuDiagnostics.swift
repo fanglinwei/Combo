@@ -1,6 +1,55 @@
 import AppKit
 import ApplicationServices
 
+private let menuTargets: [(String, String)] = [
+    ("Wi-Fi", "com.apple.menuextra.wifi"),
+    ("声音", "com.apple.menuextra.sound"),
+    ("电池", "com.apple.menuextra.battery")
+]
+
+// macOS 27 exposes system extras in MenuBarAgent's AX tree, but the number
+// of wrapper levels differs from the app/window tree shown by AX clients.
+private func menuBarItems(pid: pid_t, wanted: Set<String>) -> (items: [String: [AXUIElement]], visited: Int, timedOut: Bool) {
+    let app = AXUIElementCreateApplication(pid)
+    AXUIElementSetMessagingTimeout(app, 0.2)
+    var matches: [String: [AXUIElement]] = [:]
+    let deadline = ProcessInfo.processInfo.systemUptime + 5
+    var visited = 0
+    func visit(_ item: AXUIElement, depth: Int) {
+        guard depth <= 4, visited < 60, ProcessInfo.processInfo.systemUptime < deadline,
+              matches.count < wanted.count else { return }
+        visited += 1
+        AXUIElementSetMessagingTimeout(item, 0.2)
+        var idValue: CFTypeRef?
+        if AXUIElementCopyAttributeValue(item, kAXIdentifierAttribute as CFString, &idValue) == .success,
+           let id = idValue as? String, wanted.contains(id) {
+            matches[id, default: []].append(item)
+        }
+        guard depth < 4 else { return }
+        var childrenValue: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(item, kAXChildrenAttribute as CFString, &childrenValue) == .success,
+              let children = childrenValue as? [AXUIElement] else { return }
+        for child in children.prefix(depth == 0 ? 2 : 16) { visit(child, depth: depth + 1) }
+    }
+    visit(app, depth: 0)
+    return (matches, visited, ProcessInfo.processInfo.systemUptime >= deadline)
+}
+
+func inspectMenuBarAgent(pid: pid_t) -> String {
+    guard AXIsProcessTrusted() else { return "MenuBarAgent：需要辅助功能授权。" }
+    let result = menuBarItems(pid: pid, wanted: Set(menuTargets.map { $0.1 }))
+    if result.timedOut { return "MenuBarAgent：扫描超时；结果未采用。" }
+    return "MenuBarAgent：" + menuTargets.map { name, id in
+        let hits = result.items[id] ?? []
+        if hits.isEmpty { return "\(name) 未定位" }
+        var actions: CFArray?
+        let pressable = AXUIElementCopyActionNames(hits[0], &actions) == .success && (actions as? [String] ?? []).contains(kAXPressAction)
+        var position: CFTypeRef?
+        let positioned = AXUIElementCopyAttributeValue(hits[0], kAXPositionAttribute as CFString, &position) == .success
+        return "\(name) 已定位候选；点击\(pressable ? "可用" : "未声明")，位置\(positioned ? "可读" : "不可读")"
+    }.joined(separator: "、") + "。扫描 \(result.visited) 个节点；仅完成识别，未点击或折叠。"
+}
+
 // Read-only and explicitly initiated. Never press controls or change menu-bar layout.
 func inspectSystemMenus(pid: pid_t, source: String) -> String {
     guard AXIsProcessTrusted() else { return "需要辅助功能授权。未读取菜单、未触发权限弹窗。" }
@@ -55,7 +104,7 @@ extension Store {
         guard !checkingMenus else { return }
         refreshMenuAccess()
         guard menuAccessGranted else { menuDiagnostic = "系统未允许当前进程访问。若开关已开启，请查看引导中的重启与旧授权排查步骤。"; showMenuPermission = true; return }
-        let sources = [("控制中心", "com.apple.controlcenter"), ("系统菜单栏", "com.apple.systemuiserver")]
+        let sources = [("菜单栏代理", "com.apple.MenuBarAgent"), ("控制中心", "com.apple.controlcenter"), ("系统菜单栏", "com.apple.systemuiserver")]
             .compactMap { name, bundle -> (String, pid_t)? in
                 guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundle).first else { return nil }
                 return (name, app.processIdentifier)
@@ -64,7 +113,9 @@ extension Store {
         checkingMenus = true
         Task { [weak self] in
             let result = await Task.detached(priority: .utility) {
-                sources.map { inspectSystemMenus(pid: $0.1, source: $0.0) }.joined(separator: "\n")
+                sources.map { name, pid in
+                    name == "菜单栏代理" ? inspectMenuBarAgent(pid: pid) : inspectSystemMenus(pid: pid, source: name)
+                }.joined(separator: "\n")
             }.value
             self?.menuDiagnostic = result; self?.checkingMenus = false
         }

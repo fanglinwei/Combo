@@ -139,26 +139,38 @@ struct SettingsView: View {
     var integration: some View {
         VStack(spacing: 18) {
             Card {
-                HStack { Text("系统菜单整合").font(.system(size: 13, weight: .semibold)); Spacer(); Tag(text: "尚未接入") }
+                HStack { Text("系统菜单整合").font(.system(size: 13, weight: .semibold)); Spacer(); Tag(text: "macOS 27 实验") }
                 Toggle("整合系统菜单", isOn: .constant(false)).toggleStyle(.switch).disabled(true)
-                Text("先验证系统菜单定位与恢复能力。此预览版不会隐藏或移动你的系统图标。").font(.caption).foregroundStyle(.secondary)
+                Text("先逐项验证可见性与原生菜单恢复；总开关会在闭环通过后启用。").font(.caption).foregroundStyle(.secondary)
             }
             Card {
                 Text("准备折叠的项目").font(.system(size: 13, weight: .semibold))
                 foldRow("Wi-Fi", symbol: "wifi", binding: $foldWifi)
                 Divider(); foldRow("声音／AirPods", symbol: "headphones", binding: $foldSound)
                 Divider(); foldRow("电池", symbol: "battery.75percent", binding: $foldBattery)
-                Text("选择会保存，但暂不执行折叠。系统日期属于时钟项，尚未纳入。").font(.caption).foregroundStyle(.secondary)
+                Text("选择会保存，但当前不执行折叠。系统日期尚未纳入。").font(.caption).foregroundStyle(.secondary)
             }
             Card {
-                Label("怎样打开原生菜单？", systemImage: "cursorarrow.click").font(.system(size: 13, weight: .semibold))
-                Text("打开 Combo → 选择 Wi-Fi、声音或电池 → 临时展开系统菜单 → 关闭后收起。").font(.caption).foregroundStyle(.secondary)
-                Text("只有点击下方授权按钮时才会请求辅助功能。检测只读取菜单栏，不点击或移动图标。").font(.caption).foregroundStyle(.secondary)
+                Text("8 秒单项折叠实验").font(.system(size: 13, weight: .semibold))
+                Text("一次只试 Wi-Fi、声音／AirPods 或电池。请确认 Combo 图标始终可见；如有异常，点击“立即恢复”。正式折叠仍未启用。").font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Button("试 Wi-Fi") { store.foldExperiment.preview(systemID: 6) { store.foldExperimentMessage = $0 } }
+                    Button("试声音") { store.foldExperiment.preview(systemID: 5) { store.foldExperimentMessage = $0 } }
+                    Button("试电池") { store.foldExperiment.preview(systemID: 0) { store.foldExperimentMessage = $0 } }
+                }.disabled(!MenuFoldExperiment.available)
+                Button("立即恢复") { store.foldExperiment.release(); store.foldExperimentMessage = "实验限制已释放。" }
+                Text(store.foldExperimentMessage).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+            }
+            Card {
+                Label("原生菜单入口 · 尚待验证", systemImage: "cursorarrow.click").font(.system(size: 13, weight: .semibold))
+                Text("目标交互：打开 Combo → 选择 Wi-Fi、声音或电池 → 临时展开系统菜单 → 关闭后收起。只有确认 Combo 图标持续可见后才会启用折叠。").font(.caption).foregroundStyle(.secondary)
+                Text("只有点击授权按钮时才会请求辅助功能。检查仅读取菜单栏；单项实验会暂时限制所选图标。").font(.caption).foregroundStyle(.secondary)
                 HStack {
                     Button("检查菜单访问") { store.checkMenus() }.disabled(store.checkingMenus)
                     Button("授权辅助功能…") { store.refreshMenuAccess(); store.showMenuPermission = true }
                     if store.checkingMenus { ProgressView().controlSize(.small) }
                 }
+                Text("本机已读到三个系统项目的辅助功能候选；实际可见性和原生菜单打开仍待验证。为避免误点，不按缓存坐标触发菜单。").font(.caption).foregroundStyle(.secondary)
                 Text(store.menuDiagnostic).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             }
         }
@@ -174,7 +186,7 @@ struct SettingsView: View {
                     Text("一步设置 · 授权由你决定").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            Text("辅助功能是一项广泛的系统权限。当前版本仅在你点击检测时读取控制中心的菜单栏项目；不读取其他窗口、不截图、不点击或移动图标。授权不会自动开启折叠。")
+            Text("辅助功能是一项广泛的系统权限。检查按钮只读取系统菜单栏；单项实验会暂时限制所选图标，8 秒后释放。不截图或移动图标。")
                 .font(.system(size: 13)).fixedSize(horizontal: false, vertical: true)
             Card {
                 Text("在辅助功能列表中开启 Combo").font(.headline)
@@ -182,7 +194,7 @@ struct SettingsView: View {
                 Text("若列表中没有 Combo，点击“＋”，选择当前运行的 Combo.app。系统可能要求你输入密码或使用 Touch ID。").font(.caption).foregroundStyle(.secondary)
                 Text(Bundle.main.bundleURL.path).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             }
-            Label(store.menuAccessGranted ? "已确认授权，可以继续只读菜单检测。" : "系统尚未允许当前进程访问；不一定是开关未开启。", systemImage: store.menuAccessGranted ? "checkmark.circle.fill" : "info.circle")
+            Label(store.menuAccessGranted ? "已确认授权，可以继续菜单检测。" : "系统尚未允许当前进程访问；不一定是开关未开启。", systemImage: store.menuAccessGranted ? "checkmark.circle.fill" : "info.circle")
                 .font(.subheadline).foregroundStyle(store.menuAccessGranted ? accent : .secondary)
             if !store.menuPermissionMessage.isEmpty {
                 Text(store.menuPermissionMessage).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)

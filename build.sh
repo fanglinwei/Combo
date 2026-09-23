@@ -19,7 +19,7 @@ fi
 mkdir -p build "$APP/Contents/MacOS" "$APP/Contents/Resources"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" Combo/State.swift Tests/main.swift -o build/state-check
 ./build/state-check
-xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/State.swift Combo/NetworkStatus.swift Combo/MenuDiagnostics.swift Combo/Store.swift Combo/Icon.swift Combo/Views.swift Combo/main.swift -o "$APP/Contents/MacOS/Combo"
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/State.swift Combo/NetworkStatus.swift Combo/MenuDiagnostics.swift Combo/MenuFoldExperiment.swift Combo/Store.swift Combo/Icon.swift Combo/Views.swift Combo/main.swift -o "$APP/Contents/MacOS/Combo"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" Tests/RenderBrand.swift -o build/render-brand
 mkdir -p build/Combo.iconset
 ./build/render-brand build/Combo-icon-1024.png

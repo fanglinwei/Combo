@@ -20,6 +20,8 @@ import ServiceManagement
     @Published var showMenuPermission = false
     @Published var menuAccessGranted = AXIsProcessTrusted()
     @Published var menuPermissionMessage = ""
+    @Published var foldExperimentMessage = "每次只试一项，8 秒后自动恢复；请同时观察 Combo 图标。"
+    let foldExperiment = MenuFoldExperiment()
     private var batterySource: CFRunLoopSource?
     private var audioListeners: [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
     private var volumeHint: Task<Void, Never>?
@@ -53,7 +55,10 @@ import ServiceManagement
         let nc = NSWorkspace.shared.notificationCenter
         for (name, active) in [(NSWorkspace.screensDidSleepNotification, false), (NSWorkspace.screensDidWakeNotification, true), (NSWorkspace.sessionDidResignActiveNotification, false), (NSWorkspace.sessionDidBecomeActiveNotification, true)] {
             observers.append(nc.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                Task { @MainActor in self?.screenActive = active; if active { self?.refresh() } }
+                Task { @MainActor in
+                    self?.screenActive = active
+                    if active { self?.refresh() } else { self?.foldExperiment.release() }
+                }
             })
         }
     }
@@ -173,6 +178,7 @@ import ServiceManagement
     }
     func resetDisplay() { center = "电量百分比"; animate = true }
     func stop() {
+        foldExperiment.release()
         dateTimer?.invalidate(); clearVolumeHint(); network.stop()
         if let batterySource { CFRunLoopRemoveSource(CFRunLoopGetMain(), batterySource, .commonModes); CFRunLoopSourceInvalidate(batterySource) }
         for (object, var attr, block) in audioListeners { AudioObjectRemovePropertyListenerBlock(object, &attr, .main, block) }

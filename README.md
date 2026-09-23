@@ -18,7 +18,7 @@
 
 ## 尚未接入与技术限制
 
-- 不折叠任何系统图标。设置页新增只读菜单检测及用户主动授权入口；不自动弹出授权。原生菜单唤起与恢复仍待权限与兼容性验证。
+- `feature/0.0.1` 开放 Wi-Fi、声音、电池三个 8 秒单项实验按钮，保留“立即恢复”；正式整合开关仍禁用。此前辅助功能树测试观察到单项消失与恢复，但 Combo 自身可见性、其他图标不受影响和原生菜单展开均未验收。ad-hoc 重新编译可能使辅助功能授权失效。
 - Safari/Chrome 扩展、网易云/QQ 适配尚未实现；真实播放不会驱动音柱，只能用演示场景查看动画。
 - 日期折叠未实现；不修改系统时钟设置。
 - Wi-Fi 图形仅代表连接介质，没有 RSSI 信号格数。使用 NWPath 可用性及 SystemConfiguration IPv4/IPv6 默认接口；介质冲突、未映射接口和隧道返回不确定。没有互联网探测，也不宣称代表全机所有流量。
@@ -67,7 +67,7 @@ xcrun swiftc -sdk /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk -swift-v
 复现只读运行检查：
 
 ```sh
-xcrun swiftc -sdk /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk -swift-version 5 -parse-as-library Combo/State.swift Combo/NetworkStatus.swift Combo/MenuDiagnostics.swift Combo/Store.swift Tests/LiveState.swift -o build/live-state-check
+xcrun swiftc -sdk /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk -swift-version 5 -parse-as-library Combo/State.swift Combo/NetworkStatus.swift Combo/MenuDiagnostics.swift Combo/MenuFoldExperiment.swift Combo/Store.swift Tests/LiveState.swift -o build/live-state-check
 ./build/live-state-check
 ```
 
@@ -99,4 +99,8 @@ Apple 签名身份依据：https://developer.apple.com/documentation/technotes/t
 
 ## 授权后系统菜单检测结果
 
-2026-09-23，当前构建的辅助功能权限已生效。只读检查 Control Center 和 SystemUIServer 均未取得公开 AX 菜单栏根项（两个根属性均返回 `kAXErrorNoValue`）。因此原生菜单定位、点击与自动折叠仍不可用；这不是“尚未授权”。详见 [系统菜单验证记录](docs/menu-integration-plan.md)。
+2026-09-23，原项目路径中运行的 Combo 辅助功能权限已生效。只读检查 Control Center 和 SystemUIServer 均未取得 AX 菜单栏根项（两个根属性均返回 `kAXErrorNoValue`）；这不是“尚未授权”，也不能据此排除其他访问路径。方案对照、已确认边界和后续验证顺序见 [系统菜单整合实施计划](docs/menu-integration-plan.md)。
+
+## macOS 27 单项实验（feature 分支）
+
+MenuBarAgent 的辅助功能树在本机暴露了 Wi-Fi、声音、电池的独立标识。此前逐项 8 秒测试观察到目标项约第 3 秒从树中消失，另外两项保留；计时结束后恢复，“立即恢复”也可提前释放电池限制。该测试未证明 Combo 自身和所有其他图标保持可见。`AXPress` 与按 AX 坐标点击均未观察到原生菜单。当前三个实验按钮已开放，总开关仍禁用；本次重新构建后辅助功能授权失效，未完成新构建的折叠复测。详细记录见 [系统菜单整合实施计划](docs/menu-integration-plan.md)。
