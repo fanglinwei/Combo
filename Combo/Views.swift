@@ -246,9 +246,17 @@ struct SettingsView: View {
 struct PanelView: View {
     @ObservedObject var store: Store
     let showSettings: () -> Void
-    var body: some View {
+    let height: CGFloat?
+    @ViewBuilder var body: some View {
+        if let height {
+            ScrollView { content }.frame(width: 300, height: height).tint(accent)
+        } else {
+            content.frame(width: 300).tint(accent)
+        }
+    }
+    var content: some View {
         let s = store.snapshot
-        VStack(alignment: .leading, spacing: 18) {
+        return VStack(alignment: .leading, spacing: 18) {
             HStack { Text("Combo").font(.system(size: 16, weight: .semibold)); Spacer(); Button(action: showSettings) { Image(systemName: "gearshape") }.buttonStyle(.plain).help("设置…").accessibilityLabel("设置") }
             HStack(spacing: 20) { ComboIcon(snapshot: s, center: store.center, animate: store.animate, size: 72); VStack(alignment: .leading, spacing: 5) { Text(s.batteryText).font(.system(size: 30, weight: .medium, design: .rounded)); Text(s.charging ? "正在充电" : s.plugged ? "已连接电源" : "MacBook 电量").font(.caption).foregroundStyle(.secondary) } }
             if store.scene != .live { HStack { Tag(text: "演示数据"); Spacer(); Button("返回本机") { store.scene = .live }.font(.caption) } }
@@ -261,8 +269,10 @@ struct PanelView: View {
             Slider(value: Binding(get: { s.volume ?? 0 }, set: { store.setVolume($0) }), in: 0...1).disabled(store.scene != .live || !store.canVolume).accessibilityLabel("系统音量")
             HStack { Button(s.muted ? "取消静音" : "静音") { store.toggleMute() }.disabled(store.scene != .live || !store.canMute); Spacer(); Text("媒体识别尚未接入").font(.system(size: 10)).foregroundStyle(.tertiary) }
             if !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
-            Divider(); HStack { Text("原生菜单整合 · 准备中").font(.system(size: 10)).foregroundStyle(.tertiary); Spacer(); Button("设置…", action: showSettings).font(.caption) }
-        }.padding(22).frame(width: 300).tint(accent)
+            Divider()
+            Text("原生菜单整合 · 准备中").font(.system(size: 10)).foregroundStyle(.tertiary)
+            HStack { Spacer(); Button("退出 Combo") { NSApp.terminate(nil) }; Button("设置…", action: showSettings) }.font(.caption)
+        }.padding(22)
     }
     func row(_ symbol: String, _ title: String, _ detail: String) -> some View { HStack { Label(title, systemImage: symbol); Spacer(); Text(detail).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary) }.font(.system(size: 12)) }
 }

@@ -19,7 +19,6 @@ import Combine
         status = NSStatusBar.system.statusItem(withLength: 30)
         status.button?.target = self; status.button?.action = #selector(togglePanel)
         popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: PanelView(store: store, showSettings: { [weak self] in self?.openSettings() }))
         change = store.objectWillChange.sink { [weak self] _ in DispatchQueue.main.async { self?.updateIcon() } }
         updateIcon()
         if !UserDefaults.standard.bool(forKey: "hasOpened") || CommandLine.arguments.contains("--settings") {
@@ -46,7 +45,16 @@ import Combine
     }
     @objc func togglePanel() {
         if popover.isShown { popover.performClose(nil) }
-        else if let button = status.button { store.refresh(); popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY) }
+        else if let button = status.button {
+            store.refresh()
+            let maxHeight = (button.window?.screen?.visibleFrame.height ?? 600) - 24
+            let showSettings = { [weak self] in _ = self?.openSettings() }
+            let host = NSHostingController(rootView: PanelView(store: store, showSettings: showSettings, height: nil))
+            let idealHeight = host.sizeThatFits(in: CGSize(width: 300, height: CGFloat.greatestFiniteMagnitude)).height
+            host.rootView = PanelView(store: store, showSettings: showSettings, height: min(idealHeight, maxHeight))
+            popover.contentViewController = host
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        }
     }
     @objc func openSettings() {
         popover.performClose(nil)
