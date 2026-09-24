@@ -16,10 +16,30 @@ fi
 if [[ "$SIGNING_IDENTITY" == - ]]; then
     print -u2 'WARNING: ad-hoc builds have version-specific signing identity; a rebuild may invalidate privacy grants. Use a consistent COMBO_SIGNING_IDENTITY for permission testing.'
 fi
-mkdir -p build "$APP/Contents/MacOS" "$APP/Contents/Resources"
+mkdir -p build "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Helpers"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" Combo/State.swift Tests/main.swift -o build/state-check
 ./build/state-check
-xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/State.swift Combo/NetworkStatus.swift Combo/MenuDiagnostics.swift Combo/MenuFoldExperiment.swift Combo/Store.swift Combo/Icon.swift Combo/Views.swift Combo/main.swift -o "$APP/Contents/MacOS/Combo"
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/State.swift Combo/Icon.swift Tests/IconTransitionCheck.swift -o build/icon-transition-check
+./build/icon-transition-check
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/WiFiControl.swift Tests/WiFiControlCheck.swift -o build/wifi-control-check
+./build/wifi-control-check
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/HotspotControl.swift Tests/HotspotControlCheck.swift -o build/hotspot-control-check
+./build/hotspot-control-check
+xcrun clang -isysroot "$SDK" -target "$TARGET" -fobjc-arc -framework Foundation -framework IOKit Combo/ChargeHelper.m -o "$APP/Contents/Helpers/ComboChargeHelper"
+codesign --force --sign "$SIGNING_IDENTITY" "$APP/Contents/Helpers/ComboChargeHelper"
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/State.swift Combo/ChargeControl.swift Tests/ChargeControlCheck.swift -o build/charge-control-check
+./build/charge-control-check "$APP/Contents/Helpers/ComboChargeHelper"
+xcrun clang -isysroot "$SDK" -target "$TARGET" -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/EnergyHelper.m -o "$APP/Contents/Helpers/ComboEnergyHelper"
+codesign --force --sign "$SIGNING_IDENTITY" "$APP/Contents/Helpers/ComboEnergyHelper"
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/EnergyApps.swift Tests/EnergyAppsCheck.swift -o build/energy-apps-check
+./build/energy-apps-check
+xcrun clang -isysroot "$SDK" -target "$TARGET" -dynamiclib -Wall -Wextra -Werror Combo/AirPodsContext.c -framework CoreFoundation -framework Security -o "$APP/Contents/Helpers/ComboAirPodsContext.dylib"
+xcrun clang -isysroot "$SDK" -target "$TARGET" -fobjc-arc -Wall -Wextra -Werror Combo/AirPodsHelper.m -framework Foundation -framework CoreAudio -framework IOBluetooth -o "$APP/Contents/Helpers/ComboAirPodsHelper"
+codesign --force --sign "$SIGNING_IDENTITY" "$APP/Contents/Helpers/ComboAirPodsContext.dylib"
+codesign --force --sign "$SIGNING_IDENTITY" "$APP/Contents/Helpers/ComboAirPodsHelper"
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/AudioVolume.swift Combo/AirPodsControl.swift Tests/AirPodsCheck.swift -o build/airpods-check
+./build/airpods-check
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/State.swift Combo/NetworkStatus.swift Combo/WiFiControl.swift Combo/HotspotControl.swift Combo/MenuBarSetup.swift Combo/MenuDiagnostics.swift Combo/MenuFoldExperiment.swift Combo/PowerModeControl.swift Combo/ChargeControl.swift Combo/EnergyApps.swift Combo/AudioVolume.swift Combo/AirPodsControl.swift Combo/Store.swift Combo/Icon.swift Combo/Views.swift Combo/main.swift -o "$APP/Contents/MacOS/Combo"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" Tests/RenderBrand.swift -o build/render-brand
 mkdir -p build/Combo.iconset
 ./build/render-brand build/Combo-icon-1024.png
@@ -39,11 +59,13 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleDisplayName</key><string>Combo</string>
 <key>CFBundleIconFile</key><string>Combo.icns</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.2.0</string>
-<key>CFBundleVersion</key><string>2</string>
+<key>CFBundleShortVersionString</key><string>0.3.0</string>
+<key>CFBundleVersion</key><string>3</string>
 <key>LSMinimumSystemVersion</key><string>26.0</string>
 <key>LSUIElement</key><true/>
 <key>NSHighResolutionCapable</key><true/>
+<key>NSLocationWhenInUseUsageDescription</key><string>查找可连接的 Wi‑Fi 网络并显示网络名称。</string>
+<key>NSBluetoothAlwaysUsageDescription</key><string>读取当前蓝牙耳机的电量并控制聆听模式。</string>
 </dict></plist>
 PLIST
 codesign --force --sign "$SIGNING_IDENTITY" "$APP"

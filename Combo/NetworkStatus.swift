@@ -1,13 +1,19 @@
 import Foundation
 import SystemConfiguration
 import Network
+import CoreWLAN
 
-@MainActor final class NetworkStatus {
+@MainActor final class NetworkStatus: NSObject, CWEventDelegate {
     var update: ((String, String) -> Void)?
     private let monitor = NWPathMonitor()
     private var config: SCDynamicStore?
     private var available: Bool?
-    init() {
+    private let wifiClient = CWWiFiClient()
+    override init() {
+        super.init()
+        wifiClient.delegate = self
+        try? wifiClient.startMonitoringEvent(with: .powerDidChange)
+        try? wifiClient.startMonitoringEvent(with: .linkDidChange)
         var context = SCDynamicStoreContext(version: 0, info: Unmanaged.passUnretained(self).toOpaque(), retain: nil, release: nil, copyDescription: nil)
         config = SCDynamicStoreCreate(nil, "Combo routes" as CFString, { _, _, info in
             guard let info else { return }
@@ -38,7 +44,7 @@ import Network
         let type = resolveTransport(pathAvailable: available, interfaces: kinds)
         let value: (String,String)
         switch type {
-        case "offline": value = ("无可用路径", "exclamationmark")
+        case "offline": value = wifiClient.interface()?.powerOn() == false ? ("Wi-Fi 已关闭", "wifi.slash") : ("无可用路径", "exclamationmark")
         case "pending": value = ("等待连接", "minus")
         case "wifi": value = ("Wi-Fi", "wifi")
         case "ethernet": value = ("有线网络", "")
@@ -46,5 +52,14 @@ import Network
         }
         update?(value.0, value.1)
     }
-    func stop() { monitor.cancel(); if let config { SCDynamicStoreSetDispatchQueue(config, nil) }; update = nil }
+    nonisolated func powerStateDidChangeForWiFiInterface(withName interfaceName: String) {
+        Task { @MainActor [weak self] in self?.refresh() }
+    }
+    nonisolated func linkDidChangeForWiFiInterface(withName interfaceName: String) {
+        Task { @MainActor [weak self] in self?.refresh() }
+    }
+    func stop() {
+        monitor.cancel(); try? wifiClient.stopMonitoringAllEvents(); wifiClient.delegate = nil
+        if let config { SCDynamicStoreSetDispatchQueue(config, nil) }; update = nil
+    }
 }

@@ -1,10 +1,24 @@
 # macOS 27 菜单栏折叠：实现路径调查（2026-09-23）
 
-> 2026-09-23 实机更新：本机的 CGS 枚举只返回整块菜单栏窗口，无法为三个系统图标建立逐项窗口身份；当前改为 MenuBarClientCore 单项实验。[Thaw 的实现](thaw-menu-folding-research.md)保留为机制参考。
+> 2026-09-23 实机更新：本机的 CGS 枚举只返回整块菜单栏窗口，无法为三个系统图标建立逐项窗口身份；MenuBarClientCore 单项实验因 Combo 图标也会消失而暂停。[Thaw 的实现](thaw-menu-folding-research.md)保留为机制参考。
 
 ## 结论
 
 macOS 27 的菜单栏实现发生变化；不能直接认定旧的“每项一个 WindowServer 窗口”枚举或 `10,000 pt` 分隔项仍可用，也不能仅凭 Ice 的兼容性说明认定 Thaw 式机制必然失效。Combo 已获辅助功能权限，但只查询 `ControlCenter` / `SystemUIServer` 的 `AXMenuBar` 得到 `-25212`，**不能推断系统图标不可操作**；还应验证 `MenuBarAgent` 和各项目所属应用的 `AXExtrasMenuBar`。Apple 公开的 `NSStatusItem.isVisible` 只控制本应用创建的状态项，并非隐藏别人的图标的 API。来源：[Apple NSStatusItem](https://developer.apple.com/documentation/appkit/nsstatusitem)、[Apple AXExtrasMenuBar](https://developer.apple.com/documentation/applicationservices/kaxextrasmenubarattribute)、[Ice macOS 27 说明](https://github.com/WuColin-1/Ice/blob/macos-27/MACOS27.md)。
+
+## Combo 图标必须保留：2026-09-23 补充调查
+
+**实机事实与未解问题。** 用户观察到 Combo 折叠实验生效后，Combo 自身图标也随之消失；因此当前三个折叠按钮已暂停。Combo 的 bundle ID 是 `local.combo.preview`，旧配置已经把它加入 `allowedBundleIdentifiers`。进一步的 15 秒隔离探针中，放行全部系统项时，Wi‑Fi、声音、电池及 Combo 都留在 `MenuBarAgent` 辅助功能树；只排除 Wi‑Fi 的私有系统 ID 6 时，Wi‑Fi **与 Combo 同时从树中消失**，其他两个目标和几个已放行的第三方图标仍在；释放 assertion 后两者恢复。给 Combo 状态项增加稳定 `autosaveName` 的临时构建重复出现同样结果，故仅补这个名称无法修复。辅助功能树不能单独证明屏幕像素或确切消失机制，但已足以否决当前私有方案的安全验收。[Combo 当前实验代码](../Combo/MenuFoldExperiment.swift)、[Apple `isVisible` 文档](https://developer.apple.com/documentation/appkit/nsstatusitem/isvisible)（空间不足导致暂时隐藏时仍返回 `true`）。
+
+**三个独立开关的可行边界。** 本机 macOS 27“系统设置 → 菜单栏”有 Wi‑Fi、声音、电池三个独立复选框。逐个关闭再打开时，`MenuBarAgent` 辅助功能树只移除对应系统项，Combo 和另两项始终保留；测试结束后三项均恢复原始的开启状态。这证明系统自身能分别隐藏三项，**不证明 Combo 有可用的公开 API 来执行同一操作**。这些复选框改变的是持久系统偏好；若 Combo 用辅助功能代点后崩溃，目标图标不会随 Combo 退出而自动恢复，因此不满足已定的故障恢复要求，也没有验证从 Combo 打开被隐藏项的原生菜单。[Apple 菜单栏设置指南](https://support.apple.com/guide/mac-help/customize-the-menu-bar-mchl4af84660/27/mac/27)、[Apple 控制中心指南](https://support.apple.com/guide/mac-help/quickly-change-settings-with-control-center-mchlc9d0e1f2/27/mac/27)。
+
+**私有接口的粒度。** `MBAssessmentModeConfiguration(initWithAllowedSystemItems:allowedBundleIdentifiers:)` 没有可引用的 Apple 公开契约；开源实现把它当作“系统项 ID + 应用 bundle ID”两份白名单。[MenuBarHider bridge](https://github.com/happy666End/MenuBarHider/blob/main/MenuBarHider/Services/MenuBarAgentBridge.swift) 将所有系统 ID 放行，并按 bundle ID 折叠第三方项目；其 [HiddenSet](https://github.com/happy666End/MenuBarHider/blob/main/MenuBarHider/Models/HiddenSet.swift) 对同一 bundle 只有一个开关。[Ice 2 的 macOS 27 变更记录](https://github.com/teddychan/ice-2/blob/main/CHANGELOG.md)也明确同一应用的所有图标共享可见性；[MenuBarHider 自述](https://github.com/happy666End/MenuBarHider)还指出无 bundle ID 的项目无法进入白名单。由此**推断**：它可以尝试按已核实的 `0/5/6` 系统 ID 折叠电池／声音／Wi‑Fi，但不能以 bundle 白名单精确折叠同一第三方应用的某一枚图标；“Combo ID 已在白名单”也不构成 Combo 图标在屏幕上可见的证明。`0/5/6` 仅为 [MenuBarHider 对 macOS 27.0 的运行时映射](https://github.com/happy666End/MenuBarHider/blob/main/MenuBarHider/Services/SystemItems.swift)，不是稳定 API。
+
+**公开 AppKit 备选路径。** [Ice #997 的 spacer 源码](https://github.com/WuColin-1/Ice/blob/macos-27/Ice/MenuBar/MacOS27NativeMenuBarHiding.swift)将空白状态项放在自己的按钮左边，只用菜单栏原生 overflow 挤走左边的连续项目；[其说明](https://github.com/WuColin-1/Ice/blob/macos-27/MACOS27.md)说若自己的按钮也离开菜单栏便撤销 spacer，并指出系统项须由用户自己 ⌘-拖动，程序化拖动曾使 `MenuBarAgent` 崩溃。这提供了“Combo 留右侧、目标放左侧”的候选方案，但只能按**位置连续折叠**，不能直接实现三个互不相邻的独立开关，也不能对任意屏幕宽度保证图标始终在栏内。Apple 亦说明状态栏空间有限，状态项[不保证随时可用](https://developer.apple.com/documentation/appkit/nsstatusbar)。
+
+**最小验证实验（暂不恢复产品开关）。** 可先做一次短时、可逆的 **spacer 实验**：用户把一枚目标系统项手动 ⌘-拖到 Combo 左侧；Combo 在自身按钮紧左侧建立一枚空白 `NSStatusItem`，只在一次显式操作时临时加宽，观察目标是否进入系统 `«`、Combo 是否始终可见可点击，随即将 spacer 撤回并确认目标恢复。[Ice spacer 的创建、`setHidden(false)`／`withdraw` 与 `removeAll` 源码](https://github.com/WuColin-1/Ice/blob/macos-27/Ice/MenuBar/MacOS27NativeMenuBarHiding.swift)。此实验不需启用三个产品开关，也不需私有接口；若 Combo 开始离开菜单栏立即撤回，参考 [Ice 的自我保护与几何说明](https://github.com/WuColin-1/Ice/blob/macos-27/MACOS27.md)。私有路径仍需另一轮隔离验证：在已授权的 Combo 进程内只读记录 Combo 自身 AX 项、`MenuBarAgent` 对应容器及 overflow 位置，以实际绘制容器而非 `isVisible` 判定；再一次只排除一个已验证系统 ID，短时激活并立即可 `invalidate`，对比前后 Combo 容器与可点击性。失败或无法确认就释放。两路径均须在普通、拥挤、刘海与多显示器布局中，以**Combo 全程可见且可点击、目标能恢复、原生菜单能打开**为通过条件。[MenuBarHider assertion 的释放实现](https://github.com/happy666End/MenuBarHider/blob/main/MenuBarHider/Services/MenuBarAgentBridge.swift)。
+
+**可行性结论。** 用户要求三个按图标分别控制的开关，故按位置连续挤压图标的 spacer 不符合产品语义；当前私有限制探针又会同时移除 Combo。系统设置的三个开关虽独立，却无法满足退出或崩溃后自动恢复。现有路径均未通过“Combo 始终可见可点、逐项独立、故障恢复、原生菜单可打开”的组合验收。保留暂停状态；`isVisible == true` 也不能替代视觉验收。[Apple `isVisible`](https://developer.apple.com/documentation/appkit/nsstatusitem/isvisible)、[Combo 当前实验代码](../Combo/MenuFoldExperiment.swift)。
 
 ## 两条已存在的实现路径
 

@@ -12,7 +12,7 @@ def text(x,y,t,size=20,c=INK,bold=False):
     font=ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial'+(' Bold' if bold else '')+'.ttf',size*S)
     d.text((x*S,y*S),t,font=font,fill=c)
 
-# Original paths from the supplied SVG; only the four dot positions change.
+# Wi-Fi follows the shared two-arc-and-triangle silhouette used by the live interface.
 DOTS = [(35,76),(45,80),(55,80),(65,76)]
 def mark(draw,x,y,size,color,scale=1):
     from math import cos,sin,radians
@@ -22,24 +22,34 @@ def mark(draw,x,y,size,color,scale=1):
         for px,py in pts:
             r=width*k/2; draw.ellipse((px-r,py-r,px+r,py+r),fill=color)
     stroke([(50+34*cos(radians(a)),48-34*sin(radians(a))) for a in range(210,-31,-1)])
-    def quad(p0,p1,p2):
-        return [((1-t)**2*p0[0]+2*(1-t)*t*p1[0]+t*t*p2[0],
-                 (1-t)**2*p0[1]+2*(1-t)*t*p1[1]+t*t*p2[1]) for t in [i/100 for i in range(101)]]
-    stroke(quad((38,47),(50,36),(62,47)))
-    stroke(quad((44,53),(50,48),(56,53)))
+    for radius,angle,cy in [(12.434,40.1,57.072),(20.624,42.81,56.624)]:
+        stroke([(50+radius*cos(radians(270-angle+2*angle*i/40)),
+                 cy+radius*sin(radians(270-angle+2*angle*i/40))) for i in range(41)],4.6)
+    tip=[(46.082,52.318)]
+    for end,control in [((53.918,52.318),(50,49.568)), ((54.241,54.705),(54.788,52.868)),
+                        ((51.6,57.28),None), ((48.4,57.28),(50,58.555)),
+                        ((45.759,54.705),None), ((46.082,52.318),(45.212,52.868))]:
+        start=tip[-1]
+        if control is None: tip.append(end)
+        else:
+            for i in range(1,21):
+                t=i/20
+                tip.append(tuple((1-t)**2*a+2*(1-t)*t*b+t*t*c for a,b,c in zip(start,control,end)))
+    draw.polygon([(x+px*k,y+py*k) for px,py in tip],fill=color)
     for px,py in DOTS:
         r=3.5*k; px=x+px*k; py=y+py*k
         draw.ellipse((px-r,py-r,px+r,py+r),fill=color)
 
-def svg(color,bg=None):
-    background=f'<rect width="100" height="100" rx="22" fill="{bg}"/>' if bg else ''
+def svg(color):
     dots=''.join(f'<circle cx="{x}" cy="{y}" r="3.5"/>' for x,y in DOTS)
-    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Combo logo">{background}<g fill="none" stroke="{color}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 65 A34 34 0 1 1 79.4 65"/><path d="M38 47 Q50 36 62 47"/><path d="M44 53 Q50 48 56 53"/></g><g fill="{color}">{dots}</g></svg>'
+    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Combo logo"><g fill="none" stroke="{color}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 65 A34 34 0 1 1 79.4 65"/><g stroke-width="4.6"><path d="M35.9846 41.4940 A20.624 20.624 0 0 1 64.0154 41.4940"/><path d="M41.9910 47.5610 A12.434 12.434 0 0 1 58.0090 47.5610"/></g></g><g fill="{color}"><path d="M46.082 52.318 Q50 49.568 53.918 52.318 Q54.788 52.868 54.241 54.705 L51.6 57.28 Q50 58.555 48.4 57.28 L45.759 54.705 Q45.212 52.868 46.082 52.318 Z"/>{dots}</g></svg>'
 
-for name,color,bg in [('combo-logo',IRIS,None),('combo-monochrome',INK,None),('combo-reversed','#FFFFFF',None),('combo-app-icon','#FFFFFF',IRIS)]:
-    (OUT/f'{name}.svg').write_text(svg(color,bg))
+(OUT/'combo-iris-logo.svg').write_text(svg(IRIS))
+
+# Application icon artwork is preserved separately; only regenerate the live-style logos.
+for name,color in [('combo-logo',IRIS),('combo-monochrome',INK),('combo-reversed','#FFFFFF')]:
+    (OUT/f'{name}.svg').write_text(svg(color))
     icon=Image.new('RGBA',(2048,2048),(0,0,0,0)); idraw=ImageDraw.Draw(icon)
-    if bg: idraw.rounded_rectangle((0,0,2047,2047),450,fill=bg)
     mark(idraw,0,0,2048,color)
     icon.resize((1024,1024),Image.Resampling.LANCZOS).save(OUT/f'{name}.png')
 
@@ -47,7 +57,8 @@ text(64,42,'COMBO / VISUAL IDENTITY',18,IRIS,True)
 text(64,80,'One place. All in view.',46,INK,True)
 text(64,143,'A compact identity for a quieter menu bar.',22,'#736B80')
 box(64,205,715,435,'#FFFFFF')
-box(115,278,256,256,IRIS,56); mark(d,115,278,256,'#FFFFFF',S)
+app_icon=Image.open(OUT/'combo-app-icon.png').convert('RGBA').resize((256*S,256*S),Image.Resampling.LANCZOS)
+im.paste(app_icon,(115*S,278*S),app_icon)
 text(411,322,'Combo',68,INK,True)
 text(415,414,'Connect. Combine.',23,'#736B80')
 text(110,587,'FOUR DOTS. ONE GENTLE ARC.',16,'#736B80',True)

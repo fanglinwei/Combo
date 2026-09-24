@@ -31,6 +31,17 @@ import ApplicationServices
         assert(store.live.adjusting, "second change must extend hint")
         try? await Task.sleep(for: .milliseconds(1100))
         assert(!store.live.adjusting, "hint must expire")
+        assert(store.chargeLimit != .loading, "charge-limit read must finish or time out")
+        print("Battery detail: \(store.batterySourceText); \(store.batteryStatusText); limit \(store.chargeLimit.text)")
+        await store.powerMode.refresh()
+        assert(!store.powerMode.busy)
+        for (source, policy) in store.powerMode.policies {
+            print("Power policy: \(source.title) = \(policy.mode.title)")
+            // Same-value requests must not ask for administrator authorization.
+            await store.powerMode.set(policy.mode, source: source)
+            assert(!store.powerMode.busy)
+            assert(store.powerMode.policies[source] == policy)
+        }
         store.stop()
         print("PASS: live read-only state, observer registration, renewed volume hint and shutdown")
     }

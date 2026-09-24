@@ -1,6 +1,6 @@
 # Combo 品牌资源
 
-当前主题为鸢尾紫。Logo 保留开口电量弧、中央 Wi-Fi 弧线与底部沿浅弧排列的四个圆点。菜单栏图标仍按实时状态单色绘制，品牌 Logo 只用于应用身份。
+当前主题为鸢尾紫。Logo 保留开口电量弧与底部沿浅弧排列的四个圆点；中央 Wi-Fi 统一使用两条加粗圆头弧线和一个圆润倒三角，弧线间隙收紧，与菜单栏、设置页和网络列表保持相同轮廓。菜单栏图标仍按实时状态单色绘制，品牌 Logo 只用于应用身份。APP 图标单独保留原版鸢尾紫背景、中央双弧和底部四点，不跟随界面 Wi-Fi 样式调整。
 
 | 用途 | 颜色 |
 | --- | --- |
@@ -10,6 +10,6 @@
 | 浅色背景 | `#F5F3F8` |
 | 深色背景 | `#26222F` |
 
-`combo-iris-logo.svg` 是透明标志，`combo-iris-app-icon.svg` 是应用图标源文件。`Tests/RenderBrand.swift` 生成用于构建的 PNG，`build.sh` 将其打包成 `Combo.icns`。`render.py` 生成设计预览、通用 SVG 和 PNG；`combo-brand-preview.png` 是概念示意，不是 APP 截图。
+`combo-iris-logo.svg` 是透明标志，`combo-iris-app-icon.svg` 是应用图标源文件。`Tests/RenderBrand.swift` 生成用于构建的 PNG，`build.sh` 将其打包成 `Combo.icns`。`render.py` 生成设计预览及透明 Logo 的 SVG 和 PNG，直接复用原版 APP 图标，不覆盖应用图标资源；`combo-brand-preview.png` 是概念示意，不是 APP 截图。
 
 白字与浅色强调色对比度 6.23:1；深色强调色与深色背景对比度 7.22:1。此前的蓝色与 C 形紫色预览保留在单独的 PNG 文件中。

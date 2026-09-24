@@ -10,14 +10,14 @@ import ApplicationServices
 // macOS 27 private API experiment. It is deliberately time-limited until native
 // menu reopening and visible-state checks can be verified on this machine.
 @MainActor final class MenuFoldExperiment {
-    static let available = true
+    static let available = false
     private var assertion: MenuRestriction?
     private var expiry: Task<Void, Never>?
 
     func preview(systemID: Int, report: @escaping @MainActor (String) -> Void) {
         release()
         guard Self.available else {
-            report("折叠已暂停：尚未验证 Combo 图标始终可见。")
+            report("折叠已暂停：实验会隐藏 Combo 图标，无法保证恢复入口始终可见。")
             return
         }
         guard [0, 5, 6].contains(systemID) else {

@@ -47,9 +47,19 @@ def icon(center='wifi', bottom='volume', battery=82, volume=2,
         d.polygon([(84*k,8*k),(74*k,22*k),(80*k,22*k),(77*k,32*k),
                    (88*k,17*k),(82*k,17*k)],fill=fg)
     if center == 'wifi':
-        arc(50,57,23,228,312,fg,4.7)
-        arc(50,57,13,231,309,fg,4.7)
-        d.pieslice((44*k,51*k,56*k,63*k),220,320,fill=fg)
+        arc(50,56.624,20.624,227.19,312.81,fg,4.6)
+        arc(50,57.072,12.434,229.9,310.1,fg,4.6)
+        tip=[(46.082,52.318)]
+        for end,control in [((53.918,52.318),(50,49.568)), ((54.241,54.705),(54.788,52.868)),
+                            ((51.6,57.28),None), ((48.4,57.28),(50,58.555)),
+                            ((45.759,54.705),None), ((46.082,52.318),(45.212,52.868))]:
+            start=tip[-1]
+            if control is None: tip.append(end)
+            else:
+                for i in range(1,21):
+                    t=i/20
+                    tip.append(tuple((1-t)**2*a+2*(1-t)*t*b+t*t*c for a,b,c in zip(start,control,end)))
+        d.polygon([(px*k,py*k) for px,py in tip],fill=fg)
     elif center == 'headphones':
         arc(50,44,13,180,360,fg,4)
         for x in (35,59):
