@@ -39,7 +39,7 @@ import Combine
         let s = store.snapshot
         let now = ProcessInfo.processInfo.systemUptime
         let transitioning = iconTransition.isAnimating(at: now) && store.screenActive
-        let playing = s.playing && store.animate && !s.muted && !s.adjusting && !s.reducedMotion && !store.reduceMotion && store.screenActive
+        let playing = s.playing && store.animate && !s.silenced && !s.adjusting && !s.reducedMotion && !store.reduceMotion && store.screenActive
         let interval = transitioning ? 1.0 / 60 : 0.05
         let connecting = s.wifiConnecting && !s.reducedMotion && !store.reduceMotion && store.screenActive
         if transitioning || playing || connecting {

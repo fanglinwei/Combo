@@ -17,8 +17,8 @@ struct OutputChoice: Identifiable {
         didSet {
             sceneStarted = ProcessInfo.processInfo.systemUptime
             sceneExpiry?.cancel()
-            guard scene.event != nil else { return }
-            let duration = IconTransition.Timing.eventDuration(reducedMotion: reduceMotion)
+            guard let event = scene.event else { return }
+            let duration = IconTransition.Timing.eventDuration(event: event, reducedMotion: reduceMotion)
             sceneExpiry = Task { [weak self] in
                 do { try await Task.sleep(for: .seconds(duration)) } catch { return }
                 self?.objectWillChange.send()
@@ -33,6 +33,7 @@ struct OutputChoice: Identifiable {
     let energyApps = EnergyApps()
     let hotspots = HotspotControl()
     let airpods = AirPodsControl()
+    private let mediaPlayback = MediaPlayback()
     @Published var panelVisible = false
     private var hotspotActivity: AnyCancellable?
     @Published var login = false
@@ -90,8 +91,8 @@ struct OutputChoice: Identifiable {
     var canMute = false
     var snapshot: Snapshot {
         var result = snapshot(for: scene)
-        if scene != .live, result.centerEvent != nil {
-            let duration = IconTransition.Timing.eventDuration(reducedMotion: reduceMotion)
+        if scene != .live, let event = result.centerEvent {
+            let duration = IconTransition.Timing.eventDuration(event: event, reducedMotion: reduceMotion)
             if ProcessInfo.processInfo.systemUptime - sceneStarted >= duration {
                 result.centerEvent = nil; result.adjusting = false
             }
@@ -111,6 +112,8 @@ struct OutputChoice: Identifiable {
         batteryDisplayThreshold = min(100, max(0, UserDefaults.standard.object(forKey: "batteryDisplayThreshold") as? Int ?? 50))
         energyAppLimit = EnergyApps.displayLimit(UserDefaults.standard.object(forKey: "energyAppLimit") as? Int ?? 1)
         network.update = { [weak self] name, symbol in self?.live.network = name; self?.live.symbol = symbol }
+        mediaPlayback.update = { [weak self] playing in self?.live.playing = playing }
+        mediaPlayback.setEnabled(true)
         wifiChange = wifi.$connecting.dropFirst().sink { [weak self] connecting in
             self?.live.wifiConnecting = connecting
             if !connecting { self?.network.refresh() }
@@ -137,6 +140,7 @@ struct OutputChoice: Identifiable {
             observers.append(nc.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor in
                     self?.screenActive = active
+                    self?.mediaPlayback.setEnabled(active)
                     if active { self?.refresh() } else { self?.foldExperiment.release() }
                 }
             })
@@ -215,12 +219,14 @@ struct OutputChoice: Identifiable {
     }
     func refreshAudio() {
         let oldVolume = live.volume
+        let oldMuted = live.muted
         let oldDevice = device
         var id: AudioDeviceID = 0
         var a = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultOutputDevice, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
         var size = UInt32(MemoryLayout.size(ofValue: id))
         guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &a, 0, nil, &size, &id) == noErr, id != 0 else {
             live.volume = nil; live.muted = false; live.output = "输出设备不可用"; canVolume = false; canMute = false
+            live.outputIsAirPods = false
             device = 0; installAudioListeners(); clearVolumeHint(); return
         }
         device = id
@@ -230,6 +236,12 @@ struct OutputChoice: Identifiable {
         var name: Unmanaged<CFString>?
         size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
         if AudioObjectGetPropertyData(id, &a, 0, nil, &size, &name) == noErr { live.output = name?.takeRetainedValue() as String? ?? "未知输出设备" }
+        var transport: UInt32 = 0
+        a = address(kAudioDevicePropertyTransportType, global: true); size = UInt32(MemoryLayout<UInt32>.size)
+        _ = AudioObjectGetPropertyData(id, &a, 0, nil, &size, &transport)
+        // ponytail: reuse the output list's name heuristic; use model identity for renamed AirPods.
+        live.outputIsAirPods = [kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE].contains(transport)
+            && live.output.localizedCaseInsensitiveContains("AirPods")
         let volume = AudioVolume.read(id)
         live.volume = volume.value
         canVolume = volume.writable
@@ -240,7 +252,8 @@ struct OutputChoice: Identifiable {
         live.muted = muteRead && mute != 0
         canMute = muteRead && AudioObjectIsPropertySettable(id, &a, &settable) == noErr && settable.boolValue
         if oldDevice != id { airpods.cancel() }
-        if oldDevice == id, let previous = oldVolume, let current = live.volume, abs(previous-current) > 0.001 { showVolumeHint() }
+        let volumeChanged = oldVolume.flatMap { previous in live.volume.map { abs(previous-$0) > 0.001 } } ?? false
+        if oldDevice == id, volumeChanged || (muteRead && oldMuted != live.muted) { showVolumeHint() }
 
     }
     func address(_ selector: AudioObjectPropertySelector, global: Bool = false) -> AudioObjectPropertyAddress {
@@ -328,7 +341,7 @@ struct OutputChoice: Identifiable {
         let now = ProcessInfo.processInfo.systemUptime
         let reduced = reduceMotion || live.reducedMotion
         centerHint.show(event, at: now,
-                        duration: IconTransition.Timing.eventDuration(reducedMotion: reduced),
+                        duration: IconTransition.Timing.eventDuration(event: event, reducedMotion: reduced),
                         entrance: reduced ? IconTransition.Timing.reduced : IconTransition.Timing.hide + IconTransition.Timing.grow)
         objectWillChange.send()
         let delay = max(0, centerHint.deadline - now)
@@ -340,7 +353,7 @@ struct OutputChoice: Identifiable {
     func showVolumeHint() {
         volumeHint?.cancel()
         lastVolumeChange = ProcessInfo.processInfo.systemUptime; live.adjusting = true
-        if live.playing { showCenterHint(.volume) }
+        showCenterHint(.volume)
         volumeHint = Task { [weak self] in
             do { try await Task.sleep(for: .seconds(2)) } catch { return }
             guard let self else { return }
@@ -369,6 +382,7 @@ struct OutputChoice: Identifiable {
     }
     func resetDisplay() { animate = true; batteryDisplayThreshold = 50 }
     func stop() {
+        mediaPlayback.stop()
         centerHintTask?.cancel(); sceneExpiry?.cancel(); wifiChange?.cancel()
         chargeControl.stop()
         energyApps.cancel()

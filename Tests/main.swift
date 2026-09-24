@@ -40,6 +40,12 @@ assert(bottomState(muted: false, adjusting: true, playing: true, animate: true) 
 assert(bottomState(muted: false, adjusting: false, playing: true, animate: true) == .playing)
 assert(bottomState(muted: false, adjusting: false, playing: true, animate: false) == .volume)
 print("PASS: volume boundaries and display precedence")
+for snapshot in [Snapshot(volume: 0, playing: true), Snapshot(volume: 0.5, muted: true, playing: true)] {
+    assert(snapshot.silenced)
+    assert(bottomState(muted: snapshot.silenced, adjusting: false, playing: snapshot.playing, animate: true) == .muted)
+}
+assert(!Snapshot(volume: nil).silenced && !Snapshot(volume: 0.01, playing: true).silenced)
+print("PASS: zero volume and hardware mute override playback without treating unknown volume as mute")
 assert(Scene.allCases.count == 17) // 16 preview states plus live data.
 assert(Snapshot.demo(.music).symbol.isEmpty)
 assert(Snapshot.demo(.adjusting).volume == 0.75)
@@ -95,7 +101,7 @@ for symbol in ["wifi", "", "minus", "exclamationmark"] {
             for battery: Double? in [nil, 0, 0.49, 0.50, 0.51, 1, .nan] {
                 let original = Snapshot(battery: battery, charging: charging, symbol: symbol)
                 let result = original.preferringBattery(threshold: 50)
-                let expected = symbol == "wifi" && battery.map { $0.isFinite && (charging || $0 < 0.5) } == true
+                let expected = (symbol == "wifi" || symbol.isEmpty) && battery.map { $0.isFinite && (charging || $0 < 0.5) } == true
                 assert(result.symbol == (expected ? "" : symbol))
                 assert(result.batteryPreferred == expected)
                 assert(result.network == original.network && result.charging == charging)

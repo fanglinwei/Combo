@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 @main struct AirPodsCheck {
     @MainActor static func main() async throws {
@@ -7,6 +8,17 @@ import Foundation
         assert(AudioVolume.elements(main: false, preferred: [3, 3, 4], has: { _ in true }) == [3, 4])
         assert(AudioVolume.elements(main: false, preferred: [], has: { _ in false }).isEmpty)
         assert(!AudioVolume.set(.nan, device: 0) && !AudioVolume.set(2, device: 0))
+        func drag(_ translation: Double, count: Int = 3, selected: Int = 1, x: Double = 150, y: Double = 24) -> Double? {
+            airPodsDragPosition(selected: selected, count: count, width: 300,
+                                 startX: x, startY: y, translation: translation)
+        }
+        assert(drag(-1000) == 0 && drag(1000) == 2, "Dragging must clamp to both ends")
+        assert(drag(49)!.rounded() == 1 && drag(51)!.rounded() == 2, "Release selects the nearest center")
+        assert(drag(0) == 1 && drag(-40)!.rounded() == 1, "Returning to the original option must not switch")
+        assert(drag(90, count: 2, selected: 0, x: 75)!.rounded() == 1)
+        assert(drag(-90, count: 2, selected: 1, x: 225)!.rounded() == 0)
+        assert(drag(80, x: 20) == nil && drag(80, y: 60) == nil, "Drag must start on the selected capsule")
+        assert(drag(.nan) == nil && drag(10, count: 1, selected: 0) == nil)
         var payload: [String: Any] = ["deviceID": 99, "target": String(repeating: "a", count: 64),
             "available": true, "modes": ["transparency", "noise-cancellation"], "mode": "noise-cancellation",
             "canSetMode": true, "conversation": false, "canSetConversation": true,
@@ -42,24 +54,63 @@ import Foundation
         let control = AirPodsControl(helperURL: helper, libraryURL: URL(fileURLWithPath: "/usr/lib/libSystem.B.dylib"), timeoutSeconds: 1)
         func settle() async throws {
             for _ in 0..<100 {
-                if !control.busy { return }
+                if !control.busy && !control.refreshing { return }
                 try await Task.sleep(for: .milliseconds(20))
             }
             fatalError("helper did not settle")
         }
         try respond(payload)
-        control.refresh(deviceID: 99); try await settle()
+        control.refresh(deviceID: 99)
+        assert(!control.busy, "Background polling must not disable and dim the AirPods controls")
+        try await settle()
         assert(control.snapshot?.mode == .noiseCancellation && !control.unavailable)
+        var changes = 0
+        let observation = control.objectWillChange.sink { changes += 1 }
+        for _ in 0..<3 {
+            control.refresh(deviceID: 99)
+            assert(!control.busy && control.snapshot?.mode == .noiseCancellation)
+            try await settle()
+        }
+        assert(changes == 0, "Unchanged background reads must not publish UI updates")
+        observation.cancel()
         control.setMode(.noiseCancellation); assert(!control.busy, "same value must not write")
         control.setMode(.off); assert(!control.busy, "unsupported mode must not write")
         payload["attempted"] = true; payload["verified"] = true; payload["mode"] = "transparency"
-        try respond(payload)
-        control.setMode(.transparency); try await settle()
-        assert(control.snapshot?.mode == .transparency && control.message.isEmpty)
+        let json = String(decoding: try JSONSerialization.data(withJSONObject: payload), as: UTF8.self)
+        try write("if [ \"$1\" = \"--status\" ]; then exec /bin/sleep 5; fi\nprintf '%s' '" + json + "'")
+        control.refresh(deviceID: 99)
+        assert(control.refreshing && !control.busy)
+        control.setMode(.transparency)
+        assert(control.busy && !control.refreshing, "User writes must take priority over background reads")
+        assert(control.displayedMode == .transparency && control.snapshot?.mode == .noiseCancellation,
+               "Move selection immediately without claiming the device has confirmed it")
+        control.setConversation(true)
+        assert(control.busy && control.pendingConversation == nil && control.pendingMode == .transparency,
+               "A second write must not replace the pending selection")
+        try await settle()
+        assert(control.snapshot?.mode == .transparency && control.pendingMode == nil && control.message.isEmpty)
         payload["verified"] = false; payload["error"] = "unconfirmed"
         try respond(payload)
-        control.setConversation(true); try await settle()
-        assert(!control.message.isEmpty && control.snapshot?.conversation == false)
+        control.setConversation(true)
+        assert(control.displayedConversation == true && control.snapshot?.conversation == false)
+        try await settle()
+        assert(!control.message.isEmpty && control.displayedConversation == false && control.pendingConversation == nil,
+               "An unconfirmed switch must roll back the displayed selection")
+        payload.removeValue(forKey: "error"); payload["attempted"] = false; payload["verified"] = false
+        try respond(payload)
+        control.refresh(deviceID: 99); try await settle()
+        try write("exec /bin/sleep 5")
+        control.setMode(.noiseCancellation)
+        assert(control.displayedMode == .noiseCancellation)
+        try await settle()
+        assert(control.unavailable && control.pendingMode == nil && control.displayedMode == .transparency,
+               "Timeout must restore the last confirmed selection")
+        try respond(payload)
+        control.refresh(deviceID: 99); try await settle()
+        try write("exec /bin/sleep 5")
+        control.setConversation(true); control.cancel()
+        assert(!control.busy && control.pendingConversation == nil && control.displayedConversation == nil)
+        try respond(payload)
         control.refresh(deviceID: 100); try await settle()
         assert(control.snapshot == nil && control.unavailable, "stale output must not be displayed")
         try write("echo '{}'")
@@ -73,7 +124,7 @@ import Foundation
         assert(control.unavailable && !control.busy)
         control.refresh(deviceID: 99); control.cancel()
         try await Task.sleep(for: .milliseconds(100))
-        assert(!control.busy && control.snapshot == nil && !control.unavailable)
-        print("PASS: volume channel fallback; AirPods validation, guarded writes, readback failure, stale device, malformed output, timeout and cancellation")
+        assert(!control.busy && !control.refreshing && control.snapshot == nil && !control.unavailable)
+        print("PASS: drag bounds and release selection, optimistic selection, confirmation, rollback, timeout, cancellation, quiet polling, write priority, volume channel fallback; AirPods validation, guarded writes, readback failure, stale device, malformed output, timeout and cancellation")
     }
 }

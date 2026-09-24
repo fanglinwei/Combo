@@ -3,6 +3,27 @@ import AppKit
 @main struct RenderIcons {
     @MainActor static func main() throws {
         _ = NSApplication.shared
+        // Both sides of the charging gap retain semicircular caps, on track and progress.
+        for dark in [true, false] {
+            for battery in [0.0, 0.65, 0.8, 0.82, 1.0] {
+                let image = IconRenderer.image(Snapshot(battery: battery, charging: true), animate: false, size: 400, dark: dark)
+                let pixels = NSBitmapImageRep(data: image.tiffRepresentation!)!
+                for (angle, direction) in [(300.0, 1.0), (346.0, -1.0)] {
+                    let theta = angle * .pi / 180
+                    func alpha(_ tangent: Double, _ radial: Double) -> Double {
+                        let x = 50 + (36 + radial)*cos(theta) - direction*tangent*sin(theta)
+                        let y = 44 + (36 + radial)*sin(theta) + direction*tangent*cos(theta)
+                        let px = (50 + (x-50)*1.06) * Double(pixels.pixelsWide) / 100
+                        let py = (50 + (y-45.5)*1.06) * Double(pixels.pixelsHigh) / 100
+                        return pixels.colorAt(x: Int(px), y: Int(py))!.alphaComponent
+                    }
+                    assert(alpha(2, 0) > 0.9, "Charging cap must extend into the gap")
+                    for radial in [-2.5, 2.5] {
+                        assert(alpha(2, radial) < 0.1, "Charging cap corners must be rounded")
+                    }
+                }
+            }
+        }
         for dark in [true, false] {
             let foreground = dark ? [244,244,246] : [36,37,42]
             let track = dark ? [86,89,97] : [167,170,179]

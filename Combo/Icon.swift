@@ -4,7 +4,7 @@ import CoreText
 
 // Identity is separate from the value: updating a number never restarts a transition.
 struct IconContent: Equatable {
-    enum Kind { case wifi, wifiOff, connecting, unavailable, warning, battery, volume, muted, plugged, unplugged }
+    enum Kind { case wifi, wifiOff, connecting, unavailable, warning, battery, volume, headphones, plugged, unplugged }
     let kind: Kind
     var text = ""
     var priority = 2
@@ -36,18 +36,20 @@ struct IconContent: Equatable {
         else if snapshot.batteryPreferred || (snapshot.charging && snapshot.battery.map { $0.isFinite && (0...1).contains($0) } == true) {
             self.init(kind: .battery, text: snapshot.batteryText.replacingOccurrences(of: "%", with: ""))
         }
+        else if snapshot.outputIsAirPods { self.init(kind: .headphones) }
         else if snapshot.symbol == "wifi" { self.init(kind: .wifi, priority: 1) }
-        else if snapshot.muted { self.init(kind: .muted) }
         else {
             self.init(kind: .battery, text: snapshot.battery.map { String(Int(($0*100).rounded())) } ?? "—")
         }
         self.event = event
         networkState = snapshot.wifiConnecting && snapshot.symbol != "wifi.slash" ? "connecting" : snapshot.networkSymbol ?? snapshot.symbol
         eventSerial = event == nil ? 0 : snapshot.eventSerial
-        if kind == .muted { symbol = "speaker.slash.fill" }
+        if kind == .headphones { symbol = "airpodspro" }
         else if kind == .volume {
-            let level = volumeDots(snapshot.volume)
-            symbol = snapshot.muted ? "speaker.slash.fill" : level.map { $0 == 0 ? "speaker.fill" : "speaker.wave.\(min(3, $0)).fill" } ?? "questionmark"
+            if snapshot.silenced { text = "0" }
+            else if let volume = snapshot.volume, volume.isFinite, (0...1).contains(volume) {
+                text = String(Int((volume * 100).rounded()))
+            } else { text = "—" }
         }
     }
     func sameState(as other: IconContent) -> Bool {
@@ -67,13 +69,14 @@ struct IconContent: Equatable {
 
 struct IconTransition {
     enum Timing {
+        static let centerCrossfade = 0.23
         static let hide = 0.30, grow = 0.30, hold = 3.0, settle = 0.60
         static let peripheralDelay = 0.10, ringFill = 0.50, reduced = 0.16
         static let compactHold = 5.0
         static var restore: Double { hide + grow + hold }
         static var duration: Double { restore + settle + ringFill }
-        static func eventDuration(reducedMotion: Bool) -> Double {
-            (reducedMotion ? reduced : restore + settle) + compactHold
+        static func eventDuration(event: CenterEvent = .power, reducedMotion: Bool) -> Double {
+            event == .volume ? 2 : (reducedMotion ? reduced : restore + settle) + compactHold
         }
     }
     enum NetworkTiming {
@@ -83,6 +86,7 @@ struct IconTransition {
         var content: IconContent
         var opacity = 1.0
         var emphasis = 0.0
+        var scale = 1.0
         var networkOpen = 1.0
         var retracting = false
         var loadingPhase: Double? = nil
@@ -100,17 +104,34 @@ struct IconTransition {
     private var reduced = false
     private var networkMode = false
     private var networkGrow = 0.0
+    private var centerOnly = false
 
     mutating func update(_ content: IconContent, at now: Double, reducedMotion: Bool, active: Bool = true) {
         guard active, let previous = target else {
-            target = content; started = nil; reduced = reducedMotion
+            target = content; started = nil; reduced = reducedMotion; centerOnly = false
             networkMode = active && content.kind == .connecting
             if networkMode { started = now - NetworkTiming.morph - 0.000001; networkGrow = 0 }
             return
         }
+        if centerOnly, let started, now - started >= Timing.centerCrossfade {
+            centerOnly = false
+            self.started = nil
+        }
         let changed = !previous.sameState(as: content)
+        let downgrade = content.priority < previous.priority
+        let centerTransition = changed && (content.priority == previous.priority || downgrade)
+        if centerTransition {
+            origin = frame(at: now)
+            centerOnly = true
+            networkMode = false
+            started = now
+            target = content
+            reduced = reducedMotion
+            return
+        }
+        if changed { centerOnly = false }
         let networkChanged = previous.networkState != nil && content.networkState != nil && previous.networkState != content.networkState
-        if content.priority < previous.priority && previous.priority == 4 {
+        if downgrade && previous.priority == 4 {
             started = nil
             networkMode = content.kind == .connecting
             if networkMode { started = now - NetworkTiming.morph - 0.000001; networkGrow = 0 }
@@ -132,16 +153,26 @@ struct IconTransition {
     }
     func isAnimating(at now: Double) -> Bool {
         guard let started else { return false }
+        if centerOnly { return now - started < Timing.centerCrossfade }
         if networkMode && reduced && target?.kind != .connecting {
             return now - started < Timing.eventDuration(reducedMotion: true)
         }
         if networkMode && !reduced {
             return target?.kind == .connecting || now - started < networkGrow + NetworkTiming.morph + NetworkTiming.hold + Timing.settle + Timing.compactHold
         }
-        return now - started < (reduced ? Timing.reduced : Timing.duration)
+        return now - started < (reduced || target?.kind == .volume ? Timing.reduced : Timing.duration)
     }
     func frame(at now: Double) -> Frame {
         guard let target else { return Frame(layers: []) }
+        if centerOnly {
+            let elapsed = max(0, now - (started ?? now))
+            let t = min(1, max(0, elapsed / Timing.centerCrossfade))
+            let eased = t * t * (3 - 2 * t)
+            var layers = origin.layers.map { Layer(content: $0.content, opacity: $0.opacity * (1-eased), emphasis: 0, scale: 1 - 0.3 * eased) }
+            layers.append(Layer(content: target, opacity: eased, emphasis: 0, scale: 0.7 + 0.3 * eased))
+            return Frame(layers: layers.filter { $0.opacity > 0 }, peripheral: origin.peripheral,
+                         ringOpacity: origin.ringOpacity, ringProgress: origin.ringProgress, reduced: reduced)
+        }
         if networkMode && !reduced, let started { return networkFrame(target, elapsed: max(0, now - started)) }
         guard let started, isAnimating(at: now) else { return Frame(layers: [Layer(content: target)], reduced: reduced) }
         let elapsed = max(0, now - started)
@@ -149,13 +180,13 @@ struct IconTransition {
             let t = min(1, max(0, time / duration))
             return t * t * (3 - 2 * t)
         }
-        if reduced {
+        if reduced || target.kind == .volume {
             let t = ease(elapsed, Timing.reduced)
             var layers = origin.layers.map { Layer(content: $0.content, opacity: $0.opacity * (1-t)) }
             layers.append(Layer(content: networkMode ? target.networkContent : target, opacity: t))
             return Frame(layers: layers, peripheral: origin.peripheral + (1-origin.peripheral)*t,
                          ringOpacity: origin.ringOpacity + (1-origin.ringOpacity)*t,
-                         ringProgress: origin.ringProgress + (1-origin.ringProgress)*t, reduced: true)
+                         ringProgress: origin.ringProgress + (1-origin.ringProgress)*t, reduced: reduced)
         }
         let hide = ease(elapsed, Timing.hide)
         var layers = origin.layers.map { Layer(content: $0.content, opacity: $0.opacity * (1-hide), emphasis: $0.emphasis) }
@@ -203,6 +234,10 @@ struct IconTransition {
                          peripheral: 0, ringOpacity: 0, ringProgress: 0)
         }
         let restore = time - NetworkTiming.morph - NetworkTiming.hold
+        if restore <= 0 {
+            return Frame(layers: [Layer(content: destination, emphasis: 1)],
+                         peripheral: 0, ringOpacity: 0, ringProgress: 0)
+        }
         guard restore < Timing.settle + Timing.compactHold else { return Frame(layers: [Layer(content: target)]) }
         let shrink = ease(restore / Timing.settle)
         let ring = ease((restore-Timing.settle) / Timing.ringFill)
@@ -382,29 +417,32 @@ enum IconRenderer {
         }
         let peripheralScale = frame.reduced ? 1 : 0.05 + 0.95 * frame.peripheral
         beginLayer(scale: 1, opacity: frame.ringOpacity)
-        // Punch out the charging badge instead of painting an opaque background patch.
-        NSGraphicsContext.saveGraphicsState()
-        if s.charging {
-            let clip = NSBezierPath(rect: rect(0,0,100,100))
-            clip.append(NSBezierPath(roundedRect: rect(70,8,20,24), xRadius: 4, yRadius: 4))
-            clip.windingRule = .evenOdd; clip.addClip()
+        func ring(_ end: Double, _ color: NSColor) {
+            // Leave space for the bolt and round caps without clipping their ends.
+            if s.charging {
+                arc(50,44,36,150,min(end,300),5.7,color)
+                if end > 346 { arc(50,44,36,346,end,5.7,color) }
+            } else { arc(50,44,36,150,end,5.7,color) }
         }
-        arc(50,44,36,150,390,5.7,s.charging ? rgb(15,58,35) : track)
-        if let battery = s.battery, battery > 0, frame.ringProgress > 0 { arc(50,44,36,150,150+240*min(1,battery)*frame.ringProgress,5.7,s.charging ? rgb(40,205,80) : battery < 0.2 ? rgb(255,59,65) : fg) }
+        ring(390,s.charging ? rgb(15,58,35) : track)
+        if let battery = s.battery, battery > 0, frame.ringProgress > 0 { ring(150+240*min(1,battery)*frame.ringProgress,s.charging ? rgb(40,205,80) : battery < 0.2 ? rgb(255,59,65) : fg) }
         NSGraphicsContext.restoreGraphicsState()
-        NSGraphicsContext.restoreGraphicsState()
+        NSGraphicsContext.saveGraphicsState()
+        // Shift every transition layer by 0.8pt at menu-bar size, outside its animated scale.
+        NSGraphicsContext.current!.cgContext.translateBy(x: 0, y: 0.8 * 100 / (22 * 1.06))
         for layer in frame.layers where layer.opacity > 0 {
             let content = layer.content
-            let numeric = content.kind == .battery
+            let numeric = content.kind == .battery || content.kind == .volume
             let baseFont = NSFont.systemFont(ofSize: content.text.count == 3 ? 26 : 31, weight: .medium)
             let font = baseFont.fontDescriptor.withDesign(.rounded).flatMap { NSFont(descriptor: $0, size: baseFont.pointSize) } ?? baseFont
             let line = CTLineCreateWithAttributedString(NSAttributedString(string: content.text, attributes: [.font: font, .foregroundColor: fg]))
             let bounds = CTLineGetImageBounds(line, NSGraphicsContext.current?.cgContext)
             // Fit actual glyph bounds within the canvas, preserving the content's aspect ratio.
-            // Leave room for antialiasing when the menu-bar artwork is enlarged.
-            let expanded = numeric ? min(86 / max(1, bounds.width), 80 / max(1, bounds.height)) : 2.3
-            let resting = 1.05
-            beginLayer(scale: resting + (expanded-resting) * layer.emphasis, opacity: layer.opacity)
+            // Reserve top clearance for the upward shift, including plug stroke caps.
+            let expanded = numeric ? min(86 / max(1, bounds.width), 72 / max(1, bounds.height))
+                : (content.kind == .plugged || content.kind == .unplugged ? 2.1 : 2.3)
+            let resting = content.kind == .headphones ? 1.35 : 1.05
+            beginLayer(scale: (resting + (expanded-resting) * layer.emphasis) * layer.scale, opacity: layer.opacity)
             if content.kind == .plugged || content.kind == .unplugged {
                 drawPower(connected: content.kind == .plugged)
             } else if content.isWiFiGlyph {
@@ -426,9 +464,10 @@ enum IconRenderer {
             }
             NSGraphicsContext.restoreGraphicsState()
         }
+        NSGraphicsContext.restoreGraphicsState()
         beginLayer(scale: peripheralScale, opacity: frame.peripheral)
         if s.charging { polygon([(84,8),(74,22),(80,22),(77,32),(88,17),(82,17)].map { point(CGFloat($0.0),CGFloat($0.1)) }) }
-        let bottom = bottomState(muted: s.muted, adjusting: s.adjusting, playing: s.playing, animate: animate)
+        let bottom = bottomState(muted: s.silenced, adjusting: s.adjusting, playing: s.playing, animate: animate)
         if bottom == .muted {
             polygon([(37,78),(42,78),(49,73),(49,86),(42,82),(37,82)].map { point(CGFloat($0.0),CGFloat($0.1)) })
             stroke([point(55,77),point(62,84)],2.7,fg); stroke([point(62,77),point(55,84)],2.7,fg)
@@ -439,7 +478,7 @@ enum IconRenderer {
                 let (x,y) = coordinate
                 if bottom == .playing {
                     let p = s.reducedMotion ? 0.3 : phase
-                    let height = 7 + 3.5*(1+sin(2 * .pi * (p+offsets[i])))
+                    let height = 7 + 5.5*(1+sin(2 * .pi * (p+offsets[i])))
                     fillRound(x-3.4,y+3.4-height,6.8,height,3.4,fg)
                 } else {
                     (i < (volumeDots(s.volume) ?? 0) ? fg : track).setFill()
@@ -464,7 +503,7 @@ struct ComboIcon: View {
     @Environment(\.colorScheme) var scheme
     private var reducedMotion: Bool { reduced || snapshot.reducedMotion }
     private var eventDuration: Double {
-        IconTransition.Timing.eventDuration(reducedMotion: reducedMotion)
+        IconTransition.Timing.eventDuration(event: previewScene?.event ?? .power, reducedMotion: reducedMotion)
     }
     private func display(at time: Double) -> Snapshot {
         var value = snapshot
@@ -477,7 +516,7 @@ struct ComboIcon: View {
     }
     var body: some View {
         let current = display(at: frameTime)
-        let moving = (bottomState(muted: current.muted, adjusting: current.adjusting, playing: current.playing, animate: animate) == .playing || current.wifiConnecting) && !reducedMotion
+        let moving = (bottomState(muted: current.silenced, adjusting: current.adjusting, playing: current.playing, animate: animate) == .playing || current.wifiConnecting) && !reducedMotion
         let pending = previewScene?.event != nil && frameTime - eventStarted < eventDuration
         TimelineView(.animation(minimumInterval: transition.isAnimating(at: frameTime) ? 1.0 / 60 : 0.05,
                                 paused: !moving && !pending && !transition.isAnimating(at: frameTime))) { context in

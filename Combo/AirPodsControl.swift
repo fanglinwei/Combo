@@ -9,7 +9,17 @@ enum ListeningMode: String, CaseIterable, Codable, Identifiable {
     }
 }
 
-struct AirPodsReply: Decodable {
+// Return a fractional option index; the gesture commits its nearest index only on release.
+func airPodsDragPosition(selected: Int?, count: Int, width: Double,
+                         startX: Double, startY: Double, translation: Double) -> Double? {
+    guard let selected, count > 1, (0..<count).contains(selected),
+          width.isFinite, width > 0, startX.isFinite, startY.isFinite, translation.isFinite else { return nil }
+    let column = width / Double(count)
+    guard (2...46).contains(startY), abs(startX - column * (Double(selected) + 0.5)) <= 31 else { return nil }
+    return min(Double(count - 1), max(0, Double(selected) + translation / column))
+}
+
+struct AirPodsReply: Decodable, Equatable {
     let deviceID: UInt32
     let target: String
     let available: Bool
@@ -45,6 +55,11 @@ struct AirPodsReply: Decodable {
 @MainActor final class AirPodsControl: ObservableObject {
     @Published private(set) var snapshot: AirPodsReply?
     @Published private(set) var busy = false
+    private(set) var refreshing = false
+    @Published private(set) var pendingMode: ListeningMode?
+    @Published private(set) var pendingConversation: Bool?
+    var displayedMode: ListeningMode? { pendingMode ?? snapshot?.mode }
+    var displayedConversation: Bool? { pendingConversation ?? snapshot?.conversation }
     @Published private(set) var message = ""
     @Published private(set) var unavailable = false
     private let helperURL: URL
@@ -62,21 +77,24 @@ struct AirPodsReply: Decodable {
         run(["--status"], deviceID: deviceID, mutation: false)
     }
     func setMode(_ mode: ListeningMode) {
-        guard let snapshot, snapshot.canSetMode, snapshot.modes.contains(mode), snapshot.mode != mode else { return }
+        guard !busy, !unavailable, let snapshot, snapshot.canSetMode, snapshot.modes.contains(mode), snapshot.mode != mode else { return }
+        pendingMode = mode
         write("--mode", mode.rawValue, snapshot: snapshot)
     }
     func setConversation(_ enabled: Bool) {
-        guard let snapshot, snapshot.canSetConversation, snapshot.conversation != enabled else { return }
+        guard !busy, !unavailable, let snapshot, snapshot.canSetConversation, snapshot.conversation != enabled else { return }
+        pendingConversation = enabled
         write("--conversation", enabled ? "on" : "off", snapshot: snapshot)
     }
     private func write(_ command: String, _ value: String, snapshot: AirPodsReply) {
         guard !busy, !unavailable else { return }
+        if refreshing { stopProcess() }
         run([command, value, String(snapshot.deviceID), snapshot.target], deviceID: snapshot.deviceID, mutation: true)
     }
     private func run(_ arguments: [String], deviceID: UInt32, mutation: Bool) {
         guard process == nil else { return }
-        busy = true
-        if mutation { message = "正在确认耳机状态…" }
+        refreshing = !mutation
+        if mutation { busy = true; message = "正在确认耳机状态…" }
         let child = Process(), pipe = Pipe()
         child.executableURL = helperURL; child.arguments = arguments
         var environment = ProcessInfo.processInfo.environment
@@ -88,13 +106,19 @@ struct AirPodsReply: Decodable {
             let reply = finished.terminationStatus == 0 && data.count <= 8192 ? try? JSONDecoder().decode(AirPodsReply.self, from: data) : nil
             Task { @MainActor in
                 guard let self, self.process === finished else { return }
-                self.timeout?.cancel(); self.timeout = nil; self.process = nil; self.busy = false
+                defer { if mutation { self.clearPending() } }
+                self.timeout?.cancel(); self.timeout = nil; self.process = nil; self.refreshing = false
+                if self.busy { self.busy = false }
                 guard let reply, reply.valid, reply.deviceID == deviceID else {
-                    self.snapshot = nil; self.unavailable = true
+                    if !mutation { self.snapshot = nil }
+                    self.unavailable = true
                     if mutation { self.message = "未能确认结果，请刷新或在声音设置中检查。" }
                     return
                 }
-                self.snapshot = reply; self.unavailable = reply.error != nil
+                let confirmed = reply.verified && reply.attempted && reply.error == nil
+                if (!mutation || confirmed), self.snapshot != reply { self.snapshot = reply }
+                let unavailable = reply.error != nil || (mutation && !confirmed)
+                if self.unavailable != unavailable { self.unavailable = unavailable }
                 if mutation {
                     self.message = reply.verified && reply.attempted && reply.error == nil ? "" :
                         reply.error == "device_changed" ? "输出设备已变化，请重新选择。" : "耳机未确认切换，请重试或在声音设置中检查。"
@@ -103,22 +127,34 @@ struct AirPodsReply: Decodable {
         }
         process = child
         do { try child.run() } catch {
-            process = nil; busy = false; snapshot = nil; unavailable = true
+            process = nil; refreshing = false; busy = false; unavailable = true
+            if !mutation { snapshot = nil }
+            clearPending()
             if mutation { message = "耳机控制暂不可用。" }
             return
         }
         let timeout = DispatchWorkItem { [weak self, weak child] in
             guard let self, let child, self.process === child else { return }
-            self.cancel(); self.unavailable = true
+            self.stopProcess(); self.clearPending(); self.unavailable = true
+            if !mutation { self.snapshot = nil }
             if mutation { self.message = "确认超时，请刷新或在声音设置中检查。" }
         }
         self.timeout = timeout
         DispatchQueue.main.asyncAfter(deadline: .now() + timeoutSeconds, execute: timeout)
     }
-    func cancel() {
+    private func stopProcess() {
         timeout?.cancel(); timeout = nil
         let previous = process; process = nil
         if let previous, previous.isRunning { kill(previous.processIdentifier, SIGKILL) }
-        busy = false; snapshot = nil; unavailable = false; message = ""
+        refreshing = false
+        if busy { busy = false }
+    }
+    private func clearPending() {
+        if pendingMode != nil { pendingMode = nil }
+        if pendingConversation != nil { pendingConversation = nil }
+    }
+    func cancel() {
+        stopProcess(); clearPending()
+        snapshot = nil; unavailable = false; message = ""
     }
 }

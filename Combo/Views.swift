@@ -24,7 +24,7 @@ enum Page: String, CaseIterable, Identifiable {
         case .general: "让 Combo 按你的习惯工作。"
         case .appearance: "一个图标，刚好装下你需要的状态。"
         case .integration: "查看 Wi-Fi、声音与电池的日常功能。"
-        case .media: "查看媒体适配计划与播放演示。"
+        case .media: "查看媒体播放检测与动画演示。"
         case .experimental: "自动隐藏与原生菜单实验，仍在验证中。"
         case .about: "轻一点的菜单栏，清楚一点的状态。"
         }
@@ -317,18 +317,18 @@ struct SettingsView: View {
     var media: some View {
         VStack(spacing: 18) {
             Card {
-                HStack { Text("媒体来源").font(.system(size: 13, weight: .semibold)); Spacer(); Tag(text: "适配准备中") }
+                HStack { Text("媒体来源").font(.system(size: 13, weight: .semibold)); Spacer(); Tag(text: store.live.playing ? "正在播放" : "未检测到播放") }
                 ForEach(["Safari", "Chrome", "网易云音乐", "QQ 音乐"], id: \.self) { name in
                     HStack(spacing: 12) {
                         Image(systemName: name == "Safari" || name == "Chrome" ? "globe" : "music.note").font(.system(size: 18)).foregroundStyle(accent).frame(width: 34, height: 36).background(accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 9))
-                        VStack(alignment: .leading, spacing: 5) { Text(name); Text(name == "Safari" || name == "Chrome" ? "通过配套扩展读取已授权页面" : "需验证辅助功能播放状态").font(.caption).foregroundStyle(.secondary) }
-                        Spacer(); Toggle("启用 \(name)", isOn: .constant(false)).labelsHidden().toggleStyle(.switch).disabled(true)
+                        VStack(alignment: .leading, spacing: 5) { Text(name); Text("应用向系统提供播放状态时自动识别").font(.caption).foregroundStyle(.secondary) }
+                        Spacer()
                     }.padding(.vertical, 5)
                 }
             }
             Card {
                 Label("先看看播放效果", systemImage: "waveform").font(.system(size: 13, weight: .semibold))
-                Text("媒体尚未接入，当前不会自动识别播放器。可以用演示模式查看菜单栏音柱；没有采集任何系统声音。").font(.caption).foregroundStyle(.secondary)
+                Text("检测到音乐或视频播放时，底部圆点自动变为起伏音柱；音量为零或静音时显示静音图标。只读取播放状态，不采集声音；未向系统提供状态的播放器可能无法识别。").font(.caption).foregroundStyle(.secondary)
                 Button(store.scene == .music ? "结束演示，返回本机状态" : "在菜单栏演示播放") { store.scene = store.scene == .music ? .live : .music }
             }
         }
@@ -343,7 +343,8 @@ struct SettingsView: View {
                 Text("当前能力").font(.system(size: 13, weight: .semibold))
                 Label("本机电池、Wi‑Fi 与声音操作", systemImage: "checkmark.circle")
                 Label("菜单栏图标、点击面板与六组设置", systemImage: "checkmark.circle")
-                Label("媒体适配、自动折叠尚未接入", systemImage: "clock")
+                Label("媒体播放状态与音柱动画", systemImage: "checkmark.circle")
+                Label("自动折叠尚未接入", systemImage: "clock")
                 Divider(); Text("不上传状态，不读取网页，不录音或截图。无线图标只表示路径类型，不代表信号格数；互联网未检测。").font(.caption).foregroundStyle(.secondary)
                 Text(store.observation).font(.caption).foregroundStyle(.secondary)
                 Button("刷新本机状态") { store.refresh() }
@@ -514,35 +515,29 @@ struct AirPodsSection: View {
             if !state.modes.isEmpty {
                 heading("聆听模式")
                 let modes = state.modes.filter { $0 != .off }
-                segmentTrack(count: modes.count) {
+                AirPodsSegmentTrack(count: modes.count, selected: modes.firstIndex { $0 == control.displayedMode },
+                                    enabled: state.canSetMode && !control.busy && !control.unavailable,
+                                    select: { control.setMode(modes[$0]) }) {
                     ForEach(modes) { mode in
-                        option(mode.title, symbol: symbol(mode), selected: state.mode == mode,
+                        option(mode.title, symbol: symbol(mode), selected: control.displayedMode == mode, pending: control.pendingMode == mode,
                                enabled: state.canSetMode) { control.setMode(mode) }
                     }
                 }
                 if state.mode == nil { Text("当前模式暂不可用").font(.caption).foregroundStyle(.secondary) }
             }
-            if let conversation = state.conversation {
+            if let conversation = control.displayedConversation {
                 if !state.modes.isEmpty { Divider().padding(.vertical, 10) }
                 heading("对话感知")
-                segmentTrack(count: 2) {
-                    option("关闭", symbol: "person.wave.2.fill", selected: !conversation,
+                AirPodsSegmentTrack(count: 2, selected: conversation ? 1 : 0,
+                                    enabled: state.canSetConversation && !control.busy && !control.unavailable,
+                                    select: { control.setConversation($0 == 1) }) {
+                    option("关闭", symbol: "person.wave.2.fill", selected: !conversation, pending: control.pendingConversation == false,
                            enabled: state.canSetConversation) { control.setConversation(false) }
-                    option("打开", symbol: "person.wave.2.fill", selected: conversation,
+                    option("打开", symbol: "person.wave.2.fill", selected: conversation, pending: control.pendingConversation == true,
                            enabled: state.canSetConversation) { control.setConversation(true) }
                 }
             }
         }
-    }
-    private func segmentTrack<Content: View>(count: Int, @ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: 0, content: content)
-            .background(alignment: .top) {
-                GeometryReader { geometry in
-                    Capsule().fill(.ultraThinMaterial)
-                        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.25), lineWidth: 0.75))
-                        .padding(.horizontal, max(0, (geometry.size.width / CGFloat(max(1, count)) - 62) / 2 - 2))
-                }.frame(height: 48)
-            }
     }
     private func heading(_ title: String) -> some View {
         Text(title).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary).padding(.bottom, 5)
@@ -555,7 +550,7 @@ struct AirPodsSection: View {
         case .off: "person.fill"
         }
     }
-    private func option(_ title: String, symbol: String, selected: Bool, enabled: Bool, action: @escaping () -> Void) -> some View {
+    private func option(_ title: String, symbol: String, selected: Bool, pending: Bool, enabled: Bool, action: @escaping () -> Void) -> some View {
         // These three listening glyphs are shipped in macOS's private symbol bundle.
         let glyph = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
             ?? Bundle(path: "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphsPrivate.bundle")?.image(forResource: symbol)
@@ -567,9 +562,8 @@ struct AirPodsSection: View {
                     .foregroundStyle(selected ? Color.white : Color.primary)
                     .frame(width: 62, height: 44)
                     .background {
-                        Capsule().fill(selected ? Color.blue : Color.primary.opacity(hoveredOption == title ? 0.12 : 0))
+                        Capsule().fill(Color.primary.opacity(!selected && hoveredOption == title ? 0.12 : 0))
                     }
-                    .overlay(Capsule().strokeBorder(selected ? Color.white.opacity(0.55) : .clear, lineWidth: 0.75))
                     .padding(.top, 2)
                 Text(title).font(.system(size: 11, weight: .semibold)).lineLimit(1)
             }.frame(maxWidth: .infinity).contentShape(Rectangle())
@@ -577,9 +571,58 @@ struct AirPodsSection: View {
         .buttonStyle(.plain)
         .onHover { hoveredOption = $0 ? title : nil }
         .accessibilityLabel(title)
-        .accessibilityValue(selected ? "已选中" : "未选中")
+        .accessibilityValue(selected ? (pending ? "正在切换" : "已选中") : "未选中")
         .accessibilityAddTraits(selected ? .isSelected : [])
         .disabled(control.busy || control.unavailable || !enabled)
+    }
+}
+struct AirPodsSegmentTrack<Content: View>: View {
+    let count: Int
+    let selected: Int?
+    let enabled: Bool
+    let select: (Int) -> Void
+    @ViewBuilder var content: Content
+    @State private var width: CGFloat = 0
+    @GestureState private var draggedPosition: Double?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var position: Double? { draggedPosition ?? selected.map(Double.init) }
+    private func position(for value: DragGesture.Value) -> Double? {
+        guard enabled else { return nil }
+        return airPodsDragPosition(selected: selected, count: count, width: Double(width),
+                                   startX: Double(value.startLocation.x), startY: Double(value.startLocation.y),
+                                   translation: Double(value.translation.width))
+    }
+    var body: some View {
+        HStack(spacing: 0) { content }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+            .background(alignment: .top) {
+                let columnWidth = width / CGFloat(max(1, count))
+                ZStack(alignment: .topLeading) {
+                    Capsule().fill(.ultraThinMaterial)
+                        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.25), lineWidth: 0.75))
+                        .padding(.horizontal, max(0, (columnWidth - 62) / 2 - 2))
+                    if let position {
+                        Capsule().fill(Color.blue)
+                            .overlay(Capsule().strokeBorder(Color.white.opacity(0.55), lineWidth: 0.75))
+                            .frame(width: 62, height: 44)
+                            .offset(x: columnWidth * (position + 0.5) - 31, y: 2)
+                            .animation(reduceMotion || draggedPosition != nil ? nil : .easeInOut(duration: 0.22), value: position)
+                    }
+                }.frame(height: 48).allowsHitTesting(false)
+            }
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 4)
+                    .updating($draggedPosition) { value, position, transaction in
+                        transaction.animation = nil
+                        position = self.position(for: value)
+                    }
+                    .onEnded { value in
+                        guard let position = position(for: value) else { return }
+                        let index = Int(position.rounded())
+                        if index != selected { select(index) }
+                    },
+                including: enabled ? .all : .none
+            )
     }
 }
 struct EnergyAppsSection: View {

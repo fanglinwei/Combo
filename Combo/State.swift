@@ -52,7 +52,7 @@ func bottomState(muted: Bool, adjusting: Bool, playing: Bool, animate: Bool) -> 
     return playing && animate ? .playing : .volume
 }
 enum Scene: String, CaseIterable, Identifiable {
-    case live = "本机状态", wifi = "无线正常", wired = "有线 · 默认", music = "媒体播放", adjusting = "播放中调音量", paused = "暂停 / 未播放", mute = "系统静音", low = "低电量", charging = "充电 + 播放", offline = "网络异常", reduced = "减少动态效果"
+    case live = "本机状态", wifi = "无线正常", wired = "有线 · 默认", music = "媒体播放", adjusting = "调整音量", paused = "暂停 / 未播放", mute = "系统静音", low = "低电量", charging = "充电 + 播放", offline = "网络异常", reduced = "减少动态效果"
     var id: String { rawValue }
     var event: CenterEvent? {
         switch self {
@@ -92,7 +92,9 @@ struct Snapshot {
     var symbol = "minus"
     var volume: Double? = nil
     var muted = false
+    var silenced: Bool { muted || volume == 0 }
     var output = "正在读取"
+    var outputIsAirPods = false
     var playing = false
     var adjusting = false
     var reducedMotion = false
@@ -102,7 +104,7 @@ struct Snapshot {
     var batteryPreferred = false
     var networkSymbol: String? = nil
     func preferringBattery(threshold: Int) -> Snapshot {
-        guard symbol == "wifi", let battery, battery.isFinite, (0...1).contains(battery),
+        guard symbol == "wifi" || symbol.isEmpty, let battery, battery.isFinite, (0...1).contains(battery),
               charging || battery < Double(threshold) / 100 else { return self }
         var result = self
         result.networkSymbol = symbol
@@ -126,6 +128,7 @@ struct Snapshot {
         }
         if [.airpods, .adjusting].contains(scene) {
             s.output = "AirPods Pro（示例）"
+            s.outputIsAirPods = true
         }
         if scene == .airpods { s.playing = true }
         if scene == .connecting { s.wifiConnecting = true; s.network = "Wi-Fi 正在连接" }

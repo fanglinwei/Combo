@@ -39,7 +39,13 @@ codesign --force --sign "$SIGNING_IDENTITY" "$APP/Contents/Helpers/ComboAirPodsC
 codesign --force --sign "$SIGNING_IDENTITY" "$APP/Contents/Helpers/ComboAirPodsHelper"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/AudioVolume.swift Combo/AirPodsControl.swift Tests/AirPodsCheck.swift -o build/airpods-check
 ./build/airpods-check
-xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/State.swift Combo/NetworkStatus.swift Combo/WiFiControl.swift Combo/HotspotControl.swift Combo/MenuBarSetup.swift Combo/MenuDiagnostics.swift Combo/MenuFoldExperiment.swift Combo/PowerModeControl.swift Combo/ChargeControl.swift Combo/EnergyApps.swift Combo/AudioVolume.swift Combo/AirPodsControl.swift Combo/Store.swift Combo/Icon.swift Combo/Views.swift Combo/main.swift -o "$APP/Contents/MacOS/Combo"
+xcrun clang -isysroot "$SDK" -target "$TARGET" -dynamiclib -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/MediaPlaybackHelper.m -o "$APP/Contents/Helpers/ComboMediaPlayback.dylib"
+codesign --force --sign "$SIGNING_IDENTITY" "$APP/Contents/Helpers/ComboMediaPlayback.dylib"
+xcrun clang -isysroot "$SDK" -target "$TARGET" -fobjc-arc -Wall -Wextra -Werror -framework Foundation Tests/MediaPlaybackHelperCheck.m -o build/media-playback-helper-check
+./build/media-playback-helper-check
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/MediaPlayback.swift Tests/MediaPlaybackCheck.swift -o build/media-playback-check
+./build/media-playback-check
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/State.swift Combo/NetworkStatus.swift Combo/WiFiControl.swift Combo/HotspotControl.swift Combo/MenuBarSetup.swift Combo/MenuDiagnostics.swift Combo/MenuFoldExperiment.swift Combo/PowerModeControl.swift Combo/ChargeControl.swift Combo/EnergyApps.swift Combo/AudioVolume.swift Combo/AirPodsControl.swift Combo/MediaPlayback.swift Combo/Store.swift Combo/Icon.swift Combo/Views.swift Combo/main.swift -o "$APP/Contents/MacOS/Combo"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" Tests/RenderBrand.swift -o build/render-brand
 mkdir -p build/Combo.iconset
 ./build/render-brand build/Combo-icon-1024.png

@@ -5,21 +5,34 @@ import SwiftUI
 @main struct IconTransitionCheck {
     @MainActor static func main() throws {
         _ = NSApplication.shared
+        var central = IconTransition()
+        central.update(IconContent(kind: .battery, text: "82"), at: 0, reducedMotion: false)
+        central.update(IconContent(kind: .headphones), at: 1, reducedMotion: false)
+        let centralMiddle = central.frame(at: 1.115)
+        assert(centralMiddle.layers.count == 2 && centralMiddle.layers.allSatisfy { abs($0.opacity - 0.5) < 0.0001 },
+               "Same-level icons must crossfade together over 230ms")
+        assert(centralMiddle.layers.allSatisfy { abs($0.scale - 0.85) < 0.0001 },
+               "Crossfade must shrink the outgoing glyph and grow the incoming glyph")
+        assert(centralMiddle.peripheral == 1 && centralMiddle.ringOpacity == 1 && centralMiddle.ringProgress == 1,
+               "A center-only transition must leave visible peripherals unchanged")
+        assert(central.isAnimating(at: 1.229) && !central.isAnimating(at: 1.231))
         var networkLoading = IconTransition()
         networkLoading.update(IconContent(kind: .wifi, priority: 1), at: 0, reducedMotion: false)
         networkLoading.update(IconContent(kind: .connecting, priority: 3), at: 1, reducedMotion: false)
         assert(networkLoading.frame(at: 20).layers.last?.emphasis == 1 && networkLoading.frame(at: 20).peripheral == 0,
                "Wi-Fi must remain enlarged throughout a long connection")
         let silent = IconContent(Snapshot(symbol: "", muted: true))
-        assert(silent.kind != .battery, "Wired mute must replace the default center content")
+        assert(silent.kind == .battery, "Mute must preserve resident center content")
+        assert(IconContent(Snapshot(symbol: "", volume: 0, playing: true)).kind == .battery)
         let adjusting = IconContent(Snapshot(symbol: "wifi", volume: 0.75, playing: true, adjusting: true, centerEvent: .volume))
         assert(adjusting.kind == .volume, "Playback volume adjustment must override normal Wi-Fi")
+        assert(adjusting.text == "75" && adjusting.symbol == nil, "Volume hints must show digits instead of a speaker")
         // The same resolver serves the real menu bar and the settings preview.
         func content(_ scene: Scene) -> IconContent {
             IconContent(Snapshot.demo(scene).preferringBattery(threshold: 50))
         }
-        assert(content(.airpods).kind == .wifi && content(.airpods).priority == 1, "Headphone playback must keep automatic Wi-Fi content")
-        assert(content(.wifiMute).kind == .wifi && content(.mute).kind == .muted)
+        assert(content(.airpods).kind == .headphones && content(.airpods).priority == 2)
+        assert(content(.wifiMute).kind == .wifi && content(.mute).kind == .battery)
         assert(content(.connecting).priority == 3 && content(.connecting).kind == .connecting)
         assert(content(.plug).priority == 4 && content(.plug).kind == .plugged)
         assert(content(.plug).text.isEmpty && content(.unplug).text.isEmpty,
@@ -44,8 +57,6 @@ import SwiftUI
         resident.update(IconContent(lowBattery.preferringBattery(threshold: 50)), at: 7, reducedMotion: false)
         assert(resident.isAnimating(at: 7.1), "Different P2 resident states must animate")
         resident.update(content(.wifi), at: 8, reducedMotion: false)
-        assert(!resident.isAnimating(at: 8) && resident.frame(at: 8).layers.last?.content.kind == .wifi,
-               "P2 to normal Wi-Fi P1 must restore immediately")
         var cancelled = Snapshot.demo(.connecting); cancelled.symbol = "wifi.slash"
         assert(IconContent(cancelled).kind == .wifiOff, "Power off must stop loading before association returns")
         for result in [Scene.wifi, .offline, .wifiOff, .wired] {
@@ -53,12 +64,7 @@ import SwiftUI
             network.update(content(.connecting), at: 0, reducedMotion: false)
             assert(network.frame(at: 30).layers.last?.emphasis == 1)
             network.update(content(result), at: 30, reducedMotion: false)
-            assert(network.frame(at: 32.39).layers.last?.emphasis == 1)
-            network.update(content(result), at: 32, reducedMotion: false)
-            assert(network.frame(at: 32.7).layers.last!.emphasis < 1, "Repeated updates must not restart the two-second hold")
-            assert(network.isAnimating(at: 37.999) && network.frame(at: 33.51).ringProgress == 1,
-                   "Keep the result for five seconds after shrinking finishes at 33")
-            assert(!network.isAnimating(at: 38.001))
+            assert(network.frame(at: 30.3).layers.last?.content == content(result))
         }
         var interrupted = IconTransition()
         interrupted.update(content(.connecting), at: 0, reducedMotion: false)
@@ -102,13 +108,45 @@ import SwiftUI
         media.charging = false; media.battery = 0.2
         assert(IconContent(media.preferringBattery(threshold: 50)).kind == .battery)
         media.battery = 0.82; media.playing = false
-        assert(IconContent(media).kind == .wifi)
+        assert(IconContent(media).kind == .headphones, "AirPods stay resident even when playback is paused")
+        for (symbol, expected) in [("wifi.slash", IconContent.Kind.wifiOff), ("exclamationmark", .warning), ("minus", .unavailable)] {
+            media.symbol = symbol
+            assert(IconContent(media.preferringBattery(threshold: 50)).kind == expected)
+        }
+        media.symbol = ""; media.battery = 0.2
+        assert(IconContent(media.preferringBattery(threshold: 50)).kind == .battery, "Wired low battery also takes precedence over AirPods")
         media.centerEvent = .power; media.symbol = "exclamationmark"
         assert(IconContent(media).priority == 4, "Events temporarily cover network errors")
         var switched = Snapshot.demo(.airpods)
         let beforeSwitch = IconContent(switched)
         switched.output = "MacBook 扬声器"
-        assert(IconContent(switched) == beforeSwitch, "Output changes must not change central content")
+        switched.outputIsAirPods = false
+        assert(beforeSwitch.kind == .headphones && IconContent(switched).kind == .wifi,
+               "Switching the active output away from AirPods must restore Wi-Fi")
+        for reduced in [false, true] {
+            var volume = Snapshot.demo(.adjusting)
+            var mutedTransition = IconTransition()
+            mutedTransition.update(content(.airpods), at: 0, reducedMotion: reduced)
+            mutedTransition.update(IconContent(volume), at: 1, reducedMotion: reduced)
+            volume.muted = true
+            let muted = IconContent(volume)
+            assert(muted.kind == .volume && muted.text == "0" && muted.priority == 4)
+            mutedTransition.update(muted, at: 1.2, reducedMotion: reduced)
+            assert(!mutedTransition.isAnimating(at: 1.2) && mutedTransition.frame(at: 1.2).layers.last?.content.text == "0",
+                   "Changing volume or mute must not replay the short fade")
+            assert(bottomState(muted: volume.silenced, adjusting: true, playing: true, animate: true) == .muted)
+            volume.muted = false; volume.volume = 0
+            assert(IconContent(volume).kind == .volume && IconContent(volume).text == "0", "Zero volume keeps the P4 digits")
+            volume.centerEvent = .power
+            assert(IconContent(volume).priority == 4, "Mute must preserve power hints")
+            volume.centerEvent = nil; volume.wifiConnecting = true
+            assert(IconContent(volume).kind == .connecting, "Mute must preserve Wi-Fi connection hints")
+            volume.wifiConnecting = false; volume.volume = 0.5; volume.centerEvent = .volume
+            mutedTransition.update(IconContent(volume), at: 2, reducedMotion: reduced)
+            volume.centerEvent = nil
+            mutedTransition.update(IconContent(volume), at: 12, reducedMotion: reduced)
+            assert(mutedTransition.frame(at: 12).layers.last?.content.kind == .headphones, "Expired volume hints restore AirPods")
+        }
         assert(IconContent(Snapshot(symbol: "")).text == "—", "Missing battery must remain unknown")
         var priority = IconTransition()
         priority.update(content(.wifi), at: 0, reducedMotion: false)
@@ -134,8 +172,9 @@ import SwiftUI
         var events = CenterHint()
         for reducedMotion in [false, true] {
             for event in [CenterEvent.power, .volume] {
-                let duration = IconTransition.Timing.eventDuration(reducedMotion: reducedMotion)
-                let compactAt = reducedMotion ? 0.16 : 4.2
+                let duration = IconTransition.Timing.eventDuration(event: event, reducedMotion: reducedMotion)
+                let compactAt = event == .volume || reducedMotion ? 0.16 : 4.2
+                let expiresAt = event == .volume ? 3 : 1 + compactAt + 5
                 var hint = CenterHint()
                 hint.show(event, at: 1, duration: duration, entrance: 0.6)
                 var snapshot = Snapshot.demo(.wifi)
@@ -145,19 +184,26 @@ import SwiftUI
                 animation.update(IconContent(snapshot), at: 1, reducedMotion: reducedMotion)
                 let compact = animation.frame(at: 1 + compactAt + 0.001)
                 assert(compact.layers.last?.emphasis == 0 && compact.layers.last?.content.event == event)
-                assert(hint.active(at: 1 + compactAt + 4.999) == event,
-                       "Power and volume must remain visible for five seconds after becoming compact")
-                assert(hint.active(at: 1 + compactAt + 5.001) == nil)
-                snapshot.centerEvent = hint.active(at: 1 + compactAt + 5.001)
-                animation.update(IconContent(snapshot), at: 1 + compactAt + 5.001, reducedMotion: reducedMotion)
-                assert(animation.frame(at: 1 + compactAt + 5.001).layers.last?.content.kind == .wifi)
+                assert(hint.active(at: expiresAt - 0.001) == event)
+                assert(hint.active(at: expiresAt + 0.001) == nil)
+                if event == .volume {
+                    let fading = animation.frame(at: 1.08)
+                    assert(fading.layers.last?.emphasis == 0 && fading.layers.last!.opacity > 0,
+                           "Volume must fade in at normal size")
+                    assert(fading.peripheral == 1 && fading.ringOpacity == 1)
+                    assert(!animation.isAnimating(at: 1.17))
+                }
+                snapshot.centerEvent = hint.active(at: expiresAt + 0.001)
+                animation.update(IconContent(snapshot), at: expiresAt + 0.001, reducedMotion: reducedMotion)
+                assert(animation.frame(at: expiresAt + 0.001).layers.last?.content.kind == .wifi)
             }
         }
         let hintDuration = IconTransition.Timing.eventDuration(reducedMotion: false)
-        events.show(.volume, at: 0, duration: hintDuration, entrance: 0.6)
+        let volumeDuration = IconTransition.Timing.eventDuration(event: .volume, reducedMotion: false)
+        events.show(.volume, at: 0, duration: volumeDuration, entrance: 0.16)
         let volumeSerial = events.serial
-        events.show(.volume, at: 8, duration: hintDuration, entrance: 0.6)
-        assert(events.serial == volumeSerial && events.active(at: 17.199) == .volume && events.active(at: 17.201) == nil,
+        events.show(.volume, at: 1.5, duration: volumeDuration, entrance: 0.16)
+        assert(events.serial == volumeSerial && events.active(at: 3.499) == .volume && events.active(at: 3.5) == nil,
                "Continuous volume changes extend the hint without replaying entry")
         events.show(.power, at: 9, duration: hintDuration, entrance: 0.6)
         assert(events.serial != volumeSerial && events.active(at: 10) == .power && events.active(at: 18.201) == nil,
@@ -174,7 +220,7 @@ import SwiftUI
         assert(events.active(at: 10.59) == .volume && events.active(at: 10.6) == nil, "Do not cut entry short")
         assert(IconContent(kind: .warning).isWiFiGlyph && IconContent(kind: .warning).symbol == nil,
                "Network warnings must use the shared Wi-Fi silhouette")
-        for name in ["speaker.fill", "speaker.wave.1.fill", "speaker.wave.2.fill", "speaker.wave.3.fill", "speaker.slash.fill", "questionmark"] {
+        for name in ["airpodspro", "speaker.fill", "speaker.wave.1.fill", "speaker.wave.2.fill", "speaker.wave.3.fill", "questionmark"] {
             assert(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil, "Missing symbol: \(name)")
         }
         // At a charging limit, plugging in changes the power source but not isCharging.
@@ -229,26 +275,39 @@ import SwiftUI
         assert(!transition.isAnimating(at: 5.71), "value updates must not restart timing")
         assert(transition.frame(at: 5.71).ringProgress == 1 && transition.frame(at: 5.71).ringOpacity == 1)
         transition.update(wifi, at: 6, reducedMotion: false)
-        assert(!transition.isAnimating(at: 6), "Battery P2 to Wi-Fi P1 must not animate")
+        assert(transition.isAnimating(at: 6.1), "Battery P2 to Wi-Fi P1 must use the center transition")
         transition.update(battery, at: 6.1, reducedMotion: false)
-        let before = transition.frame(at: 6.4)
-        transition.update(IconContent(kind: .muted), at: 6.4, reducedMotion: false)
-        let after = transition.frame(at: 6.4)
-        assert(before.peripheral == after.peripheral)
-        assert(before.ringProgress == after.ringProgress && before.ringOpacity == after.ringOpacity)
-        assert(before.layers.map(\.opacity) == after.layers.map(\.opacity))
-        assert(before.layers.map(\.emphasis) == after.layers.map(\.emphasis))
-        assert(transition.frame(at: 10.61).layers.last?.content.kind == .muted)
+        transition.update(content(.airpods), at: 6.4, reducedMotion: false)
         transition.update(IconContent(kind: .volume, text: "75"), at: 11, reducedMotion: true)
         let reduced = transition.frame(at: 11.08)
         assert(reduced.reduced && reduced.layers.allSatisfy { $0.emphasis == 0 })
-        assert(!transition.isAnimating(at: 11.17))
+        assert(!transition.isAnimating(at: 11.231))
         transition.update(wifi, at: 12, reducedMotion: false, active: false)
         assert(!transition.isAnimating(at: 12))
         assert(IconContent(Snapshot(battery: 0.82, symbol: "wifi")).kind == .wifi)
         let wiredBattery = IconContent(Snapshot(battery: 0.82, symbol: ""))
         assert(wiredBattery.sameState(as: battery) && wiredBattery.text == battery.text)
-        assert(IconContent(Snapshot(symbol: "", output: "AirPods")).kind == .battery)
+        assert(IconContent(Snapshot(symbol: "", output: "AirPods")).kind == .battery, "A name alone must not identify an AirPods output")
+        assert(IconContent(Snapshot(symbol: "", output: "AirPods", outputIsAirPods: true)).kind == .headphones)
+
+        let volumeReview = NSImage(size: NSSize(width: 360, height: 200))
+        for (row, dark) in [true, false].enumerated() {
+            for (column, value) in [0.0, 0.35, 1.0].enumerated() {
+                let snapshot = Snapshot(battery: 0.82, symbol: "wifi", volume: value, centerEvent: .volume)
+                let digits = IconContent(snapshot)
+                assert(digits.text == ["0", "35", "100"][column] && digits.symbol == nil)
+                volumeReview.lockFocus()
+                (dark ? NSColor.darkGray : NSColor.white).setFill()
+                NSRect(x: column * 120, y: row * 100, width: 120, height: 100).fill()
+                IconRenderer.image(snapshot, animate: false, size: 68, dark: dark)
+                    .draw(in: NSRect(x: column * 120 + 26, y: row * 100 + 26, width: 68, height: 68))
+                IconRenderer.image(snapshot, animate: false, size: 22, dark: dark)
+                    .draw(in: NSRect(x: column * 120 + 49, y: row * 100 + 2, width: 22, height: 22))
+                volumeReview.unlockFocus()
+            }
+        }
+        try NSBitmapImageRep(data: volumeReview.tiffRepresentation!)!.representation(using: .png, properties: [:])!
+            .write(to: URL(fileURLWithPath: "build/volume-icon-review.png"))
 
         // The menu bar, both settings previews and the panel share the same Wi-Fi proportions.
         var wifiCoverage: [Double] = []
@@ -332,13 +391,14 @@ import SwiftUI
 
         // Sample real renderer frames at both native and enlarged sizes, in both appearances.
         let times = [0.0, 0.15, 0.30, 0.45, 0.60, 3.59, 3.75, 3.95, 4.20, 4.45, 4.70]
-        let sheet = NSImage(size: NSSize(width: times.count * 100, height: 500))
+        let contents = [battery, IconContent(kind: .battery, text: "100"), wifi, content(.plug), content(.unplug), content(.airpods), IconContent(kind: .battery, text: "9")]
+        let sheet = NSImage(size: NSSize(width: times.count * 100, height: contents.count * 100))
         sheet.lockFocus()
-        NSColor.darkGray.setFill(); NSRect(x: 0, y: 0, width: times.count * 100, height: 500).fill()
+        NSColor.darkGray.setFill(); NSRect(origin: .zero, size: sheet.size).fill()
         sheet.unlockFocus()
-        for (row, content) in [battery, IconContent(kind: .battery, text: "100"), wifi, content(.plug), content(.unplug)].enumerated() {
+        for (row, content) in contents.enumerated() {
             var animation = IconTransition()
-            animation.update(IconContent(kind: .muted), at: 0, reducedMotion: false)
+            animation.update(IconContent(kind: .volume), at: 0, reducedMotion: false)
             animation.update(content, at: 1, reducedMotion: false)
             for (column, time) in times.enumerated() {
                 let frame = animation.frame(at: 1 + time)
@@ -381,7 +441,7 @@ import SwiftUI
                         }
                         if dark && size == 100 {
                             sheet.lockFocus()
-                            image.draw(in: NSRect(x: column * 100, y: (4-row) * 100, width: 100, height: 100))
+                            image.draw(in: NSRect(x: column * 100, y: (contents.count-1-row) * 100, width: 100, height: 100))
                             sheet.unlockFocus()
                         }
                     }
