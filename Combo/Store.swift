@@ -385,7 +385,16 @@ struct OutputChoice: Identifiable {
         guard scene == .live, value.isFinite, (0...1).contains(value) else { return }
         let selectedDevice = device; refreshAudio()
         guard device == selectedDevice, canVolume else { message = "输出设备已变化或不支持音量控制，请重试。"; return }
-        message = AudioVolume.set(value, device: device) ? "" : "未能调节全部声道，请重试。"
+        let adjusted = AudioVolume.set(value, device: device)
+        message = adjusted ? "" : "未能调节全部声道，请重试。"
+        if adjusted && value > 0 && live.muted {
+            if canMute {
+                var mute: UInt32 = 0; var a = address(kAudioDevicePropertyMute)
+                if AudioObjectSetPropertyData(device, &a, 0, nil, UInt32(MemoryLayout.size(ofValue: mute)), &mute) != noErr {
+                    message = "音量已调整，但当前设备无法取消静音。"
+                }
+            } else { message = "音量已调整，但当前设备不支持取消静音。" }
+        }
         refreshAudio()
     }
     func toggleMute() {
