@@ -95,7 +95,7 @@ static NSDictionary *ReadTrack(void (*getClient)(dispatch_queue_t, void (^)(id))
     id artist = artistKey && [info isKindOfClass:NSDictionary.class] ? info[artistKey] : nil;
     NSMutableDictionary *track = [@{@"title": [title isKindOfClass:NSString.class] ? title : @"",
                                     @"artist": [artist isKindOfClass:NSString.class] ? artist : @"",
-                                    @"source": source, @"playing": @(playing)} mutableCopy];
+                                    @"source": source, @"bundleIdentifier": bundle, @"playing": @(playing)} mutableCopy];
     id artwork = artworkKey && [info isKindOfClass:NSDictionary.class] ? info[artworkKey] : nil;
     if ([artwork isKindOfClass:NSData.class] && [artwork length] <= 512 * 1024)
         track[@"artwork"] = [artwork base64EncodedStringWithOptions:0];

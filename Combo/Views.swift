@@ -581,6 +581,7 @@ struct PanelView: View {
     let resize: (PanelSection?) -> Void
     let reportHeight: (PanelSection?, CGFloat) -> Void
     @State private var selected: PanelSection?
+    @State private var hoveredCards: Set<String> = []
     @State private var displayedSection: PanelSection?
     @State private var detailVisible = false
     @State private var expanded = false
@@ -667,11 +668,33 @@ struct PanelView: View {
                                                  startPoint: .topLeading, endPoint: .bottomTrailing))
                     }
             }
-            .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(.white.opacity(palette.isDark ? 0.22 : 0.55)))
     }
-    private func tile<Content: View>(interactive: Bool = false, @ViewBuilder _ content: () -> Content) -> some View {
-        content().frame(maxWidth: .infinity, alignment: .leading).padding(16)
+    private func tile<Content: View>(interactive: Bool = false, hoverID: String? = nil, action: (() -> Void)? = nil,
+                                     actionLabel: String = "", @ViewBuilder _ content: () -> Content) -> some View {
+        let hovered = hoverID.map(hoveredCards.contains) ?? false
+        return content().frame(maxWidth: .infinity, alignment: .leading).padding(16)
+            .background {
+                if let action {
+                    Button(action: action) { Color.clear.contentShape(RoundedRectangle(cornerRadius: 18)) }
+                        .buttonStyle(.plain).accessibilityLabel(actionLabel)
+                }
+            }
             .glassEffect(interactive ? .regular.interactive() : .regular, in: RoundedRectangle(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(hovered ? palette.accent.opacity(palette.isDark ? 0.18 : 0.12) : .clear)
+                    .allowsHitTesting(false)
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 18))
+            .onHover { inside in
+                guard let hoverID else { return }
+                if inside { hoveredCards.insert(hoverID) }
+                else {
+                    withAnimation(store.reduceMotion ? nil : .easeOut(duration: 0.18)) {
+                        _ = hoveredCards.remove(hoverID)
+                    }
+                }
+            }
     }
     private var overview: some View {
         let s = store.snapshot
@@ -706,14 +729,13 @@ struct PanelView: View {
     }
     private func sectionCard(_ section: PanelSection, snapshot s: Snapshot) -> some View {
         Button { choose(section) } label: {
-            tile(interactive: true) {
+            tile(interactive: true, hoverID: section.rawValue) {
                 VStack(alignment: .leading, spacing: 7) {
                     HStack(spacing: 9) {
                         Image(systemName: section.symbol).frame(width: 20)
                             .foregroundStyle(palette.accent)
                         Text(section.rawValue).font(.system(size: 13, weight: .semibold))
                         Spacer(minLength: 0)
-                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(mutedText)
                     }
                     Group {
                         if section == .wifi { WiFiName(wifi: store.wifi) }
@@ -726,30 +748,30 @@ struct PanelView: View {
                     }
                 }.frame(maxHeight: .infinity, alignment: .top)
             }
-            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(selected == section ? palette.accent : .clear, lineWidth: 2))
-        }.buttonStyle(.plain).accessibilityAddTraits(selected == section ? .isSelected : [])
+        }
+        .buttonStyle(.plain)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(selected == section ? palette.accent : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
+        .accessibilityAddTraits(selected == section ? .isSelected : [])
     }
     private func soundCard(snapshot s: Snapshot) -> some View {
-        tile(interactive: true) {
+        tile(interactive: true, hoverID: PanelSection.sound.rawValue,
+             action: { choose(.sound) }, actionLabel: "声音详情") {
             VStack(alignment: .leading, spacing: 9) {
-                Button { choose(.sound) } label: {
-                    HStack(spacing: 9) {
-                        Image(systemName: PanelSection.sound.symbol).frame(width: 20).foregroundStyle(palette.accent)
-                        Text("声音").font(.system(size: 13, weight: .semibold))
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(mutedText)
-                    }.contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel("声音详情")
+                HStack(spacing: 9) {
+                    Image(systemName: PanelSection.sound.symbol).frame(width: 20).foregroundStyle(palette.accent)
+                    Text("声音").font(.system(size: 13, weight: .semibold))
+                    Spacer()
+                }.allowsHitTesting(false)
                 HStack(spacing: 12) {
                     Slider(value: Binding(get: { store.snapshot.volume ?? 0 }, set: { store.setVolume($0) }), in: 0...1)
                         .disabled(store.scene != .live || !store.canVolume || s.volume == nil)
                         .accessibilityLabel("系统音量")
                         .tint(.gray)
-                    Text(s.muted ? "静音" : s.volumeText)
+                    Text(s.muted ? "静音" : s.volumeText).allowsHitTesting(false)
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .monospacedDigit().frame(width: 42, alignment: .trailing)
                 }
-                Text(s.output).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1)
+                Text(s.output).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1).allowsHitTesting(false)
                 if store.scene == .live, s.outputIsAirPods, let state = store.airpods.snapshot,
                    state.available, state.deviceID == store.selectedOutputID,
                    state.left != nil || state.right != nil || state.caseBattery != nil || state.single != nil {
@@ -758,14 +780,17 @@ struct PanelView: View {
                         if let right = state.right { Label("\(right)%", systemImage: "airpods.pro.right") }
                         if let charge = state.caseBattery { Label("\(charge)%", systemImage: "airpodspro.chargingcase.wireless") }
                         if let single = state.single, state.left == nil && state.right == nil { Text("电量 \(single)%") }
-                    }.font(.system(size: 11)).foregroundStyle(mutedText)
+                    }.font(.system(size: 11)).foregroundStyle(mutedText).allowsHitTesting(false)
                         .accessibilityElement(children: .ignore).accessibilityLabel(state.batteryText)
                 }
             }
         }
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(selected == .sound ? palette.accent : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
+        .accessibilityAddTraits(selected == .sound ? .isSelected : [])
     }
     private func mediaCard(_ track: MediaTrack?) -> some View {
-        tile {
+        tile(interactive: true, hoverID: "媒体", action: track?.bundleIdentifier == nil ? nil : { store.openMediaSource() },
+             actionLabel: "打开\(track?.source ?? "媒体来源")") {
             VStack(alignment: .leading, spacing: 9) {
                 HStack(spacing: 11) {
                     Group {
@@ -783,7 +808,7 @@ struct PanelView: View {
                     }
                     Spacer(minLength: 0)
                     Text(store.mediaControlsAvailable ? (store.live.playing ? "播放中" : "已暂停") : "重新连接中").font(.system(size: 11)).foregroundStyle(mutedText)
-                }
+                }.allowsHitTesting(false)
                 HStack(spacing: 18) {
                     Spacer()
                     Button { store.controlMedia(.previous) } label: { Image(systemName: "backward.end.fill").frame(width: 30, height: 28) }

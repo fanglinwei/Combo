@@ -167,6 +167,11 @@ struct OutputChoice: Identifiable {
         refreshBattery(); refreshAudio(); refreshOutputs(); network.refresh(); wifi.refresh()
     }
     func controlMedia(_ command: MediaCommand) { mediaPlayback.command(command) }
+    func openMediaSource() {
+        guard let bundleID = mediaTrack?.bundleIdentifier,
+              let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return }
+        NSWorkspace.shared.open(url)
+    }
     func refreshBattery() {
         live.battery = nil; live.charging = false; live.plugged = false
         batteryHealth = "未提供"

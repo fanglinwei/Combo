@@ -85,8 +85,11 @@ int main(void) { @autoreleasepool {
     testInfo = @{@"title": @"Song", @"artist": @"Artist", @"art": [@"cover" dataUsingEncoding:NSUTF8StringEncoding]};
     testPlaying = YES;
     NSDictionary *track = ReadTrack(CurrentClient, CurrentInfo, CurrentPlaying, @"title", @"artist", @"art");
-    assert([track[@"title"] isEqual:@"Song"] && [track[@"source"] isEqual:@"Music"]);
+    assert([track[@"title"] isEqual:@"Song"] && [track[@"source"] isEqual:@"Music"]
+           && [track[@"bundleIdentifier"] isEqual:@"com.apple.Music"]);
     assert([track[@"artwork"] isEqual:@"Y292ZXI="] && [track[@"playing"] boolValue]);
+    ((TestClient *)testClients.firstObject).parentApplicationBundleIdentifier = @"com.google.Chrome";
+    assert([ReadTrack(CurrentClient, CurrentInfo, CurrentPlaying, @"title", @"artist", @"art")[@"bundleIdentifier"] isEqual:@"com.google.Chrome"]);
     testPlaying = NO;
     assert(![ReadTrack(CurrentClient, CurrentInfo, CurrentPlaying, @"title", @"artist", @"art")[@"playing"] boolValue]);
     testClients = @[Client(@"com.apple.FaceTime", 1)];

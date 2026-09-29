@@ -23,6 +23,22 @@ import SwiftUI
                "Wi-Fi must remain enlarged throughout a long connection")
         let silent = IconContent(Snapshot(symbol: "", muted: true))
         assert(silent.kind == .battery, "Mute must preserve resident center content")
+        var bottom = BottomTransition()
+        var dots = Snapshot(volume: 0.5)
+        bottom.update(dots, animate: true, at: 0, reducedMotion: false)
+        dots.playing = true
+        bottom.update(dots, animate: true, at: 1, reducedMotion: false)
+        assert(bottom.isAnimating(at: 1.1) && abs(bottom.value(at: 1.1) - 0.5) < 0.0001)
+        dots.playing = false
+        bottom.update(dots, animate: true, at: 1.1, reducedMotion: false)
+        assert(abs(bottom.value(at: 1.1) - 0.5) < 0.0001 && abs(bottom.value(at: 1.2) - 0.25) < 0.0001,
+               "Rapid playback changes must reverse from the current bottom shape")
+        dots.playing = true; dots.adjusting = true
+        bottom.update(dots, animate: true, at: 1.2, reducedMotion: false)
+        assert(!bottom.isAnimating(at: 1.2) && bottom.value(at: 1.2) == 0, "Volume adjustment must not morph")
+        dots.adjusting = false
+        bottom.update(dots, animate: true, at: 2, reducedMotion: true)
+        assert(!bottom.isAnimating(at: 2) && bottom.value(at: 2) == 1, "Reduced motion must switch bottom states directly")
         assert(IconContent(Snapshot(symbol: "", volume: 0, playing: true)).kind == .battery)
         let adjusting = IconContent(Snapshot(symbol: "wifi", volume: 0.75, playing: true, adjusting: true, centerEvent: .volume))
         assert(adjusting.kind == .volume, "Playback volume adjustment must override normal Wi-Fi")

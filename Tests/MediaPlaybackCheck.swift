@@ -24,17 +24,18 @@ import Foundation
         for invalid in ["{}", #"{"available":true,"playing":1}"#, #"{"available":true,"playing":null}"#, "not JSON"] {
             assert((try? decoder.decode(MediaPlaybackState.self, from: Data(invalid.utf8))) == nil)
         }
-        let track = try decoder.decode(MediaPlaybackState.self, from: Data(#"{"available":true,"playing":true,"track":{"title":"Song","artist":"Artist","source":"Music","playing":false,"artwork":"AQID"}}"#.utf8))
+        let track = try decoder.decode(MediaPlaybackState.self, from: Data(#"{"available":true,"playing":true,"track":{"title":"Song","artist":"Artist","source":"Music","bundleIdentifier":"com.apple.Music","playing":false,"artwork":"AQID"}}"#.utf8))
         assert(track.track?.title == "Song" && track.track?.artist == "Artist" && track.track?.source == "Music")
+        assert(track.track?.bundleIdentifier == "com.apple.Music")
         assert(track.track?.playing == false && track.track?.artwork == Data([1, 2, 3]))
         let missingMetadata = try decoder.decode(MediaPlaybackState.self, from: Data(#"{"available":true,"playing":false,"track":{"title":"","artist":"","source":"Music","playing":false}}"#.utf8))
         let retained = missingMetadata.preservingMetadata(from: track)
         assert(retained.track?.title == "Song" && retained.track?.artist == "Artist" && retained.track?.artwork == Data([1, 2, 3]))
-        assert(retained.track?.playing == false)
+        assert(retained.track?.playing == false && retained.track?.bundleIdentifier == nil)
         let nextSong = try decoder.decode(MediaPlaybackState.self, from: Data(#"{"available":true,"playing":true,"track":{"title":"Next","artist":"","source":"Music","playing":true}}"#.utf8))
         assert(nextSong.preservingMetadata(from: track).track?.artwork == nil)
         let current = MediaPlaybackState(available: true, playing: true,
-                                         track: MediaTrack(title: "Song", artist: "Artist", source: "Music", playing: true, artwork: nil))
+                                         track: MediaTrack(title: "Song", artist: "Artist", source: "Music", bundleIdentifier: "com.apple.Music", playing: true, artwork: nil))
         let shown = current.display(previous: nil, metadataAt: 100, now: 100, canSend: true)
         assert(shown.playing && shown.visible && shown.controlsAvailable && shown.track?.title == "Song")
         let unavailable = MediaPlaybackState(available: false, playing: false, track: nil)
@@ -43,7 +44,7 @@ import Foundation
         let placeholder = unavailable.display(previous: reconnecting, metadataAt: 100, now: 106, canSend: true)
         assert(placeholder.playing && placeholder.visible && placeholder.track == nil && !placeholder.controlsAvailable)
         let paused = MediaPlaybackState(available: true, playing: true,
-                                        track: MediaTrack(title: "Song", artist: "Artist", source: "Music", playing: false, artwork: nil))
+                                        track: MediaTrack(title: "Song", artist: "Artist", source: "Music", bundleIdentifier: "com.apple.Music", playing: false, artwork: nil))
             .display(previous: placeholder, metadataAt: 106, now: 107, canSend: true)
         assert(!paused.playing && paused.visible && paused.controlsAvailable)
         let stopped = MediaPlaybackState(available: true, playing: false, track: nil)

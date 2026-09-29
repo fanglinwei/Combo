@@ -21,6 +21,7 @@ final class ComboPanel: NSPanel {
     private var appearanceChange: AnyCancellable?
     var animator: Timer?
     private var iconTransition = IconTransition()
+    private var bottomTransition = BottomTransition()
     private var terminating = false
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -50,14 +51,17 @@ final class ComboPanel: NSPanel {
     func updateIcon() {
         guard status != nil else { return }
         let s = store.snapshot
-        iconTransition.update(IconContent(s), at: ProcessInfo.processInfo.systemUptime,
+        let now = ProcessInfo.processInfo.systemUptime
+        iconTransition.update(IconContent(s), at: now,
                               reducedMotion: s.reducedMotion || store.reduceMotion, active: store.screenActive)
+        bottomTransition.update(s, animate: store.animate, at: now,
+                                reducedMotion: s.reducedMotion || store.reduceMotion, active: store.screenActive)
         drawIcon()
     }
     func drawIcon() {
         let s = store.snapshot
         let now = ProcessInfo.processInfo.systemUptime
-        let transitioning = iconTransition.isAnimating(at: now) && store.screenActive
+        let transitioning = (iconTransition.isAnimating(at: now) || bottomTransition.isAnimating(at: now)) && store.screenActive
         let playing = s.playing && store.animate && !s.silenced && !s.adjusting && !s.reducedMotion && !store.reduceMotion && store.screenActive
         let interval = transitioning ? 1.0 / 60 : 0.05
         let connecting = s.wifiConnecting && !s.reducedMotion && !store.reduceMotion && store.screenActive
@@ -71,7 +75,7 @@ final class ComboPanel: NSPanel {
         } else { animator?.invalidate(); animator = nil }
         let phase = store.reduceMotion ? 0.3 : now / 1.2
         let image = IconRenderer.image(s, animate: store.animate, size: 22, phase: phase, dark: status.button?.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua,
-                                       transition: iconTransition.frame(at: now))
+                                       transition: iconTransition.frame(at: now), bottomProgress: bottomTransition.value(at: now))
         image.isTemplate = false
         status.button?.image = image
         let description = "\(store.scene == .live ? "" : "演示 · ")\(s.powerHintText)电量 \(s.batteryText) · \(s.network) · 音量 \(s.volumeText)"

@@ -4,6 +4,7 @@ struct MediaTrack: Decodable, Equatable {
     let title: String
     let artist: String
     let source: String
+    let bundleIdentifier: String?
     let playing: Bool
     let artwork: Data?
 }
@@ -18,7 +19,7 @@ struct MediaPlaybackState: Decodable, Equatable {
         let title = track.title.isEmpty ? old.title : track.title
         let sameTitle = title == old.title
         let merged = MediaTrack(title: title, artist: track.artist.isEmpty && sameTitle ? old.artist : track.artist,
-                                source: track.source, playing: track.playing,
+                                source: track.source, bundleIdentifier: track.bundleIdentifier, playing: track.playing,
                                 artwork: sameTitle ? track.artwork ?? old.artwork : track.artwork)
         return Self(available: available, playing: playing, track: merged)
     }

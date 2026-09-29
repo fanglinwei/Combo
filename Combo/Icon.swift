@@ -247,6 +247,43 @@ struct IconTransition {
     }
 }
 
+struct BottomTransition {
+    static let duration = 0.2
+    private var startValue = 0.0
+    private var endValue: Double?
+    private var started: Double?
+
+    mutating func update(_ snapshot: Snapshot, animate: Bool, at now: Double, reducedMotion: Bool, active: Bool = true) {
+        let bottom = bottomState(muted: snapshot.silenced, adjusting: snapshot.adjusting, playing: snapshot.playing, animate: animate)
+        let end = bottom == .playing ? 1.0 : 0.0
+        let eligible = bottom == .playing || (bottom == .volume && !snapshot.adjusting && volumeDots(snapshot.volume) != nil)
+        guard active && animate && !reducedMotion && eligible else {
+            startValue = end; endValue = eligible ? end : nil; started = nil
+            return
+        }
+        guard let previous = endValue else {
+            startValue = end; endValue = end
+            return
+        }
+        guard previous != end else { return }
+        startValue = value(at: now)
+        endValue = end
+        started = now
+    }
+
+    func value(at now: Double) -> Double {
+        guard let started, let end = endValue else { return startValue }
+        let t = min(1, max(0, (now - started) / Self.duration))
+        let eased = t * t * (3 - 2 * t)
+        return startValue + (end - startValue) * eased
+    }
+
+    func isAnimating(at now: Double) -> Bool {
+        guard let started, let end = endValue else { return false }
+        return startValue != end && now - started < Self.duration
+    }
+}
+
 // Pixel-measured from Tests/WiFiReference.png, in the menu-bar renderer's 100 × 100 coordinates.
 enum WiFiGlyph {
     static let lineWidth: CGFloat = 4.6
@@ -303,7 +340,8 @@ struct WiFiIcon: View {
 
 // Coordinates and palette follow docs/assets/render_design.py, on a 100 × 100 canvas.
 enum IconRenderer {
-    @MainActor static func image(_ s: Snapshot, animate: Bool, size: CGFloat, phase: Double = 0, dark: Bool = true, transition: IconTransition.Frame? = nil) -> NSImage {
+    @MainActor static func image(_ s: Snapshot, animate: Bool, size: CGFloat, phase: Double = 0, dark: Bool = true,
+                                 transition: IconTransition.Frame? = nil, bottomProgress: Double? = nil) -> NSImage {
         let image = NSImage(size: NSSize(width: size, height: size))
         image.lockFocus()
         defer { image.unlockFocus() }
@@ -474,16 +512,15 @@ enum IconRenderer {
         } else if bottom == .volume && s.volume == nil { fillRound(43,79,14,3,1.5,track) }
         else {
             let offsets = [0.0, 0.35, 0.65, 0.15]
+            let progress = bottomProgress ?? (bottom == .playing ? 1 : 0)
             for (i, coordinate) in [(31.0,77.0),(43.0,82.0),(57.0,82.0),(69.0,77.0)].enumerated() {
                 let (x,y) = coordinate
-                if bottom == .playing {
-                    let p = s.reducedMotion ? 0.3 : phase
-                    let height = 7 + 5.5*(1+sin(2 * .pi * (p+offsets[i])))
-                    fillRound(x-3.4,y+3.4-height,6.8,height,3.4,fg)
-                } else {
-                    (i < (volumeDots(s.volume) ?? 0) ? fg : track).setFill()
-                    NSBezierPath(ovalIn: rect(x-3.4,y-3.4,6.8,6.8)).fill()
-                }
+                let p = s.reducedMotion ? 0.3 : phase
+                let barHeight = 7 + 5.5*(1+sin(2 * .pi * (p+offsets[i])))
+                let height = 6.8 + (barHeight - 6.8) * progress
+                let dotColor = i < (volumeDots(s.volume) ?? 0) ? fg : track
+                let color = dotColor.blended(withFraction: progress, of: fg) ?? fg
+                fillRound(x-3.4,y+3.4-height,6.8,height,3.4,color)
             }
         }
         NSGraphicsContext.restoreGraphicsState()
@@ -497,6 +534,7 @@ struct ComboIcon: View {
     var size: CGFloat = 100
     var previewScene: Scene? = nil
     @State private var transition = IconTransition()
+    @State private var bottomTransition = BottomTransition()
     @State private var eventStarted = Date.timeIntervalSinceReferenceDate
     @State private var frameTime = Date.timeIntervalSinceReferenceDate
     @Environment(\.accessibilityReduceMotion) var reduced
@@ -518,27 +556,39 @@ struct ComboIcon: View {
         let current = display(at: frameTime)
         let moving = (bottomState(muted: current.silenced, adjusting: current.adjusting, playing: current.playing, animate: animate) == .playing || current.wifiConnecting) && !reducedMotion
         let pending = previewScene?.event != nil && frameTime - eventStarted < eventDuration
-        TimelineView(.animation(minimumInterval: transition.isAnimating(at: frameTime) ? 1.0 / 60 : 0.05,
-                                paused: !moving && !pending && !transition.isAnimating(at: frameTime))) { context in
+        let transitioning = transition.isAnimating(at: frameTime) || bottomTransition.isAnimating(at: frameTime)
+        TimelineView(.animation(minimumInterval: transitioning ? 1.0 / 60 : 0.05,
+                                paused: !moving && !pending && !transitioning)) { context in
             let time = context.date.timeIntervalSinceReferenceDate
             let value = display(at: time)
             Image(nsImage: IconRenderer.image(value, animate: animate, size: size, phase: reducedMotion ? 0.3 : time / 1.2, dark: scheme == .dark,
-                                             transition: transition.frame(at: time)))
+                                             transition: transition.frame(at: time), bottomProgress: bottomTransition.value(at: time)))
                 .frame(width: size, height: size)
                 .onChange(of: context.date) { _, date in
                     frameTime = date.timeIntervalSinceReferenceDate
-                    transition.update(IconContent(display(at: frameTime)), at: frameTime, reducedMotion: reducedMotion)
+                    let value = display(at: frameTime)
+                    transition.update(IconContent(value), at: frameTime, reducedMotion: reducedMotion)
+                    bottomTransition.update(value, animate: animate, at: frameTime, reducedMotion: reducedMotion)
                 }
         }.accessibilityLabel("\(current.powerHintText)电量 \(snapshot.batteryText)，\(snapshot.network)，音量 \(snapshot.volumeText)")
             .onChange(of: IconContent(snapshot), initial: true) { old, content in
                 let now = Date.timeIntervalSinceReferenceDate
                 if !old.sameState(as: content) || transition.target == nil { eventStarted = now }
                 frameTime = now
-                transition.update(IconContent(display(at: now)), at: now, reducedMotion: reducedMotion)
+                let value = display(at: now)
+                transition.update(IconContent(value), at: now, reducedMotion: reducedMotion)
+                bottomTransition.update(value, animate: animate, at: now, reducedMotion: reducedMotion)
+            }
+            .onChange(of: bottomState(muted: current.silenced, adjusting: current.adjusting, playing: current.playing, animate: animate) == .playing) { _, _ in
+                let now = Date.timeIntervalSinceReferenceDate
+                frameTime = now
+                bottomTransition.update(display(at: now), animate: animate, at: now, reducedMotion: reducedMotion)
             }
             .onChange(of: reducedMotion) { _, _ in
                 frameTime = Date.timeIntervalSinceReferenceDate
-                transition.update(IconContent(display(at: frameTime)), at: frameTime, reducedMotion: reducedMotion)
+                let value = display(at: frameTime)
+                transition.update(IconContent(value), at: frameTime, reducedMotion: reducedMotion)
+                bottomTransition.update(value, animate: animate, at: frameTime, reducedMotion: reducedMotion)
             }
     }
 }
