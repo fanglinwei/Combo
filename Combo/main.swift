@@ -6,11 +6,16 @@ final class ComboPanel: NSPanel {
     override var canBecomeKey: Bool { true }
 }
 
-@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = Store()
     var status: NSStatusItem!
     var panel: ComboPanel?
     private var panelCompact = false
+    private var overviewHeight: CGFloat = 0
+    private var detailHeight: CGFloat = 0
+    private var detailHeightSection: PanelSection?
+    private var selectedSection: PanelSection?
+    private var revealTask: Task<Void, Never>?
     var settings: NSWindow?
     var change: AnyCancellable?
     private var appearanceChange: AnyCancellable?
@@ -70,8 +75,10 @@ final class ComboPanel: NSPanel {
         image.isTemplate = false
         status.button?.image = image
         let description = "\(store.scene == .live ? "" : "演示 · ")\(s.powerHintText)电量 \(s.batteryText) · \(s.network) · 音量 \(s.volumeText)"
-        status.button?.toolTip = description
-        status.button?.setAccessibilityLabel(description)
+        if status.button?.toolTip != description {
+            status.button?.toolTip = description
+            status.button?.setAccessibilityLabel(description)
+        }
     }
     @objc func togglePanel() {
         if panel?.isVisible == true { closePanel() }
@@ -80,9 +87,12 @@ final class ComboPanel: NSPanel {
             let visible = screen.visibleFrame
             let height = min(500, visible.height - 16)
             panelCompact = visible.width < PanelView.width * 2 + 34
+            overviewHeight = 0; detailHeight = 0; detailHeightSection = nil; selectedSection = nil
+            revealTask?.cancel()
             let showSettings = { [weak self] in _ = self?.openSettings() }
-            let view = PanelView(store: store, showSettings: showSettings, height: height, compact: panelCompact,
-                                 resize: { [weak self] expanded in self?.resizePanel(expanded: expanded) })
+            let view = PanelView(store: store, showSettings: showSettings, compact: panelCompact, maxHeight: visible.height - 16,
+                                 resize: { [weak self] selected in self?.resizePanel(selected: selected) },
+                                 reportHeight: { [weak self] section, value in self?.updatePanelHeight(for: section, value) })
             let frame = NSRect(x: visible.maxX - PanelView.width - 12, y: visible.maxY - height - 8,
                                width: PanelView.width, height: height)
             let window = panel ?? ComboPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -94,41 +104,54 @@ final class ComboPanel: NSPanel {
             window.isOpaque = false
             window.backgroundColor = .clear
             window.hasShadow = true
+            window.hidesOnDeactivate = false
             window.level = .floating
             window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
-            window.delegate = self
             panel = window
-            window.alphaValue = store.reduceMotion ? 1 : 0
+            window.alphaValue = 0
             window.makeKeyAndOrderFront(nil)
             store.panelVisible = true
-            if !store.reduceMotion {
-                NSAnimationContext.runAnimationGroup { context in
-                    context.duration = 0.2
+            revealTask = Task { @MainActor [weak self, weak window] in
+                try? await Task.sleep(for: .milliseconds(30))
+                guard !Task.isCancelled, let self, let window, self.panel === window, window.isVisible else { return }
+                await NSAnimationContext.runAnimationGroup { context in
+                    context.duration = self.store.reduceMotion ? 0.12 : 0.22
+                    context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                     window.animator().alphaValue = 1
                 }
             }
         }
     }
-    private func resizePanel(expanded: Bool) {
+    private func resizePanel(selected: PanelSection?) {
+        selectedSection = selected
+        updatePanelFrame()
+    }
+    private func updatePanelHeight(for section: PanelSection?, _ value: CGFloat) {
+        guard value.isFinite, value > 0 else { return }
+        if section == nil { overviewHeight = ceil(value) }
+        else if selectedSection == nil || section == selectedSection {
+            detailHeight = ceil(value)
+            detailHeightSection = section
+        } else { return }
+        updatePanelFrame()
+    }
+    private func updatePanelFrame() {
         guard let panel, let screen = panel.screen else { return }
         let visible = screen.visibleFrame
-        let width = expanded && !panelCompact ? PanelView.width * 2 + 10 : PanelView.width
-        let frame = NSRect(x: visible.maxX - width - 12, y: panel.frame.minY, width: width, height: panel.frame.height)
-        if store.reduceMotion { panel.setFrame(frame, display: true) }
-        else {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.25
-                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                panel.animator().setFrame(frame, display: true)
-            }
-        }
+        let width = selectedSection != nil && !panelCompact ? PanelView.width * 2 + 10 : PanelView.width
+        let overview = overviewHeight > 0 ? overviewHeight : panel.frame.height
+        let detail = detailHeightSection == selectedSection ? detailHeight : 0
+        let desired = selectedSection == nil ? overview : panelCompact ? (detail > 0 ? detail : overview) : max(overview, detail)
+        let height = min(max(1, desired), max(1, visible.height - 16))
+        let frame = NSRect(x: visible.maxX - width - 12, y: visible.maxY - height - 8, width: width, height: height)
+        guard abs(panel.frame.width - frame.width) > 0.5 || abs(panel.frame.height - frame.height) > 0.5 || abs(panel.frame.minY - frame.minY) > 0.5 else { return }
+        panel.setFrame(frame, display: true)
     }
-    private func closePanel() { panel?.orderOut(nil); store.panelVisible = false }
-    func windowDidResignKey(_ notification: Notification) {
-        if notification.object as? NSWindow === panel { closePanel() }
+    private func closePanel() {
+        revealTask?.cancel()
+        panel?.orderOut(nil); store.panelVisible = false
     }
     @objc func openSettings() {
-        closePanel()
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 850, height: 690), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             window.appearance = selectedAppearance

@@ -100,6 +100,89 @@ struct Card<Content: View>: View {
     @Environment(\.comboPalette) private var palette
     var body: some View { VStack(alignment: .leading, spacing: 16) { content }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(palette.surface, in: RoundedRectangle(cornerRadius: 14)).overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.primary.opacity(0.055))) }
 }
+private final class HoverScroller: NSScroller {
+    var accent = NSColor.controlAccentColor
+    private var hovered = false
+
+    override class var isCompatibleWithOverlayScrollers: Bool { self == HoverScroller.self }
+
+    func setHovered(_ value: Bool) {
+        guard hovered != value else { return }
+        hovered = value
+        needsDisplay = true
+    }
+
+    override func drawKnob() {
+        guard hovered else { super.drawKnob(); return }
+        let knob = rect(for: .knob).insetBy(dx: 2, dy: 1)
+        accent.setFill()
+        NSBezierPath(roundedRect: knob, xRadius: knob.width / 2, yRadius: knob.width / 2).fill()
+    }
+}
+
+private struct HoverScrollerBridge: NSViewRepresentable {
+    let accent: NSColor
+
+    func makeNSView(context: Context) -> InstallerView { InstallerView() }
+    func updateNSView(_ view: InstallerView, context: Context) { view.accent = accent; view.install() }
+
+    final class InstallerView: NSView {
+        var accent = NSColor.controlAccentColor
+        private weak var scroller: HoverScroller?
+        private var monitor: Any?
+
+        override func viewDidMoveToSuperview() { super.viewDidMoveToSuperview(); install() }
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if window == nil {
+                scroller?.setHovered(false)
+                scroller = nil
+                if let monitor { NSEvent.removeMonitor(monitor); self.monitor = nil }
+            } else { install() }
+        }
+
+        func install() {
+            DispatchQueue.main.async { [weak self] in self?.installNow() }
+        }
+
+        private func installNow() {
+            guard window != nil else { return }
+            var parent = superview
+            while let view = parent {
+                if let scrollView = view as? NSScrollView {
+                    if let scroller = scrollView.verticalScroller as? HoverScroller {
+                        if !scroller.accent.isEqual(accent) {
+                            scroller.accent = accent
+                            scroller.needsDisplay = true
+                        }
+                        self.scroller = scroller
+                    } else {
+                        let scroller = HoverScroller()
+                        scroller.accent = accent
+                        scrollView.verticalScroller = scroller
+                        self.scroller = scroller
+                    }
+                    if monitor == nil {
+                        monitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .leftMouseDown]) { [weak self] event in
+                            self?.updateHover(event)
+                            return event
+                        }
+                    }
+                    return
+                }
+                parent = view.superview
+            }
+        }
+
+        private func updateHover(_ event: NSEvent) {
+            guard let scroller else { return }
+            let inside = event.window === scroller.window && scroller.bounds.contains(scroller.convert(event.locationInWindow, from: nil))
+            scroller.setHovered(inside)
+        }
+
+        deinit { if let monitor { NSEvent.removeMonitor(monitor) } }
+    }
+}
 struct SettingsView: View {
     @ObservedObject var store: Store
     @ObservedObject var setup: MenuBarSetup
@@ -148,6 +231,7 @@ struct SettingsView: View {
                     }
                     if !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange).textSelection(.enabled) }
                 }.padding(30).frame(maxWidth: 650, alignment: .leading).frame(maxWidth: .infinity)
+                    .background(HoverScrollerBridge(accent: NSColor(palette.accent)))
             }.background(palette.canvasTop)
         }.frame(minWidth: 760, minHeight: 580).tint(palette.accent)
             .alert("恢复显示偏好？", isPresented: $reset) { Button("取消", role: .cancel) {}; Button("恢复") { store.resetDisplay() } } message: { Text("播放动效开启，电池显示阈值恢复为 50%。登录项和折叠选择保持不变。") }
@@ -469,6 +553,18 @@ enum PanelSection: String {
         }
     }
 }
+private struct WiFiName: View {
+    @ObservedObject var wifi: WiFiControl
+    var body: some View {
+        Text(name).lineLimit(1).minimumScaleFactor(0.8).help(name)
+    }
+    private var name: String {
+        if wifi.powerOn == false { return "Wi‑Fi 已关闭" }
+        if wifi.powerOn == nil { return "Wi‑Fi 不可用" }
+        if let ssid = wifi.currentSSID, !ssid.isEmpty { return ssid }
+        return wifi.nameAccess ? "未连接或名称不可用" : "允许定位以显示名称"
+    }
+}
 
 struct PanelView: View {
     static let width: CGFloat = 420
@@ -480,32 +576,34 @@ struct PanelView: View {
     private var mutedText: Color { palette.mutedText }
     @ObservedObject var store: Store
     let showSettings: () -> Void
-    let height: CGFloat
     let compact: Bool
-    let resize: (Bool) -> Void
+    let maxHeight: CGFloat
+    let resize: (PanelSection?) -> Void
+    let reportHeight: (PanelSection?, CGFloat) -> Void
     @State private var selected: PanelSection?
+    @State private var displayedSection: PanelSection?
+    @State private var detailVisible = false
+    @State private var expanded = false
+    @State private var detailTask: Task<Void, Never>?
+    @State private var overviewContentHeight: CGFloat = 0
+    @State private var detailContentHeights: [PanelSection: CGFloat] = [:]
     var body: some View {
-        HStack(spacing: 10) {
-            if let selected {
-                panel {
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            if compact { Button("返回总览") { choose(selected) }.font(.caption) }
-                            else { Text(selected.rawValue).font(.headline) }
-                            Spacer()
-                        }
-                        detail(selected)
-                        if compact && !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
-                    }
-                }
-                .transition(.move(edge: .trailing).combined(with: .opacity))
+        HStack(alignment: .top, spacing: 10) {
+            if !compact && expanded {
+                ZStack {
+                    if let displayedSection { detailPanel(displayedSection) }
+                }.frame(width: Self.width)
             }
-            if selected == nil || !compact { panel { overview } }
+            if compact, let displayedSection { detailPanel(displayedSection) }
+            if displayedSection == nil || !compact { panel(for: nil) { overview } }
         }
-        .frame(width: selected == nil || compact ? Self.width : Self.width * 2 + 10, height: height)
+        .frame(width: !compact && expanded ? Self.width * 2 + 10 : Self.width, alignment: .trailing)
+        .frame(maxHeight: .infinity, alignment: .top)
         .tint(palette.accent)
-        .task(id: store.panelVisible && store.screenActive && store.scene == .live) {
-            guard store.panelVisible && store.screenActive && store.scene == .live else { store.energyApps.cancel(); return }
+        .onDisappear { detailTask?.cancel() }
+        .onChange(of: store.panelVisible) { _, visible in if !visible { detailTask?.cancel() } }
+        .task(id: store.panelVisible && store.screenActive && store.scene == .live && selected == .battery) {
+            guard store.panelVisible && store.screenActive && store.scene == .live && selected == .battery else { store.energyApps.cancel(); return }
             while !Task.isCancelled {
                 store.energyApps.refresh()
                 do { try await Task.sleep(for: .seconds(30)) } catch { return }
@@ -519,86 +617,152 @@ struct PanelView: View {
             }
         }
     }
-    private func panel<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        ScrollView { content().padding(18).frame(maxWidth: .infinity, alignment: .leading) }
-            .frame(width: Self.width, height: height)
-            .background(LinearGradient(colors: [palette.canvasTop, palette.canvasBottom],
-                                       startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(palette.isDark ? Color.white.opacity(0.22) : Color.black.opacity(0.10)))
+    private var detailEnterAnimation: Animation {
+        .timingCurve(0.23, 1, 0.32, 1, duration: store.reduceMotion ? 0.12 : 0.23)
     }
-    private func tile<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        content().frame(maxWidth: .infinity, alignment: .leading).padding(14)
-            .background(LinearGradient(colors: [palette.tileTop, palette.tileBottom],
-                                       startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(palette.isDark ? Color.white.opacity(0.13) : Color.black.opacity(0.08)))
+    private var detailExitAnimation: Animation {
+        .timingCurve(0.23, 1, 0.32, 1, duration: store.reduceMotion ? 0.12 : 0.16)
+    }
+    private func detailPanel(_ section: PanelSection) -> some View {
+        panel(for: section) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    if compact { Button("返回总览") { choose(section) }.font(.caption) }
+                    else { Text(section.rawValue).font(.headline) }
+                    Spacer()
+                }
+                tile { detail(section) }
+                if compact && !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
+            }
+        }
+        .opacity(detailVisible ? 1 : 0)
+        .scaleEffect(store.reduceMotion || detailVisible ? 1 : 0.98, anchor: .bottom)
+        .allowsHitTesting(detailVisible)
+        .onAppear {
+            guard displayedSection == section else { return }
+            withAnimation(detailEnterAnimation) { detailVisible = true }
+        }
+        .id(section)
+    }
+    private func panel<Content: View>(for section: PanelSection?, @ViewBuilder _ content: () -> Content) -> some View {
+        let measured = section.flatMap { detailContentHeights[$0] } ?? (section == nil ? overviewContentHeight : 0)
+        let initial = section == nil ? 500 : (overviewContentHeight > 0 ? overviewContentHeight : 500)
+        return ScrollView {
+            content().padding(18).frame(maxWidth: .infinity, alignment: .leading)
+                .background(HoverScrollerBridge(accent: NSColor(palette.accent)))
+                .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { value in
+                    let height = ceil(value)
+                    if let section { detailContentHeights[section] = height }
+                    else { overviewContentHeight = height }
+                    reportHeight(section, height)
+                }
+        }
+            .frame(width: Self.width, height: min(maxHeight, measured > 0 ? measured : initial))
+            .background {
+                RoundedRectangle(cornerRadius: 22)
+                    .fill(.regularMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 22)
+                            .fill(LinearGradient(colors: [palette.canvasTop.opacity(0.72), palette.canvasBottom.opacity(0.82)],
+                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
+                    }
+            }
+            .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(.white.opacity(palette.isDark ? 0.22 : 0.55)))
+    }
+    private func tile<Content: View>(interactive: Bool = false, @ViewBuilder _ content: () -> Content) -> some View {
+        content().frame(maxWidth: .infinity, alignment: .leading).padding(16)
+            .glassEffect(interactive ? .regular.interactive() : .regular, in: RoundedRectangle(cornerRadius: 18))
     }
     private var overview: some View {
         let s = store.snapshot
-        return VStack(alignment: .leading, spacing: 10) {
-            Text("Combo 概览").font(.system(size: 18, weight: .semibold)).padding(.bottom, 2)
-            tile {
-                HStack(spacing: 14) {
-                    ComboIcon(snapshot: s, animate: store.animate, size: 50)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("电池 \(s.batteryText)").lineLimit(1)
-                        Text("Wi‑Fi \(s.network)").lineLimit(1)
-                        Text("声音 \(s.muted ? "静音" : s.volumeText)").lineLimit(1)
-                    }.font(.system(size: 12, weight: .medium)).foregroundStyle(mutedText)
-                }.frame(height: store.mediaVisible ? 52 : 90)
+        return GlassEffectContainer(spacing: 6) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    ComboIcon(snapshot: s, animate: store.animate, size: 56)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Combo").font(.system(size: 24, weight: .semibold))
+                        Text("状态，合而为一").font(.system(size: 12)).foregroundStyle(mutedText)
+                    }
+                    Spacer()
+                    Text(store.scene == .live ? "本机状态" : "部分演示")
+                        .font(.system(size: 12, weight: .medium)).foregroundStyle(mutedText)
+                }.padding(.horizontal, 4).padding(.bottom, 6)
+                if store.mediaVisible { mediaCard(store.mediaTrack) }
+                HStack(alignment: .top, spacing: 10) {
+                    sectionCard(.battery, snapshot: s)
+                    sectionCard(.wifi, snapshot: s)
+                }.fixedSize(horizontal: false, vertical: true)
+                soundCard(snapshot: s)
+                if !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
+                HStack {
+                    Button { NSApp.terminate(nil) } label: { Label("退出 Combo", systemImage: "rectangle.portrait.and.arrow.right") }
+                        .buttonStyle(.plain).help("退出 Combo")
+                    Spacer()
+                    Button(action: showSettings) { Image(systemName: "gearshape.fill").font(.system(size: 17)) }
+                        .buttonStyle(.plain).help("设置…").accessibilityLabel("设置")
+                }.foregroundStyle(mutedText).font(.system(size: 12, weight: .medium)).padding(.horizontal, 4).padding(.top, 9)
             }
-            if store.mediaVisible { mediaCard(store.mediaTrack) }
-            HStack(alignment: .top, spacing: 10) {
-                sectionCard(.battery, snapshot: s)
-                sectionCard(.wifi, snapshot: s)
-            }
-            sectionCard(.sound, snapshot: s)
-            if !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
-            Spacer(minLength: 0)
-            Rectangle().fill(palette.isDark ? Color.white.opacity(0.13) : Color.black.opacity(0.08)).frame(height: 1)
-            HStack {
-                Button { NSApp.terminate(nil) } label: { Label("退出 Combo", systemImage: "rectangle.portrait.and.arrow.right") }
-                    .buttonStyle(.plain).help("退出 Combo")
-                Spacer()
-                Button(action: showSettings) { Image(systemName: "gearshape.fill").font(.system(size: 17)) }
-                    .buttonStyle(.plain).help("设置…").accessibilityLabel("设置")
-            }.foregroundStyle(mutedText).font(.system(size: 12, weight: .medium)).padding(.horizontal, 3)
-        }.frame(minHeight: height - 36, alignment: .top)
+        }
     }
     private func sectionCard(_ section: PanelSection, snapshot s: Snapshot) -> some View {
         Button { choose(section) } label: {
-            tile {
+            tile(interactive: true) {
                 VStack(alignment: .leading, spacing: 7) {
                     HStack(spacing: 9) {
-                        Image(systemName: section.symbol).frame(width: 23)
-                        Text(section.rawValue).font(.system(size: 15, weight: .semibold))
+                        Image(systemName: section.symbol).frame(width: 20)
+                            .foregroundStyle(palette.accent)
+                        Text(section.rawValue).font(.system(size: 13, weight: .semibold))
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(mutedText)
                     }
-                    Text(summary(section, snapshot: s)).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1)
+                    Group {
+                        if section == .wifi { WiFiName(wifi: store.wifi) }
+                        else { Text(s.batteryText).lineLimit(1) }
+                    }
+                    .font(.system(size: section == .wifi ? 17 : 21, weight: .semibold, design: .rounded))
                     if section == .battery {
-                        if store.scene == .live { EnergyAppsSection(control: store.energyApps, limit: 1) }
-                        else { Text("演示数据").font(.caption).foregroundStyle(mutedText) }
-                    } else if section == .sound {
-                        Text(s.output).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1)
-                        if store.scene == .live, s.outputIsAirPods, let state = store.airpods.snapshot,
-                           state.available, state.deviceID == store.selectedOutputID,
-                           state.left != nil || state.right != nil || state.caseBattery != nil || state.single != nil {
-                            HStack(spacing: 8) {
-                                if let left = state.left { Label("\(left)%", systemImage: "airpods.pro.left") }
-                                if let right = state.right { Label("\(right)%", systemImage: "airpods.pro.right") }
-                                if let charge = state.caseBattery { Label("\(charge)%", systemImage: "airpodspro.chargingcase.wireless") }
-                                if let single = state.single, state.left == nil && state.right == nil { Text("电量 \(single)%") }
-                            }.font(.system(size: 11)).foregroundStyle(mutedText)
-                                .accessibilityElement(children: .ignore).accessibilityLabel(state.batteryText)
-                        }
+                        Text(store.scene == .live ? store.batteryStatusText : "演示数据")
+                            .font(.system(size: 11)).foregroundStyle(mutedText).lineLimit(2)
                     }
-                    if section == .sound, !store.mediaVisible, let volume = s.volume {
-                        ProgressView(value: s.muted ? 0 : volume).tint(mutedText).padding(.top, 5)
-                    }
-                }.frame(minHeight: section == .battery ? 115 : store.mediaVisible ? (section == .sound ? 62 : 50) : (section == .sound ? 106 : 85), alignment: .center)
+                }.frame(maxHeight: .infinity, alignment: .top)
             }
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(selected == section ? palette.accent : .clear, lineWidth: 2))
+            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(selected == section ? palette.accent : .clear, lineWidth: 2))
         }.buttonStyle(.plain).accessibilityAddTraits(selected == section ? .isSelected : [])
+    }
+    private func soundCard(snapshot s: Snapshot) -> some View {
+        tile(interactive: true) {
+            VStack(alignment: .leading, spacing: 9) {
+                Button { choose(.sound) } label: {
+                    HStack(spacing: 9) {
+                        Image(systemName: PanelSection.sound.symbol).frame(width: 20).foregroundStyle(palette.accent)
+                        Text("声音").font(.system(size: 13, weight: .semibold))
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(mutedText)
+                    }.contentShape(Rectangle())
+                }.buttonStyle(.plain).accessibilityLabel("声音详情")
+                HStack(spacing: 12) {
+                    Slider(value: Binding(get: { store.snapshot.volume ?? 0 }, set: { store.setVolume($0) }), in: 0...1)
+                        .disabled(store.scene != .live || !store.canVolume || s.volume == nil)
+                        .accessibilityLabel("系统音量")
+                        .tint(.gray)
+                    Text(s.muted ? "静音" : s.volumeText)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .monospacedDigit().frame(width: 42, alignment: .trailing)
+                }
+                Text(s.output).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1)
+                if store.scene == .live, s.outputIsAirPods, let state = store.airpods.snapshot,
+                   state.available, state.deviceID == store.selectedOutputID,
+                   state.left != nil || state.right != nil || state.caseBattery != nil || state.single != nil {
+                    HStack(spacing: 8) {
+                        if let left = state.left { Label("\(left)%", systemImage: "airpods.pro.left") }
+                        if let right = state.right { Label("\(right)%", systemImage: "airpods.pro.right") }
+                        if let charge = state.caseBattery { Label("\(charge)%", systemImage: "airpodspro.chargingcase.wireless") }
+                        if let single = state.single, state.left == nil && state.right == nil { Text("电量 \(single)%") }
+                    }.font(.system(size: 11)).foregroundStyle(mutedText)
+                        .accessibilityElement(children: .ignore).accessibilityLabel(state.batteryText)
+                }
+            }
+        }
     }
     private func mediaCard(_ track: MediaTrack?) -> some View {
         tile {
@@ -633,18 +797,32 @@ struct PanelView: View {
             }
         }
     }
-    private func summary(_ section: PanelSection, snapshot s: Snapshot) -> String {
-        switch section {
-        case .battery: "\(s.batteryText) · \(store.batteryStatusText)"
-        case .wifi: s.network
-        case .sound: s.muted ? "静音" : s.volumeText
+    private func choose(_ section: PanelSection) {
+        detailTask?.cancel()
+        let next = selected == section ? nil : section
+        selected = next
+        if displayedSection == section, !detailVisible, next == section {
+            withAnimation(detailEnterAnimation) { detailVisible = true }
+            return
+        }
+        guard displayedSection != nil else {
+            if let next { showDetail(next) }
+            return
+        }
+        withAnimation(detailExitAnimation) { detailVisible = false }
+        detailTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(store.reduceMotion ? 120 : next == nil ? 160 : 200))
+            guard !Task.isCancelled else { return }
+            displayedSection = nil
+            if let next { showDetail(next) }
+            else { expanded = false; resize(nil) }
         }
     }
-    private func choose(_ section: PanelSection) {
-        withAnimation(store.reduceMotion ? nil : .easeInOut(duration: 0.25)) {
-            selected = selected == section ? nil : section
-            resize(selected != nil && !compact)
-        }
+    private func showDetail(_ section: PanelSection) {
+        expanded = true
+        displayedSection = section
+        detailVisible = false
+        resize(section)
     }
     @ViewBuilder private func detail(_ section: PanelSection) -> some View {
         let s = store.snapshot
@@ -681,6 +859,7 @@ struct PanelView: View {
                 Label("声音", systemImage: "speaker.wave.2").font(.headline)
                 HStack { Text(s.muted ? "静音" : "音量"); Spacer(); Text(s.volumeText).foregroundStyle(.secondary) }.font(.caption)
                 Slider(value: Binding(get: { s.volume ?? 0 }, set: { store.setVolume($0) }), in: 0...1).disabled(store.scene != .live || !store.canVolume).accessibilityLabel("系统音量")
+                    .tint(.gray)
                 SoundOutputs(store: store)
                 HStack { Button(s.muted ? "取消静音" : "静音") { store.toggleMute() }.disabled(store.scene != .live || !store.canMute); Button("声音设置 / AirPods") { store.openSystemSettings("sound") } }.font(.caption)
             }
@@ -746,7 +925,6 @@ struct SoundOutputs: View {
                     AirPodsSection(control: control, state: state)
                         .padding(.horizontal, 14).padding(.vertical, 12)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.primary.opacity(0.16))
                         .padding(.horizontal, -14).padding(.top, 5).padding(.bottom, 4)
                 }
             }

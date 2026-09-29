@@ -96,10 +96,13 @@ import SwiftUI
         var reducedCompletion = IconTransition()
         reducedCompletion.update(content(.connecting), at: 0, reducedMotion: true)
         reducedCompletion.update(IconContent(preferred.preferringBattery(threshold: 50)), at: 1, reducedMotion: true)
+        let reducedMiddle = reducedCompletion.frame(at: 1.08)
+        assert(reducedMiddle.layers.count == 2 && reducedMiddle.layers.allSatisfy { $0.opacity > 0 && $0.scale == 1 },
+               "Reduced-motion center transitions must crossfade without scaling")
         let compactResult = reducedCompletion.frame(at: 1.3)
         assert(compactResult.reduced && compactResult.layers.last?.content.kind == .battery)
         assert(compactResult.layers.allSatisfy { $0.emphasis == 0 })
-        assert(!reducedCompletion.isAnimating(at: 1.231))
+        assert(reducedCompletion.isAnimating(at: 1.159) && !reducedCompletion.isAnimating(at: 1.161))
         var media = Snapshot.demo(.airpods)
         media.charging = true
         assert(IconContent(media.preferringBattery(threshold: 50)).kind == .battery)

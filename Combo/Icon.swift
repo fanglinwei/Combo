@@ -113,7 +113,7 @@ struct IconTransition {
             if networkMode { started = now - NetworkTiming.morph - 0.000001; networkGrow = 0 }
             return
         }
-        if centerOnly, let started, now - started >= Timing.centerCrossfade {
+        if centerOnly, let started, now - started >= (reduced ? Timing.reduced : Timing.centerCrossfade) {
             centerOnly = false
             self.started = nil
         }
@@ -153,7 +153,7 @@ struct IconTransition {
     }
     func isAnimating(at now: Double) -> Bool {
         guard let started else { return false }
-        if centerOnly { return now - started < Timing.centerCrossfade }
+        if centerOnly { return now - started < (reduced ? Timing.reduced : Timing.centerCrossfade) }
         if networkMode && reduced && target?.kind != .connecting {
             return now - started < Timing.eventDuration(reducedMotion: true)
         }
@@ -166,10 +166,10 @@ struct IconTransition {
         guard let target else { return Frame(layers: []) }
         if centerOnly {
             let elapsed = max(0, now - (started ?? now))
-            let t = min(1, max(0, elapsed / Timing.centerCrossfade))
+            let t = min(1, max(0, elapsed / (reduced ? Timing.reduced : Timing.centerCrossfade)))
             let eased = t * t * (3 - 2 * t)
-            var layers = origin.layers.map { Layer(content: $0.content, opacity: $0.opacity * (1-eased), emphasis: 0, scale: 1 - 0.3 * eased) }
-            layers.append(Layer(content: target, opacity: eased, emphasis: 0, scale: 0.7 + 0.3 * eased))
+            var layers = origin.layers.map { Layer(content: $0.content, opacity: $0.opacity * (1-eased), emphasis: 0, scale: reduced ? 1 : 1 - 0.3 * eased) }
+            layers.append(Layer(content: target, opacity: eased, emphasis: 0, scale: reduced ? 1 : 0.7 + 0.3 * eased))
             return Frame(layers: layers.filter { $0.opacity > 0 }, peripheral: origin.peripheral,
                          ringOpacity: origin.ringOpacity, ringProgress: origin.ringProgress, reduced: reduced)
         }

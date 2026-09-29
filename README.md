@@ -2,6 +2,15 @@
 
 一个菜单栏入口展示电池、当前网络路径与声音状态。系统图标由用户在 macOS 菜单栏设置中手动隐藏；Combo 不再使用会连自身图标一起隐藏的私有折叠实验。
 
+## 图标会怎样变化
+
+| Wi-Fi 连接中 | 充电 + 播放 | AirPods 播放时调音量 |
+| :---: | :---: | :---: |
+| ![Wi-Fi 连接时中央图形放大并脉冲](docs/assets/states/connecting.gif) | ![充电绿环、闪电和播放音柱同时显示](docs/assets/states/charging.gif) | ![音量数字短暂出现，随后恢复 AirPods 和播放音柱](docs/assets/states/adjusting.gif) |
+| 中央放大并脉冲，等待连接结果。 | 电量、充电和媒体状态组合在一枚图标里。 | 音量提示结束后，恢复 AirPods 和播放动效。 |
+
+[查看完整状态与变化](docs/combo-current-states.md)。
+
 ## 运行
 
 双击 `build/Combo.app`。首次启动打开设置窗口，关闭窗口后菜单栏图标继续运行；点击菜单栏图标可操作三项功能。退出使用设置页或弹窗中的“退出 Combo”，也可按 Command-Q。

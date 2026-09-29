@@ -148,6 +148,9 @@ struct OutputChoice: Identifiable {
         }
         refresh()
         let nc = NSWorkspace.shared.notificationCenter
+        observers.append(nc.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: NSWorkspace.shared, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }
+        })
         for (name, active) in [(NSWorkspace.screensDidSleepNotification, false), (NSWorkspace.screensDidWakeNotification, true), (NSWorkspace.sessionDidResignActiveNotification, false), (NSWorkspace.sessionDidBecomeActiveNotification, true)] {
             observers.append(nc.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor in
