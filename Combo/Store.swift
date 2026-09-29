@@ -34,6 +34,13 @@ struct OutputChoice: Identifiable {
     let hotspots = HotspotControl()
     let airpods = AirPodsControl()
     private let mediaPlayback = MediaPlayback()
+    @Published var mediaTrack: MediaTrack?
+    @Published var mediaVisible = false
+    @Published var mediaControlsAvailable = false
+    var mediaTitle: String {
+        guard let mediaTrack else { return "未识别到媒体" }
+        return mediaTrack.title.isEmpty ? "正在获取媒体信息" : mediaTrack.title
+    }
     @Published var panelVisible = false
     private var hotspotActivity: AnyCancellable?
     @Published var login = false
@@ -112,7 +119,12 @@ struct OutputChoice: Identifiable {
         batteryDisplayThreshold = min(100, max(0, UserDefaults.standard.object(forKey: "batteryDisplayThreshold") as? Int ?? 50))
         energyAppLimit = EnergyApps.displayLimit(UserDefaults.standard.object(forKey: "energyAppLimit") as? Int ?? 1)
         network.update = { [weak self] name, symbol in self?.live.network = name; self?.live.symbol = symbol }
-        mediaPlayback.update = { [weak self] playing in self?.live.playing = playing }
+        mediaPlayback.update = { [weak self] state in
+            self?.live.playing = state.playing
+            self?.mediaTrack = state.track
+            self?.mediaVisible = state.visible
+            self?.mediaControlsAvailable = state.controlsAvailable
+        }
         mediaPlayback.setEnabled(true)
         wifiChange = wifi.$connecting.dropFirst().sink { [weak self] connecting in
             self?.live.wifiConnecting = connecting
@@ -151,6 +163,7 @@ struct OutputChoice: Identifiable {
         login = SMAppService.mainApp.status == .enabled
         refreshBattery(); refreshAudio(); refreshOutputs(); network.refresh(); wifi.refresh()
     }
+    func controlMedia(_ command: MediaCommand) { mediaPlayback.command(command) }
     func refreshBattery() {
         live.battery = nil; live.charging = false; live.plugged = false
         batteryHealth = "未提供"

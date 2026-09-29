@@ -1,20 +1,80 @@
 import SwiftUI
 import AppKit
 
-let accent = Color(nsColor: NSColor(name: NSColor.Name("ComboAccent")) { appearance in
-    let dark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-    return dark ? NSColor(srgbRed: 185/255, green: 165/255, blue: 245/255, alpha: 1)
-                : NSColor(srgbRed: 102/255, green: 80/255, blue: 180/255, alpha: 1)
-})
-let canvas = Color(nsColor: NSColor(name: NSColor.Name("ComboCanvas")) { appearance in
-    let dark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-    return dark ? NSColor(srgbRed: 38/255, green: 34/255, blue: 47/255, alpha: 1)
-                : NSColor(srgbRed: 245/255, green: 243/255, blue: 248/255, alpha: 1)
-})
+private func themeColor(_ rgb: UInt32) -> Color {
+    Color(red: Double((rgb >> 16) & 0xFF) / 255,
+          green: Double((rgb >> 8) & 0xFF) / 255,
+          blue: Double(rgb & 0xFF) / 255)
+}
+struct ComboPalette {
+    let canvasTop: Color
+    let canvasBottom: Color
+    let surface: Color
+    let tileTop: Color
+    let tileBottom: Color
+    let mutedText: Color
+    let accent: Color
+    let isDark: Bool
+}
+enum ComboTheme: String, CaseIterable, Identifiable {
+    case blue, purple, gold
+    var id: String { rawValue }
+    var title: String {
+        switch self { case .blue: "蓝色"; case .purple: "紫色"; case .gold: "暖金色" }
+    }
+    func palette(isDark: Bool) -> ComboPalette {
+        switch (self, isDark) {
+        case (.blue, false):
+            return ComboPalette(canvasTop: themeColor(0xB5D1EB), canvasBottom: themeColor(0x91BADB),
+                                surface: themeColor(0xDBEBF7), tileTop: themeColor(0xDEEDF7), tileBottom: themeColor(0xC2DBF0),
+                                mutedText: themeColor(0x364D63), accent: themeColor(0x2B6196), isDark: false)
+        case (.blue, true):
+            let accent = themeColor(0x78C6FF)
+            return ComboPalette(canvasTop: themeColor(0x17263C), canvasBottom: themeColor(0x0E1B2B),
+                                surface: themeColor(0x263D55), tileTop: accent.opacity(0.23), tileBottom: accent.opacity(0.10),
+                                mutedText: themeColor(0xD1E3F5), accent: accent, isDark: true)
+        case (.purple, false):
+            return ComboPalette(canvasTop: themeColor(0xFBF9FD), canvasBottom: themeColor(0xF1ECF7),
+                                surface: themeColor(0xF4EDF9), tileTop: themeColor(0xFFFEFF), tileBottom: themeColor(0xF4EDF9),
+                                mutedText: themeColor(0x61546E), accent: themeColor(0x785C9C), isDark: false)
+        case (.purple, true):
+            return ComboPalette(canvasTop: themeColor(0x241C2D), canvasBottom: themeColor(0x130F1C),
+                                surface: themeColor(0x3B3049), tileTop: themeColor(0x3B3049), tileBottom: themeColor(0x2B2538),
+                                mutedText: themeColor(0xD4CCDE), accent: themeColor(0xC9B0DE), isDark: true)
+        case (.gold, false):
+            return ComboPalette(canvasTop: themeColor(0xFDFBF6), canvasBottom: themeColor(0xF3EDE3),
+                                surface: themeColor(0xF9F2E9), tileTop: themeColor(0xFFFEFC), tileBottom: themeColor(0xF9F2E9),
+                                mutedText: themeColor(0x695C4F), accent: themeColor(0x966E47), isDark: false)
+        case (.gold, true):
+            return ComboPalette(canvasTop: themeColor(0x212124), canvasBottom: themeColor(0x121215),
+                                surface: themeColor(0x363637), tileTop: themeColor(0x363637), tileBottom: themeColor(0x29292C),
+                                mutedText: themeColor(0xD6D1C9), accent: themeColor(0xDBC4A3), isDark: true)
+        }
+    }
+}
+private struct ComboPaletteKey: EnvironmentKey {
+    static let defaultValue = ComboTheme.blue.palette(isDark: false)
+}
+extension EnvironmentValues {
+    var comboPalette: ComboPalette {
+        get { self[ComboPaletteKey.self] }
+        set { self[ComboPaletteKey.self] = newValue }
+    }
+}
 let brandImage = NSImage(contentsOfFile: Bundle.main.path(forResource: "Combo", ofType: "icns") ?? "")
     ?? NSImage(systemSymbolName: "circle.dotted.circle", accessibilityDescription: nil)!
+enum ComboAppearance: String, CaseIterable, Identifiable {
+    case system, light, dark
+    var id: String { rawValue }
+    var title: String {
+        switch self { case .system: "跟随系统"; case .light: "浅色"; case .dark: "深色" }
+    }
+    var nsAppearance: NSAppearance? {
+        switch self { case .system: nil; case .light: NSAppearance(named: .aqua); case .dark: NSAppearance(named: .darkAqua) }
+    }
+}
 enum Page: String, CaseIterable, Identifiable {
-    case general = "通用", appearance = "图标与动效", integration = "系统菜单整合", media = "媒体来源", experimental = "实验性项目", about = "关于与帮助"
+    case general = "通用", appearance = "外观与动效", integration = "系统菜单整合", media = "媒体来源", experimental = "实验性项目", about = "关于与帮助"
     var id: String { rawValue }
     var symbol: String {
         switch self { case .general: "slider.horizontal.3"; case .appearance: "circle.dotted.circle"; case .integration: "menubar.rectangle"; case .media: "waveform"; case .experimental: "flask"; case .about: "info.circle" }
@@ -22,7 +82,7 @@ enum Page: String, CaseIterable, Identifiable {
     var subtitle: String {
         switch self {
         case .general: "让 Combo 按你的习惯工作。"
-        case .appearance: "一个图标，刚好装下你需要的状态。"
+        case .appearance: "让外观、图标与动效都按你的习惯呈现。"
         case .integration: "查看 Wi-Fi、声音与电池的日常功能。"
         case .media: "查看媒体播放检测与动画演示。"
         case .experimental: "自动隐藏与原生菜单实验，仍在验证中。"
@@ -32,11 +92,13 @@ enum Page: String, CaseIterable, Identifiable {
 }
 struct Tag: View {
     let text: String
-    var body: some View { Text(text).font(.system(size: 10, weight: .medium)).padding(.horizontal, 8).padding(.vertical, 4).foregroundStyle(accent).background(accent.opacity(0.1), in: Capsule()) }
+    @Environment(\.comboPalette) private var palette
+    var body: some View { Text(text).font(.system(size: 10, weight: .medium)).padding(.horizontal, 8).padding(.vertical, 4).foregroundStyle(palette.accent).background(palette.accent.opacity(0.1), in: Capsule()) }
 }
 struct Card<Content: View>: View {
     @ViewBuilder var content: Content
-    var body: some View { VStack(alignment: .leading, spacing: 16) { content }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 14)).overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.primary.opacity(0.055))) }
+    @Environment(\.comboPalette) private var palette
+    var body: some View { VStack(alignment: .leading, spacing: 16) { content }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(palette.surface, in: RoundedRectangle(cornerRadius: 14)).overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.primary.opacity(0.055))) }
 }
 struct SettingsView: View {
     @ObservedObject var store: Store
@@ -49,6 +111,12 @@ struct SettingsView: View {
     @AppStorage("foldWifi") var foldWifi = true
     @AppStorage("foldSound") var foldSound = true
     @AppStorage("foldBattery") var foldBattery = true
+    @AppStorage("appearanceMode") private var appearanceMode: ComboAppearance = .system
+    @AppStorage("themeFamily") private var themeFamily: ComboTheme = .blue
+    @Environment(\.colorScheme) private var colorScheme
+    private var palette: ComboPalette {
+        themeFamily.palette(isDark: colorScheme == .dark)
+    }
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 6) {
@@ -60,12 +128,12 @@ struct SettingsView: View {
                 ForEach(Page.allCases) { item in
                     Button { page = item } label: {
                         Label(item.rawValue, systemImage: item.symbol).font(.system(size: 12, weight: page == item ? .semibold : .regular)).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 13).padding(.vertical, 11)
-                            .foregroundStyle(page == item ? accent : .primary).background(page == item ? accent.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
+                            .foregroundStyle(page == item ? palette.accent : .primary).background(page == item ? palette.accent.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
                     }.buttonStyle(.plain).accessibilityAddTraits(page == item ? .isSelected : [])
                 }
                 Spacer()
                 VStack(alignment: .leading, spacing: 8) { Tag(text: "PREVIEW 0.3"); Text("为 MacBook 而设计").font(.system(size: 10)).foregroundStyle(.tertiary) }.padding(14)
-            }.padding(.horizontal, 10).frame(width: 180).background(.thinMaterial)
+            }.padding(.horizontal, 10).frame(width: 180).background(palette.surface)
             Divider()
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
@@ -80,8 +148,8 @@ struct SettingsView: View {
                     }
                     if !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange).textSelection(.enabled) }
                 }.padding(30).frame(maxWidth: 650, alignment: .leading).frame(maxWidth: .infinity)
-            }.background(canvas)
-        }.frame(minWidth: 760, minHeight: 580).tint(accent)
+            }.background(palette.canvasTop)
+        }.frame(minWidth: 760, minHeight: 580).tint(palette.accent)
             .alert("恢复显示偏好？", isPresented: $reset) { Button("取消", role: .cancel) {}; Button("恢复") { store.resetDisplay() } } message: { Text("播放动效开启，电池显示阈值恢复为 50%。登录项和折叠选择保持不变。") }
             .sheet(isPresented: $store.showMenuPermission) { menuPermissionGuide }
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -91,9 +159,20 @@ struct SettingsView: View {
                 Button("尝试恢复") { Task { _ = await setup.restore() } }
                 Button("稍后检查", role: .cancel) {}
             } message: { Text("请检查三枚系统图标；Combo 只能在读到原始状态时尝试恢复。") }
+            .environment(\.comboPalette, palette)
     }
     var appearance: some View {
         VStack(spacing: 18) {
+            Card {
+                Text("主题色").font(.system(size: 13, weight: .semibold))
+                HStack(spacing: 10) { ForEach(ComboTheme.allCases) { themeOption($0) } }
+                Divider()
+                Text("外观模式").font(.system(size: 13, weight: .semibold))
+                Picker("外观模式", selection: $appearanceMode) {
+                    ForEach(ComboAppearance.allCases) { mode in Text(mode.title).tag(mode) }
+                }.pickerStyle(.segmented)
+                Text("跟随系统时，Combo 会随 macOS 的外观设置切换。").font(.caption).foregroundStyle(.secondary)
+            }
             Card {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 8) { Text("效果预览").font(.system(size: 13, weight: .semibold)); Text("示例数据 · 不改变系统状态").font(.caption).foregroundStyle(.secondary) }
@@ -109,8 +188,8 @@ struct SettingsView: View {
                     ForEach(Scene.allCases.filter { $0 != .live }) { scene in
                         Button { preview = scene } label: {
                             Text(scene.rawValue).font(.system(size: 10)).frame(maxWidth: .infinity).padding(.vertical, 8)
-                                .background(preview == scene ? accent.opacity(0.15) : Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
-                                .foregroundStyle(preview == scene ? accent : .secondary)
+                                .background(preview == scene ? palette.accent.opacity(0.15) : Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
+                                .foregroundStyle(preview == scene ? palette.accent : .secondary)
                         }.buttonStyle(.plain).accessibilityAddTraits(preview == scene ? .isSelected : [])
                     }
                 }
@@ -122,6 +201,21 @@ struct SettingsView: View {
                 HStack { Text("减少动态效果"); Spacer(); Text(store.reduceMotion ? "系统已开启 · 静态音柱" : "跟随系统设置").foregroundStyle(.secondary) }.font(.caption)
             }
         }
+    }
+    private func themeOption(_ theme: ComboTheme) -> some View {
+        let light = theme.palette(isDark: false)
+        let dark = theme.palette(isDark: true)
+        return Button { themeFamily = theme } label: {
+            VStack(spacing: 8) {
+                HStack(spacing: 0) {
+                    Rectangle().fill(LinearGradient(colors: [light.canvasTop, light.tileBottom], startPoint: .top, endPoint: .bottom))
+                    Rectangle().fill(LinearGradient(colors: [dark.canvasTop, dark.tileBottom], startPoint: .top, endPoint: .bottom))
+                }.frame(height: 42).clipShape(RoundedRectangle(cornerRadius: 7)).accessibilityHidden(true)
+                Text(theme.title).font(.system(size: 12, weight: themeFamily == theme ? .semibold : .regular))
+            }.padding(9).frame(maxWidth: .infinity)
+                .background(themeFamily == theme ? palette.accent.opacity(0.12) : Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(themeFamily == theme ? palette.accent : Color.primary.opacity(0.08), lineWidth: themeFamily == theme ? 2 : 1))
+        }.buttonStyle(.plain).accessibilityAddTraits(themeFamily == theme ? .isSelected : [])
     }
     var general: some View {
         VStack(spacing: 18) {
@@ -205,12 +299,12 @@ struct SettingsView: View {
                 Text("Wi-Fi 正常连接且电量低于此值时，中央显示电量百分比。设为 0% 可关闭低电量自动显示；正在充电时仍优先显示电量；拔插电源或充电状态变化时仍会播放临时提示。").font(.caption).foregroundStyle(.secondary)
                 Text("主面板显示电量、电源来源、充电状态、当前充电上限、低电量模式和系统提供的粗略健康状态。能耗模式仅修改点击时的电源类型，需要管理员授权，退出 Combo 后保留。接电且确认被手动上限暂停充电时，可点击“立即充满电”；临时解除限制后的恢复由 macOS 管理，退出 Combo 不会取消。暂不支持仅优化充电暂缓的情况，无法操作时请使用系统电池设置。高耗能应用显示在主面板，可在活动监视器查看详细能耗。")
                     .font(.caption).foregroundStyle(.secondary)
-                Picker("高耗能应用显示上限", selection: $store.energyAppLimit) {
+                Picker("电池详情高耗能应用上限", selection: $store.energyAppLimit) {
                     ForEach(1...3, id: \.self) { Text("\($0) 个").tag($0) }
                 }
                 .pickerStyle(.segmented)
-                .accessibilityLabel("高耗能应用显示上限")
-                Text("默认最多 1 个，按系统数据源顺序显示；没有高耗能应用时不补充其他应用。无法获取时会明确提示。")
+                .accessibilityLabel("电池详情高耗能应用上限")
+                Text("概览固定显示 1 个；电池详情默认最多 1 个，按系统数据源顺序显示。没有高耗能应用时不补充其他应用，无法获取时会明确提示。")
                     .font(.caption).foregroundStyle(.secondary)
                 HStack { Button("打开电池设置") { store.openSystemSettings("battery") }; Button("查看耗电应用") { store.openActivityMonitor() } }
             }
@@ -267,7 +361,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(spacing: 14) {
                 Image(systemName: store.menuAccessGranted ? "checkmark.shield" : "hand.raised")
-                    .font(.system(size: 30)).foregroundStyle(accent).accessibilityHidden(true)
+                    .font(.system(size: 30)).foregroundStyle(palette.accent).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(store.menuAccessGranted ? "辅助功能已授权" : "允许 Combo 检查菜单栏与图标设置")
                         .font(.system(size: 21, weight: .semibold))
@@ -283,7 +377,7 @@ struct SettingsView: View {
                 Text(Bundle.main.bundleURL.path).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             }
             Label(store.menuAccessGranted ? "已确认授权，可以继续检测。" : "系统尚未允许当前进程访问；不一定是开关未开启。", systemImage: store.menuAccessGranted ? "checkmark.circle.fill" : "info.circle")
-                .font(.subheadline).foregroundStyle(store.menuAccessGranted ? accent : .secondary)
+                .font(.subheadline).foregroundStyle(store.menuAccessGranted ? palette.accent : .secondary)
             if !store.menuPermissionMessage.isEmpty {
                 Text(store.menuPermissionMessage).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
@@ -303,7 +397,7 @@ struct SettingsView: View {
                     Button("打开系统设置并授权") { store.requestMenuAccess() }.keyboardShortcut(.defaultAction)
                 }
             }
-        }.padding(28).frame(width: 510).tint(accent)
+        }.padding(28).frame(width: 510).tint(palette.accent)
             .onAppear { store.refreshMenuAccess() }
     }
     func foldRow(_ title: String, symbol: String, binding: Binding<Bool>) -> some View {
@@ -317,10 +411,23 @@ struct SettingsView: View {
     var media: some View {
         VStack(spacing: 18) {
             Card {
-                HStack { Text("媒体来源").font(.system(size: 13, weight: .semibold)); Spacer(); Tag(text: store.live.playing ? "正在播放" : "未检测到播放") }
+                HStack { Text("媒体来源").font(.system(size: 13, weight: .semibold)); Spacer(); Tag(text: !store.mediaControlsAvailable && store.mediaVisible ? "重新连接中" : store.live.playing ? "正在播放" : store.mediaVisible ? "已暂停" : "未检测到播放") }
+                if store.mediaVisible {
+                    HStack(spacing: 12) {
+                        if let artwork = store.mediaTrack?.artwork, let image = NSImage(data: artwork) {
+                            Image(nsImage: image).resizable().scaledToFill().frame(width: 40, height: 40).clipShape(RoundedRectangle(cornerRadius: 8)).accessibilityHidden(true)
+                        } else { Image(systemName: "music.note").frame(width: 40, height: 40).foregroundStyle(palette.accent).background(palette.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 8)).accessibilityHidden(true) }
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(store.mediaTitle).font(.system(size: 13, weight: .medium)).lineLimit(1)
+                            if let artist = store.mediaTrack?.artist, !artist.isEmpty { Text(artist).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
+                            if let source = store.mediaTrack?.source, !source.isEmpty { Text(source).font(.caption).foregroundStyle(.secondary) }
+                        }
+                        Spacer()
+                    }
+                } else { Text("当前没有可识别的媒体").font(.caption).foregroundStyle(.secondary) }
                 ForEach(["Safari", "Chrome", "网易云音乐", "QQ 音乐"], id: \.self) { name in
                     HStack(spacing: 12) {
-                        Image(systemName: name == "Safari" || name == "Chrome" ? "globe" : "music.note").font(.system(size: 18)).foregroundStyle(accent).frame(width: 34, height: 36).background(accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 9))
+                        Image(systemName: name == "Safari" || name == "Chrome" ? "globe" : "music.note").font(.system(size: 18)).foregroundStyle(palette.accent).frame(width: 34, height: 36).background(palette.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 9))
                         VStack(alignment: .leading, spacing: 5) { Text(name); Text("应用向系统提供播放状态时自动识别").font(.caption).foregroundStyle(.secondary) }
                         Spacer()
                     }.padding(.vertical, 5)
@@ -352,61 +459,232 @@ struct SettingsView: View {
         }
     }
 }
-struct PanelView: View {
-    @ObservedObject var store: Store
-    let showSettings: () -> Void
-    let height: CGFloat?
-    @ViewBuilder var body: some View {
-        if let height {
-            ScrollView { content }.frame(width: 340, height: height).tint(accent)
-        } else {
-            content.frame(width: 340).tint(accent)
+enum PanelSection: String {
+    case battery = "电池", wifi = "Wi‑Fi", sound = "声音"
+    var symbol: String {
+        switch self {
+        case .battery: "battery.75percent"
+        case .wifi: "wifi"
+        case .sound: "speaker.wave.2"
         }
     }
-    var content: some View {
-        let s = store.snapshot
-        return VStack(alignment: .leading, spacing: 16) {
-            HStack { Text("Combo · 三合一").font(.system(size: 16, weight: .semibold)); Spacer(); Button(action: showSettings) { Image(systemName: "gearshape") }.buttonStyle(.plain).help("设置…").accessibilityLabel("设置") }
-            HStack(spacing: 16) {
-                ComboIcon(snapshot: s, animate: store.animate, size: 68)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(s.batteryText).font(.system(size: 28, weight: .medium, design: .rounded))
-                    if store.scene == .live {
-                        Text("电源：\(store.batterySourceText)").font(.caption).foregroundStyle(.secondary)
-                        Text(store.batteryStatusText).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    } else {
-                        Text("演示数据 · 不改变系统状态").font(.caption).foregroundStyle(.secondary)
+}
+
+struct PanelView: View {
+    static let width: CGFloat = 420
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("themeFamily") private var themeFamily: ComboTheme = .blue
+    private var palette: ComboPalette {
+        themeFamily.palette(isDark: colorScheme == .dark)
+    }
+    private var mutedText: Color { palette.mutedText }
+    @ObservedObject var store: Store
+    let showSettings: () -> Void
+    let height: CGFloat
+    let compact: Bool
+    let resize: (Bool) -> Void
+    @State private var selected: PanelSection?
+    var body: some View {
+        HStack(spacing: 10) {
+            if let selected {
+                panel {
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            if compact { Button("返回总览") { choose(selected) }.font(.caption) }
+                            else { Text(selected.rawValue).font(.headline) }
+                            Spacer()
+                        }
+                        detail(selected)
+                        if compact && !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
                     }
                 }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             }
-            if store.scene == .live {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("当前充电上限：\(store.chargeLimit.text)")
-                    Text("健康：\(store.batteryHealth) · 低电量模式：\(store.lowPowerMode ? "开" : "关")")
-                }.font(.caption).foregroundStyle(.secondary)
-                ChargeFullSection(control: store.chargeControl, eligible: store.canRequestFullCharge,
-                                  expectedLimit: store.chargeLimit, action: store.requestFullCharge)
-                PowerModeSection(control: store.powerMode, source: store.batteryOnAC.map { $0 ? .adapter : .battery }) {
-                    store.refreshBattery()
+            if selected == nil || !compact { panel { overview } }
+        }
+        .frame(width: selected == nil || compact ? Self.width : Self.width * 2 + 10, height: height)
+        .tint(palette.accent)
+        .task(id: store.panelVisible && store.screenActive && store.scene == .live) {
+            guard store.panelVisible && store.screenActive && store.scene == .live else { store.energyApps.cancel(); return }
+            while !Task.isCancelled {
+                store.energyApps.refresh()
+                do { try await Task.sleep(for: .seconds(30)) } catch { return }
+            }
+        }
+        .task(id: "\(store.panelVisible && store.screenActive && store.scene == .live && (store.live.outputIsAirPods || selected == .sound))-\(store.selectedOutputID)") {
+            guard store.panelVisible && store.screenActive && store.scene == .live && (store.live.outputIsAirPods || selected == .sound) else { store.airpods.cancel(); return }
+            while !Task.isCancelled {
+                store.airpods.refresh(deviceID: store.selectedOutputID)
+                do { try await Task.sleep(for: .seconds(3)) } catch { return }
+            }
+        }
+    }
+    private func panel<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        ScrollView { content().padding(18).frame(maxWidth: .infinity, alignment: .leading) }
+            .frame(width: Self.width, height: height)
+            .background(LinearGradient(colors: [palette.canvasTop, palette.canvasBottom],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(palette.isDark ? Color.white.opacity(0.22) : Color.black.opacity(0.10)))
+    }
+    private func tile<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        content().frame(maxWidth: .infinity, alignment: .leading).padding(14)
+            .background(LinearGradient(colors: [palette.tileTop, palette.tileBottom],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(palette.isDark ? Color.white.opacity(0.13) : Color.black.opacity(0.08)))
+    }
+    private var overview: some View {
+        let s = store.snapshot
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("Combo 概览").font(.system(size: 18, weight: .semibold)).padding(.bottom, 2)
+            tile {
+                HStack(spacing: 14) {
+                    ComboIcon(snapshot: s, animate: store.animate, size: 50)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("电池 \(s.batteryText)").lineLimit(1)
+                        Text("Wi‑Fi \(s.network)").lineLimit(1)
+                        Text("声音 \(s.muted ? "静音" : s.volumeText)").lineLimit(1)
+                    }.font(.system(size: 12, weight: .medium)).foregroundStyle(mutedText)
+                }.frame(height: store.mediaVisible ? 52 : 90)
+            }
+            if store.mediaVisible { mediaCard(store.mediaTrack) }
+            HStack(alignment: .top, spacing: 10) {
+                sectionCard(.battery, snapshot: s)
+                sectionCard(.wifi, snapshot: s)
+            }
+            sectionCard(.sound, snapshot: s)
+            if !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
+            Spacer(minLength: 0)
+            Rectangle().fill(palette.isDark ? Color.white.opacity(0.13) : Color.black.opacity(0.08)).frame(height: 1)
+            HStack {
+                Button { NSApp.terminate(nil) } label: { Label("退出 Combo", systemImage: "rectangle.portrait.and.arrow.right") }
+                    .buttonStyle(.plain).help("退出 Combo")
+                Spacer()
+                Button(action: showSettings) { Image(systemName: "gearshape.fill").font(.system(size: 17)) }
+                    .buttonStyle(.plain).help("设置…").accessibilityLabel("设置")
+            }.foregroundStyle(mutedText).font(.system(size: 12, weight: .medium)).padding(.horizontal, 3)
+        }.frame(minHeight: height - 36, alignment: .top)
+    }
+    private func sectionCard(_ section: PanelSection, snapshot s: Snapshot) -> some View {
+        Button { choose(section) } label: {
+            tile {
+                VStack(alignment: .leading, spacing: 7) {
+                    HStack(spacing: 9) {
+                        Image(systemName: section.symbol).frame(width: 23)
+                        Text(section.rawValue).font(.system(size: 15, weight: .semibold))
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(mutedText)
+                    }
+                    Text(summary(section, snapshot: s)).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1)
+                    if section == .battery {
+                        if store.scene == .live { EnergyAppsSection(control: store.energyApps, limit: 1) }
+                        else { Text("演示数据").font(.caption).foregroundStyle(mutedText) }
+                    } else if section == .sound {
+                        Text(s.output).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1)
+                        if store.scene == .live, s.outputIsAirPods, let state = store.airpods.snapshot,
+                           state.available, state.deviceID == store.selectedOutputID,
+                           state.left != nil || state.right != nil || state.caseBattery != nil || state.single != nil {
+                            HStack(spacing: 8) {
+                                if let left = state.left { Label("\(left)%", systemImage: "airpods.pro.left") }
+                                if let right = state.right { Label("\(right)%", systemImage: "airpods.pro.right") }
+                                if let charge = state.caseBattery { Label("\(charge)%", systemImage: "airpodspro.chargingcase.wireless") }
+                                if let single = state.single, state.left == nil && state.right == nil { Text("电量 \(single)%") }
+                            }.font(.system(size: 11)).foregroundStyle(mutedText)
+                                .accessibilityElement(children: .ignore).accessibilityLabel(state.batteryText)
+                        }
+                    }
+                    if section == .sound, !store.mediaVisible, let volume = s.volume {
+                        ProgressView(value: s.muted ? 0 : volume).tint(mutedText).padding(.top, 5)
+                    }
+                }.frame(minHeight: section == .battery ? 115 : store.mediaVisible ? (section == .sound ? 62 : 50) : (section == .sound ? 106 : 85), alignment: .center)
+            }
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(selected == section ? palette.accent : .clear, lineWidth: 2))
+        }.buttonStyle(.plain).accessibilityAddTraits(selected == section ? .isSelected : [])
+    }
+    private func mediaCard(_ track: MediaTrack?) -> some View {
+        tile {
+            VStack(alignment: .leading, spacing: 9) {
+                HStack(spacing: 11) {
+                    Group {
+                        if let artwork = track?.artwork, let image = NSImage(data: artwork) {
+                            Image(nsImage: image).resizable().scaledToFill()
+                        } else {
+                            Image(systemName: "music.note").font(.system(size: 21)).frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .background(palette.isDark ? Color.white.opacity(0.09) : Color.black.opacity(0.05))
+                        }
+                    }.frame(width: 48, height: 48).clipShape(RoundedRectangle(cornerRadius: 9)).accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(store.mediaTitle).font(.system(size: 14, weight: .semibold)).lineLimit(1)
+                        if let artist = track?.artist, !artist.isEmpty { Text(artist).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1) }
+                        if let source = track?.source, !source.isEmpty { Text(source).font(.system(size: 11)).foregroundStyle(mutedText).lineLimit(1) }
+                    }
+                    Spacer(minLength: 0)
+                    Text(store.mediaControlsAvailable ? (store.live.playing ? "播放中" : "已暂停") : "重新连接中").font(.system(size: 11)).foregroundStyle(mutedText)
                 }
-                EnergyAppsSection(control: store.energyApps, limit: store.energyAppLimit, active: store.screenActive)
-            } else {
-                Button("返回本机状态") { store.scene = .live }.font(.caption)
+                HStack(spacing: 18) {
+                    Spacer()
+                    Button { store.controlMedia(.previous) } label: { Image(systemName: "backward.end.fill").frame(width: 30, height: 28) }
+                        .help("上一首").accessibilityLabel("上一首")
+                    Button { store.controlMedia(.toggle) } label: { Image(systemName: store.live.playing ? "pause.fill" : "play.fill").frame(width: 30, height: 28) }
+                        .help(store.live.playing ? "暂停" : "播放").accessibilityLabel(store.live.playing ? "暂停" : "播放")
+                    Button { store.controlMedia(.next) } label: { Image(systemName: "forward.end.fill").frame(width: 30, height: 28) }
+                        .help("下一首").accessibilityLabel("下一首")
+                    Spacer()
+                }.buttonStyle(.plain).font(.system(size: 15)).disabled(!store.mediaControlsAvailable)
             }
-            HStack { Button("电池设置") { store.openSystemSettings("battery") }; Button("耗电应用") { store.openActivityMonitor() } }.font(.caption)
-            Divider()
+        }
+    }
+    private func summary(_ section: PanelSection, snapshot s: Snapshot) -> String {
+        switch section {
+        case .battery: "\(s.batteryText) · \(store.batteryStatusText)"
+        case .wifi: s.network
+        case .sound: s.muted ? "静音" : s.volumeText
+        }
+    }
+    private func choose(_ section: PanelSection) {
+        withAnimation(store.reduceMotion ? nil : .easeInOut(duration: 0.25)) {
+            selected = selected == section ? nil : section
+            resize(selected != nil && !compact)
+        }
+    }
+    @ViewBuilder private func detail(_ section: PanelSection) -> some View {
+        let s = store.snapshot
+        switch section {
+        case .battery:
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 16) {
+                    ComboIcon(snapshot: s, animate: store.animate, size: 68)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(s.batteryText).font(.system(size: 28, weight: .medium, design: .rounded))
+                        if store.scene == .live {
+                            Text("电源：\(store.batterySourceText)").font(.caption).foregroundStyle(.secondary)
+                            Text(store.batteryStatusText).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        } else { Text("演示数据 · 不改变系统状态").font(.caption).foregroundStyle(.secondary) }
+                    }
+                }
+                if store.scene == .live {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("当前充电上限：\(store.chargeLimit.text)")
+                        Text("健康：\(store.batteryHealth) · 低电量模式：\(store.lowPowerMode ? "开" : "关")")
+                    }.font(.caption).foregroundStyle(.secondary)
+                    ChargeFullSection(control: store.chargeControl, eligible: store.canRequestFullCharge,
+                                      expectedLimit: store.chargeLimit, action: store.requestFullCharge)
+                    PowerModeSection(control: store.powerMode, source: store.batteryOnAC.map { $0 ? .adapter : .battery }) { store.refreshBattery() }
+                    EnergyAppsSection(control: store.energyApps, limit: store.energyAppLimit)
+                } else { Button("返回本机状态") { store.scene = .live }.font(.caption) }
+                HStack { Button("电池设置") { store.openSystemSettings("battery") }; Button("耗电应用") { store.openActivityMonitor() } }.font(.caption)
+            }
+        case .wifi:
             WiFiSection(wifi: store.wifi, hotspots: store.hotspots, connection: s.network, active: store.screenActive,
                         openSettings: { store.openSystemSettings("wifi") })
-            Divider()
-            Label("声音", systemImage: "speaker.wave.2").font(.headline)
-            HStack { Text(s.muted ? "静音" : "音量"); Spacer(); Text(s.volumeText).foregroundStyle(.secondary) }.font(.caption)
-            Slider(value: Binding(get: { s.volume ?? 0 }, set: { store.setVolume($0) }), in: 0...1).disabled(store.scene != .live || !store.canVolume).accessibilityLabel("系统音量")
-            SoundOutputs(store: store)
-            HStack { Button(s.muted ? "取消静音" : "静音") { store.toggleMute() }.disabled(store.scene != .live || !store.canMute); Button("声音设置 / AirPods") { store.openSystemSettings("sound") } }.font(.caption)
-            if !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
-            Divider()
-            HStack { Spacer(); Button("退出 Combo") { NSApp.terminate(nil) }; Button("设置…", action: showSettings) }.font(.caption)
-        }.padding(20)
+        case .sound:
+            VStack(alignment: .leading, spacing: 16) {
+                Label("声音", systemImage: "speaker.wave.2").font(.headline)
+                HStack { Text(s.muted ? "静音" : "音量"); Spacer(); Text(s.volumeText).foregroundStyle(.secondary) }.font(.caption)
+                Slider(value: Binding(get: { s.volume ?? 0 }, set: { store.setVolume($0) }), in: 0...1).disabled(store.scene != .live || !store.canVolume).accessibilityLabel("系统音量")
+                SoundOutputs(store: store)
+                HStack { Button(s.muted ? "取消静音" : "静音") { store.toggleMute() }.disabled(store.scene != .live || !store.canMute); Button("声音设置 / AirPods") { store.openSystemSettings("sound") } }.font(.caption)
+            }
+        }
     }
 }
 struct SoundOutputs: View {
@@ -485,15 +763,6 @@ struct SoundOutputs: View {
             }
         }
         .onChange(of: store.selectedOutputID) { _, _ in expanded = true }
-        .task(id: "\(active)-\(store.selectedOutputID)") {
-            guard active else { control.cancel(); return }
-            // ponytail: poll only while visible; replace with private notifications if measured cost warrants it.
-            while !Task.isCancelled {
-                control.refresh(deviceID: store.selectedOutputID)
-                do { try await Task.sleep(for: .seconds(3)) } catch { return }
-            }
-        }
-        .onDisappear { control.cancel() }
     }
     private func battery(_ state: AirPodsReply) -> some View {
         HStack(spacing: 8) {
@@ -628,7 +897,6 @@ struct AirPodsSegmentTrack<Content: View>: View {
 struct EnergyAppsSection: View {
     @ObservedObject var control: EnergyApps
     let limit: Int
-    let active: Bool
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("高耗能应用").font(.caption).foregroundStyle(.secondary)
@@ -653,14 +921,6 @@ struct EnergyAppsSection: View {
             }
         }
         .font(.caption)
-        .task(id: active) {
-            guard active else { control.cancel(); return }
-            while !Task.isCancelled {
-                control.refresh()
-                do { try await Task.sleep(for: .seconds(30)) } catch { return }
-            }
-        }
-        .onDisappear { control.cancel() }
     }
 }
 struct ChargeFullSection: View {

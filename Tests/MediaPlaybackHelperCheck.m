@@ -5,6 +5,7 @@
 @interface TestClient : NSObject
 @property NSString *bundleIdentifier;
 @property NSString *parentApplicationBundleIdentifier;
+@property NSString *displayName;
 @property uint32_t state;
 @end
 @implementation TestClient
@@ -33,8 +34,19 @@
 @end
 
 static NSArray *testClients;
+static NSDictionary *testInfo;
+static BOOL testPlaying;
 static void Clients(dispatch_queue_t queue, void (^completion)(NSArray *)) {
     dispatch_async(queue, ^{ completion(testClients); });
+}
+static void CurrentClient(dispatch_queue_t queue, void (^completion)(id)) {
+    dispatch_async(queue, ^{ completion(testClients.firstObject); });
+}
+static void CurrentInfo(dispatch_queue_t queue, void (^completion)(NSDictionary *)) {
+    dispatch_async(queue, ^{ completion(testInfo); });
+}
+static void CurrentPlaying(dispatch_queue_t queue, void (^completion)(BOOL)) {
+    dispatch_async(queue, ^{ completion(testPlaying); });
 }
 static TestClient *Client(NSString *bundle, uint32_t state) {
     TestClient *client = TestClient.new; client.bundleIdentifier = bundle; client.state = state; return client;
@@ -68,5 +80,17 @@ int main(void) { @autoreleasepool {
         assert(Excluded(bundle));
     Check(@[Client(@"us.zoom.xos", 1), Client(@"com.apple.FaceTime", 1)], YES, NO);
     assert(!Excluded(@"com.tencent.QQMusic") && !Excluded(@"com.netease.163music") && !Excluded(@"com.google.Chrome"));
+    testClients = @[Client(@"com.apple.Music", 1)];
+    ((TestClient *)testClients.firstObject).displayName = @"Music";
+    testInfo = @{@"title": @"Song", @"artist": @"Artist", @"art": [@"cover" dataUsingEncoding:NSUTF8StringEncoding]};
+    testPlaying = YES;
+    NSDictionary *track = ReadTrack(CurrentClient, CurrentInfo, CurrentPlaying, @"title", @"artist", @"art");
+    assert([track[@"title"] isEqual:@"Song"] && [track[@"source"] isEqual:@"Music"]);
+    assert([track[@"artwork"] isEqual:@"Y292ZXI="] && [track[@"playing"] boolValue]);
+    testPlaying = NO;
+    assert(![ReadTrack(CurrentClient, CurrentInfo, CurrentPlaying, @"title", @"artist", @"art")[@"playing"] boolValue]);
+    testClients = @[Client(@"com.apple.FaceTime", 1)];
+    assert(ReadTrack(CurrentClient, CurrentInfo, CurrentPlaying, @"title", @"artist", @"art") == nil);
+    assert(CommandForByte('t') == 2 && CommandForByte('n') == 4 && CommandForByte('b') == 5 && CommandForByte('x') == -1);
     puts("PASS: all-client aggregation, pause/stop/interruption, unknown state and communications exclusions");
 } }

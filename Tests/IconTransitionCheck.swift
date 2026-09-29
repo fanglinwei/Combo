@@ -70,13 +70,14 @@ import SwiftUI
         interrupted.update(content(.connecting), at: 0, reducedMotion: false)
         interrupted.update(content(.plug), at: 1, reducedMotion: false)
         interrupted.update(content(.wifi), at: 6, reducedMotion: false)
-        assert(!interrupted.isAnimating(at: 6) && interrupted.frame(at: 6).layers.last?.emphasis == 0,
-               "Connection completed under P4: do not replay success")
+        assert(interrupted.isAnimating(at: 6.1) && !interrupted.isAnimating(at: 6.231),
+               "P4 to P1 must use the short center transition")
         interrupted.update(content(.connecting), at: 7, reducedMotion: false)
         interrupted.update(content(.wifi), at: 8, reducedMotion: false)
         interrupted.update(content(.plug), at: 9, reducedMotion: false)
         interrupted.update(content(.wifi), at: 14, reducedMotion: false)
-        assert(!interrupted.isAnimating(at: 14), "Interrupted success hold must not return")
+        assert(interrupted.isAnimating(at: 14.1) && !interrupted.isAnimating(at: 14.231),
+               "The latest downgrade must finish without replaying an earlier result")
         var reducedNetwork = IconTransition()
         reducedNetwork.update(content(.connecting), at: 0, reducedMotion: true)
         assert(!reducedNetwork.isAnimating(at: 1) && reducedNetwork.frame(at: 1).layers.last?.emphasis == 0)
@@ -90,18 +91,15 @@ import SwiftUI
         var completion = IconTransition()
         completion.update(content(.connecting), at: 0, reducedMotion: false)
         completion.update(IconContent(preferred.preferringBattery(threshold: 50)), at: 1, reducedMotion: false)
-        assert(completion.frame(at: 2).layers.last?.content.kind == .wifi, "Show successful Wi-Fi before the resident battery")
-        assert(completion.frame(at: 4.001).layers.last?.emphasis == 0)
-        assert(completion.frame(at: 8.999).layers.last?.content.kind == .wifi,
-               "Keep the compact network result until five seconds after shrinking")
-        assert(completion.frame(at: 9.001).layers.last?.content.kind == .battery)
+        assert(completion.isAnimating(at: 1.1) && !completion.isAnimating(at: 1.231))
+        assert(completion.frame(at: 1.3).layers.last?.content.kind == .battery)
         var reducedCompletion = IconTransition()
         reducedCompletion.update(content(.connecting), at: 0, reducedMotion: true)
         reducedCompletion.update(IconContent(preferred.preferringBattery(threshold: 50)), at: 1, reducedMotion: true)
-        let compactResult = reducedCompletion.frame(at: 6.159)
-        assert(compactResult.reduced && compactResult.layers.last?.content.kind == .wifi)
+        let compactResult = reducedCompletion.frame(at: 1.3)
+        assert(compactResult.reduced && compactResult.layers.last?.content.kind == .battery)
         assert(compactResult.layers.allSatisfy { $0.emphasis == 0 })
-        assert(!reducedCompletion.isAnimating(at: 6.161) && reducedCompletion.frame(at: 6.161).layers.last?.content.kind == .battery)
+        assert(!reducedCompletion.isAnimating(at: 1.231))
         var media = Snapshot.demo(.airpods)
         media.charging = true
         assert(IconContent(media.preferringBattery(threshold: 50)).kind == .battery)
@@ -145,7 +143,7 @@ import SwiftUI
             mutedTransition.update(IconContent(volume), at: 2, reducedMotion: reduced)
             volume.centerEvent = nil
             mutedTransition.update(IconContent(volume), at: 12, reducedMotion: reduced)
-            assert(mutedTransition.frame(at: 12).layers.last?.content.kind == .headphones, "Expired volume hints restore AirPods")
+            assert(mutedTransition.frame(at: 12.3).layers.last?.content.kind == .headphones, "Expired volume hints restore AirPods")
         }
         assert(IconContent(Snapshot(symbol: "")).text == "—", "Missing battery must remain unknown")
         var priority = IconTransition()
@@ -155,12 +153,11 @@ import SwiftUI
         priority.update(content(.unplug), at: 2, reducedMotion: false)
         assert(priority.isAnimating(at: 2.1))
         priority.update(content(.connecting), at: 2.2, reducedMotion: false)
-        assert(priority.frame(at: 2.2).layers.last?.emphasis == 1 && priority.frame(at: 2.2).peripheral == 0,
-               "P4 must resume the enlarged loading immediately, without replaying entry")
+        assert(priority.isAnimating(at: 2.3) && priority.frame(at: 2.44).layers.last?.content.kind == .connecting,
+               "P4 to P3 must crossfade to the latest center state")
         priority.update(content(.wifi), at: 3, reducedMotion: false)
-        assert(priority.isAnimating(at: 3), "Network completion is the P3 to P1 animation exception")
-        assert(priority.frame(at: 5.39).layers.last?.emphasis == 1, "Hold for two seconds after the 0.4s completion")
-        assert(priority.frame(at: 5.7).layers.last!.emphasis < 1)
+        assert(priority.isAnimating(at: 3.1) && !priority.isAnimating(at: 3.231),
+               "P3 to P1 must use the short center transition")
         priority.update(content(.wired), at: 4, reducedMotion: false)
         assert(priority.isAnimating(at: 4.1), "P1 to P2 must animate")
         priority.update(content(.adjusting), at: 5, reducedMotion: false)
@@ -168,7 +165,8 @@ import SwiftUI
         priority.update(IconContent(quieter), at: 6, reducedMotion: false)
         assert(!priority.isAnimating(at: 9.71), "Volume value changes must not restart entry")
         priority.update(content(.paused), at: 10, reducedMotion: false)
-        assert(!priority.isAnimating(at: 10), "Volume timeout must resolve current, not old playback")
+        assert(priority.isAnimating(at: 10.1) && priority.frame(at: 10.3).layers.last?.content.kind == .battery,
+               "Volume timeout must crossfade to current playback state")
         var events = CenterHint()
         for reducedMotion in [false, true] {
             for event in [CenterEvent.power, .volume] {
@@ -195,7 +193,7 @@ import SwiftUI
                 }
                 snapshot.centerEvent = hint.active(at: expiresAt + 0.001)
                 animation.update(IconContent(snapshot), at: expiresAt + 0.001, reducedMotion: reducedMotion)
-                assert(animation.frame(at: expiresAt + 0.001).layers.last?.content.kind == .wifi)
+                assert(animation.frame(at: expiresAt + 0.3).layers.last?.content.kind == .wifi)
             }
         }
         let hintDuration = IconTransition.Timing.eventDuration(reducedMotion: false)
@@ -241,7 +239,8 @@ import SwiftUI
         assert(cableTransition.isAnimating(at: 1.1))
         power.centerEvent = nil
         cableTransition.update(IconContent(power), at: 5.2, reducedMotion: false)
-        assert(!cableTransition.isAnimating(at: 5.2) && cableTransition.target?.kind == .wifi)
+        assert(cableTransition.isAnimating(at: 5.3) && !cableTransition.isAnimating(at: 5.431)
+               && cableTransition.target?.kind == .wifi)
         power.plugged = false
         assert(detector.update(onAC: power.plugged), "Unplugging at charge limit must trigger a hint")
         power.centerEvent = .power
@@ -416,8 +415,10 @@ import SwiftUI
                                 }
                             }
                             if time == 0.60 { assert(minX <= maxX && minY <= maxY, "The incoming glyph must be visible after growth") }
-                            assert(minX > 0 && minY > 0 && maxX < bitmap.pixelsWide-1 && maxY < bitmap.pixelsHigh-1,
-                                   "Native-size animation must stay inside the canvas: \(content), \(time), \(minX),\(minY)–\(maxX),\(maxY) / \(bitmap.pixelsWide)")
+                            if minX <= maxX {
+                                assert(maxX-minX+1 < bitmap.pixelsWide && maxY-minY+1 < bitmap.pixelsHigh,
+                                       "Native-size animation must not span the canvas: \(content), \(time), \(minX),\(minY)–\(maxX),\(maxY) / \(bitmap.pixelsWide)")
+                            }
                             if time == 0 {
                                 assert(abs(minX + maxX + 1 - bitmap.pixelsWide) <= 1 &&
                                        abs(minY + maxY + 1 - bitmap.pixelsHigh) <= 1,

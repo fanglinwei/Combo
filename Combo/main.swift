@@ -2,12 +2,18 @@ import AppKit
 import SwiftUI
 import Combine
 
-@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+final class ComboPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+}
+
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let store = Store()
     var status: NSStatusItem!
-    let popover = NSPopover()
+    var panel: ComboPanel?
+    private var panelCompact = false
     var settings: NSWindow?
     var change: AnyCancellable?
+    private var appearanceChange: AnyCancellable?
     var animator: Timer?
     private var iconTransition = IconTransition()
     private var terminating = false
@@ -20,13 +26,21 @@ import Combine
         root.submenu = submenu; NSApp.mainMenu = menu
         status = NSStatusBar.system.statusItem(withLength: 30)
         status.button?.target = self; status.button?.action = #selector(togglePanel)
-        popover.behavior = .transient
-        popover.delegate = self
         change = store.objectWillChange.sink { [weak self] _ in DispatchQueue.main.async { self?.updateIcon() } }
+        appearanceChange = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification, object: UserDefaults.standard)
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.updateWindowAppearance() } }
         updateIcon()
         if !UserDefaults.standard.bool(forKey: "hasOpened") || CommandLine.arguments.contains("--settings") || store.menuSetup.needsRecovery {
             openSettings(); UserDefaults.standard.set(true, forKey: "hasOpened")
         }
+    }
+    private var selectedAppearance: NSAppearance? {
+        (ComboAppearance(rawValue: UserDefaults.standard.string(forKey: "appearanceMode") ?? "") ?? .system).nsAppearance
+    }
+    private func updateWindowAppearance() {
+        let appearance = selectedAppearance
+        settings?.appearance = appearance
+        panel?.appearance = appearance
     }
     func updateIcon() {
         guard status != nil else { return }
@@ -60,28 +74,64 @@ import Combine
         status.button?.setAccessibilityLabel(description)
     }
     @objc func togglePanel() {
-        if popover.isShown { popover.performClose(nil) }
-        else if let button = status.button {
+        if panel?.isVisible == true { closePanel() }
+        else if let screen = status.button?.window?.screen ?? NSScreen.main {
             store.refresh()
-            let maxHeight = (button.window?.screen?.visibleFrame.height ?? 600) - 24
+            let visible = screen.visibleFrame
+            let height = min(500, visible.height - 16)
+            panelCompact = visible.width < PanelView.width * 2 + 34
             let showSettings = { [weak self] in _ = self?.openSettings() }
-            let host = NSHostingController(rootView: PanelView(store: store, showSettings: showSettings, height: nil))
-            let idealHeight = host.sizeThatFits(in: CGSize(width: 340, height: CGFloat.greatestFiniteMagnitude)).height
-            host.rootView = PanelView(store: store, showSettings: showSettings, height: min(idealHeight, maxHeight))
-            popover.contentViewController = host
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            store.panelVisible = popover.isShown
-            if let window = host.view.window, let screen = button.window?.screen,
-               window.frame.maxY > screen.visibleFrame.maxY {
-                window.setFrameOrigin(NSPoint(x: window.frame.minX, y: screen.visibleFrame.maxY - window.frame.height))
+            let view = PanelView(store: store, showSettings: showSettings, height: height, compact: panelCompact,
+                                 resize: { [weak self] expanded in self?.resizePanel(expanded: expanded) })
+            let frame = NSRect(x: visible.maxX - PanelView.width - 12, y: visible.maxY - height - 8,
+                               width: PanelView.width, height: height)
+            let window = panel ?? ComboPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+            window.appearance = selectedAppearance
+            let hosting = NSHostingView(rootView: view)
+            hosting.sizingOptions = []
+            window.contentView = hosting
+            window.setFrame(frame, display: false)
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.hasShadow = true
+            window.level = .floating
+            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+            window.delegate = self
+            panel = window
+            window.alphaValue = store.reduceMotion ? 1 : 0
+            window.makeKeyAndOrderFront(nil)
+            store.panelVisible = true
+            if !store.reduceMotion {
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.2
+                    window.animator().alphaValue = 1
+                }
             }
         }
     }
-    func popoverDidClose(_ notification: Notification) { store.panelVisible = false }
+    private func resizePanel(expanded: Bool) {
+        guard let panel, let screen = panel.screen else { return }
+        let visible = screen.visibleFrame
+        let width = expanded && !panelCompact ? PanelView.width * 2 + 10 : PanelView.width
+        let frame = NSRect(x: visible.maxX - width - 12, y: panel.frame.minY, width: width, height: panel.frame.height)
+        if store.reduceMotion { panel.setFrame(frame, display: true) }
+        else {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.25
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                panel.animator().setFrame(frame, display: true)
+            }
+        }
+    }
+    private func closePanel() { panel?.orderOut(nil); store.panelVisible = false }
+    func windowDidResignKey(_ notification: Notification) {
+        if notification.object as? NSWindow === panel { closePanel() }
+    }
     @objc func openSettings() {
-        popover.performClose(nil)
+        closePanel()
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 850, height: 690), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+            window.appearance = selectedAppearance
             window.title = "Combo 设置"; window.titlebarAppearsTransparent = true
             window.contentView = NSHostingView(rootView: SettingsView(store: store))
             window.minSize = NSSize(width: 780, height: 620)
