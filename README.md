@@ -13,7 +13,7 @@
 
 ## 运行
 
-双击 `build/Combo.app`。首次启动打开设置窗口，关闭窗口后菜单栏图标继续运行；点击菜单栏图标可操作三项功能。退出使用设置页或弹窗中的“退出 Combo”，也可按 Command-Q。
+用 Xcode 打开 `Combo.xcodeproj` 并运行 Combo scheme，或在终端执行 `./build.sh` 后打开 Xcode 的 DerivedData/Build/Products/Debug/Combo.app。Debug 运行时自动打开设置窗口，Release 首次启动时打开；关闭窗口后菜单栏图标继续运行；点击菜单栏图标可操作三项功能。退出使用设置页或弹窗中的“退出 Combo”，也可按 Command-Q。
 
 ## 可以体验
 
@@ -32,7 +32,7 @@
 - Wi‑Fi 网络名称需要定位权限；本地 ad-hoc 重新编译可能使权限授权失效。连接网络、切换输出设备和设置状态恢复仍需在不同硬件与权限状态下实机回归。
 - 媒体检测枚举系统注册的媒体客户端并聚合播放状态，任一客户端播放时启用原有底部音柱；暂停、停止或读取失败时恢复圆点，音量为零或静音时优先显示原有静音图标。主面板读取当前媒体的标题、作者、来源和可用封面，提供上一首、播放／暂停、下一首；暂停后保留媒体卡，直到系统媒体会话结束。锁屏/休眠时停止检测，唤醒后恢复。不录音、不读取网页。
 - 媒体读取使用隔离的 `MediaPlaybackHelper.m` 与系统 Perl，参考 [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter) 的加载机制；不是公开 API 的兼容性承诺。每秒查询一次全部已注册媒体客户端，单次超时 2 秒，宿主设 5 秒看门狗并处理退出/失效。未向系统注册的播放器不能识别；每个客户端查询默认播放器，多播放器子会话仍需实机验证。普通通知音不注册媒体会话；已显式排除 FaceTime、微信、QQ、Teams、Zoom、Discord 等通讯来源，但浏览器内通话及未知通讯应用仍需验证，不能保证语义分类覆盖所有应用。
-- 媒体检查：`Tests/MediaPlaybackHelperCheck.m` 覆盖多客户端聚合、暂停/停止/中断、通讯来源排除与 JSON 布尔类型；`Tests/MediaPlaybackCheck.swift` 覆盖解码和缺失 helper。构建后可运行 `build/media-playback-check --watch build/Combo.app/Contents/Helpers/ComboMediaPlayback.dylib`，在 12 秒内手动播放/暂停观察状态变更。
+- 媒体检查：`Tests/MediaPlaybackHelperCheck.m` 覆盖多客户端聚合、暂停/停止/中断、通讯来源排除与 JSON 布尔类型；`Tests/MediaPlaybackCheck.swift` 覆盖解码和缺失 helper，使用 `./verify.sh` 运行。
 - 日期折叠未实现；不修改系统时钟设置。
 - 菜单栏组合图标的 Wi-Fi 图形仅代表连接介质；面板内网络列表另用 RSSI 显示信号等级。默认路径使用 NWPath 可用性及 SystemConfiguration IPv4/IPv6 接口；介质冲突、未映射接口和隧道返回不确定。没有互联网探测，也不宣称代表全机所有流量。
 - 中央内容自动显示网络、电量或静音状态，不提供手动选择，也不显示日期或输出设备；设备切换不触发中央提示。
@@ -44,9 +44,14 @@
 
 ```sh
 ./build.sh
+./verify.sh
 ```
 
-使用已安装的 Swift 编译器及 `/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk`，部署目标 macOS 26.0，无第三方依赖。编译前运行 `Tests/main.swift` 的音量边界及显示优先级测试。
+`build.sh` 调用 Xcode 27 构建 Debug 应用；`COMBO_CONFIGURATION=Release ./build.sh` 构建 Release。目标系统仍为 macOS 26.0。`verify.sh` 单独运行原有状态、Helper、图标与签名检查。Xcode 从 GitHub 获取 InjectionNext 2.0.1 和 Inject 1.6.0；`Combo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` 固定版本。首次构建需要访问 GitHub，包括 InjectionNext 的 Git 子模块。
+
+### SwiftUI 热重载
+
+安装 [InjectionNext 2.0.1](https://github.com/johnno1962/InjectionNext/releases/tag/2.0.1) 到 `/Applications`，退出 Xcode，然后从 InjectionNext 菜单栏图标选择 **Launch Xcode**。在 Xcode 里运行 Combo 的 Debug scheme；InjectionNext 图标变橙色表示应用已连接。若保存文件后没有检测到改动，在 InjectionNext 中选择 **...or Watch Project** 并指定仓库根目录。保存 `Combo/Views.swift` 或 `Combo/Icon.swift` 中的 SwiftUI 视图实现后，InjectionNext 会编译改动并注入运行中的应用。属性布局、函数签名等结构性修改仍需重新构建运行。Debug 配置含 `-interposable`，并关闭沙盒与强化运行时以允许代码注入；Release 不设置注入链接参数。
 
 构建、状态测试与代码签名校验通过；在 macOS 27.0 开发机检查三合一面板与 Wi‑Fi、声音、电池系统设置跳转。Wi‑Fi 实际连接、输出设备切换、钥匙串写入、辅助功能读取及退出恢复尚未完成实机验证。
 
@@ -112,9 +117,9 @@ xcrun swiftc -sdk /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk -swift-v
 
 先退出并重启；若仍无效，在系统权限列表移除旧 Combo，用当前运行路径重新添加并开启。macOS 27 的用户截图中页面名称为“设备控制和数据访问”。不要重置整个 TCC 或给其他进程额外权限。
 
-构建现在拒绝覆盖正在运行的输出应用，避免运行中代码与磁盘签名不一致。权限验证应显式使用同一开发者签名身份：`COMBO_SIGNING_IDENTITY='证书 SHA-1' ./build.sh`；不设置仍为 ad-hoc，会打印权限失效风险。不能随意选择钥匙串中其他人的证书。身份首次切换后也可能需要重新授权。
+以下是 2026-09-23 的旧构建记录，现已由上方 Xcode 工程取代：当时的构建脚本拒绝覆盖正在运行的输出应用，避免运行中代码与磁盘签名不一致。权限验证使用固定签名身份；不设置时采用 ad-hoc。身份首次切换后也可能需要重新授权。
 
-本次修改在 `build/validation/Combo.app` 单独构建验证，未覆盖正在运行的 `build/Combo.app`；验证副本不应当作当前已授权应用使用。引导文案改成“系统尚未允许当前进程访问”，补充开关已开启时的排查步骤。未修改系统权限、未清空 TCC。`zsh Tests/check-build-guard.sh` 验证运行中构建被拒绝且原二进制哈希不变。
+本次修改在 `build/validation/Combo.app` 单独构建验证，未覆盖当时运行的 `build/Combo.app`；验证副本不应当作当前已授权应用使用。引导文案改成“系统尚未允许当前进程访问”，补充开关已开启时的排查步骤。未修改系统权限、未清空 TCC。旧构建防覆盖检查脚本已随 Xcode 迁移移除。
 
 Apple 签名身份依据：https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements
 

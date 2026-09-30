@@ -1,4 +1,5 @@
 import SwiftUI
+import Inject
 import AppKit
 
 private func themeColor(_ rgb: UInt32) -> Color {
@@ -91,99 +92,19 @@ enum Page: String, CaseIterable, Identifiable {
     }
 }
 struct Tag: View {
+    @ObserveInjection var inject
     let text: String
     @Environment(\.comboPalette) private var palette
     var body: some View { Text(text).font(.system(size: 10, weight: .medium)).padding(.horizontal, 8).padding(.vertical, 4).foregroundStyle(palette.accent).background(palette.accent.opacity(0.1), in: Capsule()) }
 }
 struct Card<Content: View>: View {
+    @ObserveInjection var inject
     @ViewBuilder var content: Content
     @Environment(\.comboPalette) private var palette
     var body: some View { VStack(alignment: .leading, spacing: 16) { content }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(palette.surface, in: RoundedRectangle(cornerRadius: 14)).overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.primary.opacity(0.055))) }
 }
-private final class HoverScroller: NSScroller {
-    var accent = NSColor.controlAccentColor
-    private var hovered = false
-
-    override class var isCompatibleWithOverlayScrollers: Bool { self == HoverScroller.self }
-
-    func setHovered(_ value: Bool) {
-        guard hovered != value else { return }
-        hovered = value
-        needsDisplay = true
-    }
-
-    override func drawKnob() {
-        guard hovered else { super.drawKnob(); return }
-        let knob = rect(for: .knob).insetBy(dx: 2, dy: 1)
-        accent.setFill()
-        NSBezierPath(roundedRect: knob, xRadius: knob.width / 2, yRadius: knob.width / 2).fill()
-    }
-}
-
-private struct HoverScrollerBridge: NSViewRepresentable {
-    let accent: NSColor
-
-    func makeNSView(context: Context) -> InstallerView { InstallerView() }
-    func updateNSView(_ view: InstallerView, context: Context) { view.accent = accent; view.install() }
-
-    final class InstallerView: NSView {
-        var accent = NSColor.controlAccentColor
-        private weak var scroller: HoverScroller?
-        private var monitor: Any?
-
-        override func viewDidMoveToSuperview() { super.viewDidMoveToSuperview(); install() }
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            if window == nil {
-                scroller?.setHovered(false)
-                scroller = nil
-                if let monitor { NSEvent.removeMonitor(monitor); self.monitor = nil }
-            } else { install() }
-        }
-
-        func install() {
-            DispatchQueue.main.async { [weak self] in self?.installNow() }
-        }
-
-        private func installNow() {
-            guard window != nil else { return }
-            var parent = superview
-            while let view = parent {
-                if let scrollView = view as? NSScrollView {
-                    if let scroller = scrollView.verticalScroller as? HoverScroller {
-                        if !scroller.accent.isEqual(accent) {
-                            scroller.accent = accent
-                            scroller.needsDisplay = true
-                        }
-                        self.scroller = scroller
-                    } else {
-                        let scroller = HoverScroller()
-                        scroller.accent = accent
-                        scrollView.verticalScroller = scroller
-                        self.scroller = scroller
-                    }
-                    if monitor == nil {
-                        monitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .leftMouseDown]) { [weak self] event in
-                            self?.updateHover(event)
-                            return event
-                        }
-                    }
-                    return
-                }
-                parent = view.superview
-            }
-        }
-
-        private func updateHover(_ event: NSEvent) {
-            guard let scroller else { return }
-            let inside = event.window === scroller.window && scroller.bounds.contains(scroller.convert(event.locationInWindow, from: nil))
-            scroller.setHovered(inside)
-        }
-
-        deinit { if let monitor { NSEvent.removeMonitor(monitor) } }
-    }
-}
 struct SettingsView: View {
+    @ObserveInjection var inject
     @ObservedObject var store: Store
     @ObservedObject var setup: MenuBarSetup
     init(store: Store) { self.store = store; self.setup = store.menuSetup }
@@ -244,6 +165,7 @@ struct SettingsView: View {
                 Button("稍后检查", role: .cancel) {}
             } message: { Text("请检查三枚系统图标；Combo 只能在读到原始状态时尝试恢复。") }
             .environment(\.comboPalette, palette)
+            .enableInjection()
     }
     var appearance: some View {
         VStack(spacing: 18) {
@@ -554,6 +476,7 @@ enum PanelSection: String {
     }
 }
 private struct WiFiName: View {
+    @ObserveInjection var inject
     @ObservedObject var wifi: WiFiControl
     var body: some View {
         Text(name).lineLimit(1).minimumScaleFactor(0.8).help(name)
@@ -567,6 +490,7 @@ private struct WiFiName: View {
 }
 
 struct PanelView: View {
+    @ObserveInjection var inject
     static let width: CGFloat = 420
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage("themeFamily") private var themeFamily: ComboTheme = .blue
@@ -617,6 +541,7 @@ struct PanelView: View {
                 do { try await Task.sleep(for: .seconds(3)) } catch { return }
             }
         }
+        .enableInjection()
     }
     private var detailEnterAnimation: Animation {
         .timingCurve(0.23, 1, 0.32, 1, duration: store.reduceMotion ? 0.12 : 0.23)
@@ -892,6 +817,7 @@ struct PanelView: View {
     }
 }
 struct SoundOutputs: View {
+    @ObserveInjection var inject
     @ObservedObject var store: Store
     @ObservedObject var control: AirPodsControl
     @State private var expanded = true
@@ -979,6 +905,7 @@ struct SoundOutputs: View {
     }
 }
 struct AirPodsSection: View {
+    @ObserveInjection var inject
     @ObservedObject var control: AirPodsControl
     let state: AirPodsReply
     @State private var hoveredOption: String?
@@ -1049,6 +976,7 @@ struct AirPodsSection: View {
     }
 }
 struct AirPodsSegmentTrack<Content: View>: View {
+    @ObserveInjection var inject
     let count: Int
     let selected: Int?
     let enabled: Bool
@@ -1098,6 +1026,7 @@ struct AirPodsSegmentTrack<Content: View>: View {
     }
 }
 struct EnergyAppsSection: View {
+    @ObserveInjection var inject
     @ObservedObject var control: EnergyApps
     let limit: Int
     var body: some View {
@@ -1127,6 +1056,7 @@ struct EnergyAppsSection: View {
     }
 }
 struct ChargeFullSection: View {
+    @ObserveInjection var inject
     @ObservedObject var control: ChargeControl
     let eligible: Bool
     let expectedLimit: ChargeLimit
@@ -1155,6 +1085,7 @@ struct ChargeFullSection: View {
     }
 }
 struct PowerModeSection: View {
+    @ObserveInjection var inject
     @ObservedObject var control: PowerModeControl
     let source: PowerSource?
     let refresh: () -> Void
@@ -1182,6 +1113,7 @@ struct PowerModeSection: View {
 }
 
 struct WiFiPasswordSettings: View {
+    @ObserveInjection var inject
     @ObservedObject var wifi: WiFiControl
     @State private var showExplanation = false
     var body: some View {
@@ -1209,6 +1141,7 @@ struct WiFiPasswordSettings: View {
 }
 
 struct HotspotStatusIcons: View {
+    @ObserveInjection var inject
     let signal: Int?
     let battery: Int?
     var body: some View {
@@ -1245,6 +1178,7 @@ struct HotspotStatusIcons: View {
 }
 
 struct PersonalHotspotSection: View {
+    @ObserveInjection var inject
     @ObservedObject var control: HotspotControl
     let openSettings: () -> Void
     var body: some View {
@@ -1292,6 +1226,7 @@ struct PersonalHotspotSection: View {
 }
 
 struct WiFiSection: View {
+    @ObserveInjection var inject
     @ObservedObject var wifi: WiFiControl
     let hotspots: HotspotControl
     let connection: String

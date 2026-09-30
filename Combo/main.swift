@@ -36,7 +36,12 @@ final class ComboPanel: NSPanel {
         appearanceChange = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification, object: UserDefaults.standard)
             .sink { [weak self] _ in DispatchQueue.main.async { self?.updateWindowAppearance() } }
         updateIcon()
-        if !UserDefaults.standard.bool(forKey: "hasOpened") || CommandLine.arguments.contains("--settings") || store.menuSetup.needsRecovery {
+        #if DEBUG
+        let showSettings = true
+        #else
+        let showSettings = !UserDefaults.standard.bool(forKey: "hasOpened") || CommandLine.arguments.contains("--settings") || store.menuSetup.needsRecovery
+        #endif
+        if showSettings {
             openSettings(); UserDefaults.standard.set(true, forKey: "hasOpened")
         }
     }

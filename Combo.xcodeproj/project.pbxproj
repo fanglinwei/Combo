@@ -1,0 +1,508 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07AC77614721507B247E230C /* HoverScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A453DCC82C729938A532C5 /* HoverScroller.swift */; };
+		126858ABDF709C9A021EA8DC /* EnergyApps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89D8B2128427EB6D64D4651E /* EnergyApps.swift */; };
+		186320F179D22AB5DDE7273E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141C7E0B4B8033FEFD4E6E3 /* main.swift */; };
+		20AF98593CEC5902E72C031C /* State.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAD8F5DF85A5699BF4EF74DD /* State.swift */; };
+		32E1CB35F0A51A0A3846C835 /* MenuDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E707D0608019378308FCC72 /* MenuDiagnostics.swift */; };
+		3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */; };
+		5E00D0EE72AF68EB37B88EE6 /* WiFiControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */; };
+		6C74CABA6CF5033FA7B8715C /* AudioVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */; };
+		7012FCA18A931EE3D6402869 /* InjectionNext in Frameworks */ = {isa = PBXBuildFile; productRef = 0ECE20A209DF30F65F7EC3A4 /* InjectionNext */; };
+		756D3DABE9C8837B37E031FE /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = 16B2FA3A515D354A30BCEC75 /* Inject */; };
+		806396930CB40D61BD38E445 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45FEC6A6DB0E3328C1EB77 /* Store.swift */; };
+		82EC1A0CE1BDECA3461169B8 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F951B1AB68E4AC17144EF10 /* Icon.swift */; };
+		8916AEC4AA95CCE6EB2B924E /* AirPodsControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */; };
+		89D7E2AA404BE963A36E44D3 /* Combo.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0733EE4F313F9A37B63C241D /* Combo.icns */; };
+		8D0E3ADF639C9B4669A8DF0A /* MenuFoldExperiment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */; };
+		908640C6F77CB53C46879E70 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 682E6A0AC33379301D321FAB /* Cocoa.framework */; };
+		954227314649115F4BCCD392 /* NetworkStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12994A42967FE55612E83F0C /* NetworkStatus.swift */; };
+		D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */; };
+		E9389571F13E1CBB3B732459 /* MediaPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */; };
+		F10C80F2ECA567F263086DC1 /* HotspotControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0761E92A852EF53B66972DA /* HotspotControl.swift */; };
+		F167C07E33420695912C062F /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A78ED80A91E3BE2FDD52277 /* Views.swift */; };
+		F44BAAD3AA4CE1463CC4CD81 /* PowerModeControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0141C7E0B4B8033FEFD4E6E3 /* main.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		0733EE4F313F9A37B63C241D /* Combo.icns */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.icns; path = Combo.icns; sourceTree = "<group>"; };
+		092B442EC711CC51B8749ADA /* Combo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Combo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B45FEC6A6DB0E3328C1EB77 /* Store.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		12994A42967FE55612E83F0C /* NetworkStatus.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NetworkStatus.swift; sourceTree = "<group>"; };
+		2F951B1AB68E4AC17144EF10 /* Icon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
+		3A78ED80A91E3BE2FDD52277 /* Views.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
+		3ABDC3E82DEC91AD9967B5D2 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4E707D0608019378308FCC72 /* MenuDiagnostics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuDiagnostics.swift; sourceTree = "<group>"; };
+		572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuFoldExperiment.swift; sourceTree = "<group>"; };
+		628947417B405D94700C64C2 /* AirPodsContext.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; path = AirPodsContext.c; sourceTree = "<group>"; };
+		62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiControl.swift; sourceTree = "<group>"; };
+		65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioVolume.swift; sourceTree = "<group>"; };
+		682E6A0AC33379301D321FAB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChargeControl.swift; sourceTree = "<group>"; };
+		76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPodsControl.swift; sourceTree = "<group>"; };
+		7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediaPlayback.swift; sourceTree = "<group>"; };
+		832EB9E7923BEB3E683D893F /* MediaPlaybackHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = MediaPlaybackHelper.m; sourceTree = "<group>"; };
+		89D8B2128427EB6D64D4651E /* EnergyApps.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EnergyApps.swift; sourceTree = "<group>"; };
+		A0761E92A852EF53B66972DA /* HotspotControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotspotControl.swift; sourceTree = "<group>"; };
+		A3A453DCC82C729938A532C5 /* HoverScroller.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HoverScroller.swift; sourceTree = "<group>"; };
+		A7C6E6FC3866A2286D6176F1 /* EnergyHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = EnergyHelper.m; sourceTree = "<group>"; };
+		B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PowerModeControl.swift; sourceTree = "<group>"; };
+		B9833BCDE5F7EAD64C9BA2B3 /* ChargeHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = ChargeHelper.m; sourceTree = "<group>"; };
+		CAD8F5DF85A5699BF4EF74DD /* State.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = State.swift; sourceTree = "<group>"; };
+		EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuBarSetup.swift; sourceTree = "<group>"; };
+		F6CE5149DF92562886DF166F /* AirPodsHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = AirPodsHelper.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AFB386B3A0D35C79122B162F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				908640C6F77CB53C46879E70 /* Cocoa.framework in Frameworks */,
+				7012FCA18A931EE3D6402869 /* InjectionNext in Frameworks */,
+				756D3DABE9C8837B37E031FE /* Inject in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3C58C0D3217474974257123A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				092B442EC711CC51B8749ADA /* Combo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4451806E1B3B5BE316D9CC3E /* Combo */ = {
+			isa = PBXGroup;
+			children = (
+				76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */,
+				65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */,
+				75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */,
+				89D8B2128427EB6D64D4651E /* EnergyApps.swift */,
+				A0761E92A852EF53B66972DA /* HotspotControl.swift */,
+				2F951B1AB68E4AC17144EF10 /* Icon.swift */,
+				7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */,
+				EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */,
+				4E707D0608019378308FCC72 /* MenuDiagnostics.swift */,
+				572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */,
+				12994A42967FE55612E83F0C /* NetworkStatus.swift */,
+				B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */,
+				CAD8F5DF85A5699BF4EF74DD /* State.swift */,
+				0B45FEC6A6DB0E3328C1EB77 /* Store.swift */,
+				3A78ED80A91E3BE2FDD52277 /* Views.swift */,
+				62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */,
+				0141C7E0B4B8033FEFD4E6E3 /* main.swift */,
+				0733EE4F313F9A37B63C241D /* Combo.icns */,
+				3ABDC3E82DEC91AD9967B5D2 /* Info.plist */,
+				B9833BCDE5F7EAD64C9BA2B3 /* ChargeHelper.m */,
+				A7C6E6FC3866A2286D6176F1 /* EnergyHelper.m */,
+				628947417B405D94700C64C2 /* AirPodsContext.c */,
+				F6CE5149DF92562886DF166F /* AirPodsHelper.m */,
+				832EB9E7923BEB3E683D893F /* MediaPlaybackHelper.m */,
+				A3A453DCC82C729938A532C5 /* HoverScroller.swift */,
+			);
+			path = Combo;
+			sourceTree = "<group>";
+		};
+		7B0EC1FEBC72CEF03CCA2F9E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9550E48EBA119469F91D6290 /* OS X */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		9550E48EBA119469F91D6290 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				682E6A0AC33379301D321FAB /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		CD922D4D2A542514D8565DDF = {
+			isa = PBXGroup;
+			children = (
+				3C58C0D3217474974257123A /* Products */,
+				7B0EC1FEBC72CEF03CCA2F9E /* Frameworks */,
+				4451806E1B3B5BE316D9CC3E /* Combo */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BF3EB1ECE2EE2421FFF26086 /* Combo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3E469B9AD69A8FC0FF27FA63 /* Build configuration list for PBXNativeTarget "Combo" */;
+			buildPhases = (
+				944B36866F17A12741546806 /* Sources */,
+				B8559022B074028149F33E5B /* Build and sign helpers */,
+				AFB386B3A0D35C79122B162F /* Frameworks */,
+				DFF5B99CB8616F1D04269C44 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Combo;
+			packageProductDependencies = (
+				0ECE20A209DF30F65F7EC3A4 /* InjectionNext */,
+				16B2FA3A515D354A30BCEC75 /* Inject */,
+			);
+			productName = Combo;
+			productReference = 092B442EC711CC51B8749ADA /* Combo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E27AE2E768E52DF74108B4B1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = 7323C5B6B7F13118886E6044 /* Build configuration list for PBXProject "Combo" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CD922D4D2A542514D8565DDF;
+			packageReferences = (
+				73B01430928BD8A039EA6FFF /* XCRemoteSwiftPackageReference "InjectionNext" */,
+				32D6AB6E1C9D4633969E2F3F /* XCRemoteSwiftPackageReference "Inject" */,
+			);
+			productRefGroup = 3C58C0D3217474974257123A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BF3EB1ECE2EE2421FFF26086 /* Combo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DFF5B99CB8616F1D04269C44 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				89D7E2AA404BE963A36E44D3 /* Combo.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B8559022B074028149F33E5B /* Build and sign helpers */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Combo/ChargeHelper.m",
+				"$(SRCROOT)/Combo/EnergyHelper.m",
+				"$(SRCROOT)/Combo/AirPodsContext.c",
+				"$(SRCROOT)/Combo/AirPodsHelper.m",
+				"$(SRCROOT)/Combo/MediaPlaybackHelper.m",
+			);
+			name = "Build and sign helpers";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboChargeHelper",
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboEnergyHelper",
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboAirPodsContext.dylib",
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboAirPodsHelper",
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboMediaPlaybackHelper.dylib",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/zsh;
+			shellScript = "set -eu\nmkdir -p \"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Helpers\"\ncd \"$SRCROOT\"\nOUT=\"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Helpers\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -framework Foundation -framework IOKit Combo/ChargeHelper.m -o \"$OUT/ComboChargeHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/EnergyHelper.m -o \"$OUT/ComboEnergyHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -dynamiclib -Wall -Wextra -Werror Combo/AirPodsContext.c -framework CoreFoundation -framework Security -o \"$OUT/ComboAirPodsContext.dylib\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -Wall -Wextra -Werror Combo/AirPodsHelper.m -framework Foundation -framework CoreAudio -framework IOBluetooth -o \"$OUT/ComboAirPodsHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -dynamiclib -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/MediaPlaybackHelper.m -o \"$OUT/ComboMediaPlayback.dylib\"\nfor file in \"$OUT\"/*; do codesign --force --sign - \"$file\"; done\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		944B36866F17A12741546806 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8916AEC4AA95CCE6EB2B924E /* AirPodsControl.swift in Sources */,
+				6C74CABA6CF5033FA7B8715C /* AudioVolume.swift in Sources */,
+				3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */,
+				126858ABDF709C9A021EA8DC /* EnergyApps.swift in Sources */,
+				F10C80F2ECA567F263086DC1 /* HotspotControl.swift in Sources */,
+				82EC1A0CE1BDECA3461169B8 /* Icon.swift in Sources */,
+				E9389571F13E1CBB3B732459 /* MediaPlayback.swift in Sources */,
+				D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */,
+				32E1CB35F0A51A0A3846C835 /* MenuDiagnostics.swift in Sources */,
+				8D0E3ADF639C9B4669A8DF0A /* MenuFoldExperiment.swift in Sources */,
+				954227314649115F4BCCD392 /* NetworkStatus.swift in Sources */,
+				F44BAAD3AA4CE1463CC4CD81 /* PowerModeControl.swift in Sources */,
+				20AF98593CEC5902E72C031C /* State.swift in Sources */,
+				806396930CB40D61BD38E445 /* Store.swift in Sources */,
+				F167C07E33420695912C062F /* Views.swift in Sources */,
+				5E00D0EE72AF68EB37B88EE6 /* WiFiControl.swift in Sources */,
+				186320F179D22AB5DDE7273E /* main.swift in Sources */,
+				07AC77614721507B247E230C /* HoverScroller.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		119A7A1E029DD069416D9573 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				EMIT_FRONTEND_COMMAND_LINES = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Combo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-Xlinker",
+					"-interposable",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.combo.app;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_ENABLE_OPAQUE_TYPE_ERASURE = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		15C403F586D6EF92F4E4E645 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Combo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = local.combo.app;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_ENABLE_OPAQUE_TYPE_ERASURE = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		56DAFCCB60509F409DC77129 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A04540A7A77AB0D8DC28EB8D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3E469B9AD69A8FC0FF27FA63 /* Build configuration list for PBXNativeTarget "Combo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15C403F586D6EF92F4E4E645 /* Release */,
+				119A7A1E029DD069416D9573 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7323C5B6B7F13118886E6044 /* Build configuration list for PBXProject "Combo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				56DAFCCB60509F409DC77129 /* Debug */,
+				A04540A7A77AB0D8DC28EB8D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		32D6AB6E1C9D4633969E2F3F /* XCRemoteSwiftPackageReference "Inject" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzysztofzablocki/Inject.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.6.0;
+			};
+		};
+		73B01430928BD8A039EA6FFF /* XCRemoteSwiftPackageReference "InjectionNext" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/johnno1962/InjectionNext.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.0.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0ECE20A209DF30F65F7EC3A4 /* InjectionNext */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 73B01430928BD8A039EA6FFF /* XCRemoteSwiftPackageReference "InjectionNext" */;
+			productName = InjectionNext;
+		};
+		16B2FA3A515D354A30BCEC75 /* Inject */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 32D6AB6E1C9D4633969E2F3F /* XCRemoteSwiftPackageReference "Inject" */;
+			productName = Inject;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E27AE2E768E52DF74108B4B1 /* Project object */;
+}

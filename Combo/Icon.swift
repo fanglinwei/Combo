@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(Inject)
+import Inject
+#endif
 import AppKit
 import CoreText
 
@@ -318,6 +321,9 @@ enum WiFiGlyph {
 }
 
 struct WiFiIcon: View {
+#if canImport(Inject)
+    @ObserveInjection var inject
+#endif
     var level = 3
     var body: some View {
         Canvas { context, size in
@@ -529,6 +535,9 @@ enum IconRenderer {
 
 }
 struct ComboIcon: View {
+#if canImport(Inject)
+    @ObserveInjection var inject
+#endif
     let snapshot: Snapshot
     let animate: Bool
     var size: CGFloat = 100
