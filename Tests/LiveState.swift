@@ -1,5 +1,6 @@
 import AppKit
 import ApplicationServices
+import Combine
 
 @main struct LiveStateCheck {
     @MainActor static func main() async {
@@ -10,6 +11,14 @@ import ApplicationServices
         if let volume = store.live.volume { assert((0...1).contains(volume)) }
         assert(!store.observation.isEmpty)
         assert(!store.checkingMenus)
+        var iconUpdates = 0
+        let iconObserver = store.objectWillChange.sink { iconUpdates += 1 }
+        let originalThreshold = store.battery.displayThreshold
+        store.battery.displayThreshold = originalThreshold == 50 ? 49 : 50
+        let thresholdRedrewIcon = iconUpdates > 0
+        store.battery.displayThreshold = originalThreshold
+        iconObserver.cancel()
+        assert(thresholdRedrewIcon, "Changing the battery threshold must redraw the menu bar icon")
         print("Battery: \(store.live.battery == nil ? "unavailable" : "valid")")
         print("Volume: \(store.live.volume == nil ? "unavailable" : "valid")")
         print("Network: \(store.live.network)")
@@ -23,10 +32,10 @@ import ApplicationServices
             assert(!store.checkingMenus, "denied menu check must not start an AX scan")
         }
         print("PASS: permission refresh and denied-access guidance (when untrusted)")
-        if store.selectedOutputID != 0 && store.canMute {
+        if store.audio.selectedOutputID != 0 && store.audio.canMute {
             // Simulate the previous observed mute value, then read the real device without writing it.
-            store.live.muted.toggle()
-            store.refreshAudio()
+            store.audio.muted.toggle()
+            store.audio.refreshAudio()
             assert(store.snapshot.centerEvent == .volume, "A mute-only device change must trigger P4")
             store.clearVolumeHint()
         }
@@ -57,16 +66,16 @@ import ApplicationServices
         assert(!store.live.adjusting && store.snapshot.centerEvent == nil, "hint must expire")
         assert(IconContent(store.snapshot).kind == .wifi, "Expiry must restore the latest resident state")
         store.live = originalAudio
-        assert(store.chargeLimit != .loading, "charge-limit read must finish or time out")
-        print("Battery detail: \(store.batterySourceText); \(store.batteryStatusText); limit \(store.chargeLimit.text)")
-        await store.powerMode.refresh()
-        assert(!store.powerMode.busy)
-        for (source, policy) in store.powerMode.policies {
+        assert(store.battery.chargeLimit != .loading, "charge-limit read must finish or time out")
+        print("Battery detail: \(store.battery.sourceText); \(store.battery.statusText); limit \(store.battery.chargeLimit.text)")
+        await store.battery.powerMode.refresh()
+        assert(!store.battery.powerMode.busy)
+        for (source, policy) in store.battery.powerMode.policies {
             print("Power policy: \(source.title) = \(policy.mode.title)")
             // Same-value requests must not ask for administrator authorization.
-            await store.powerMode.set(policy.mode, source: source)
-            assert(!store.powerMode.busy)
-            assert(store.powerMode.policies[source] == policy)
+            await store.battery.powerMode.set(policy.mode, source: source)
+            assert(!store.battery.powerMode.busy)
+            assert(store.battery.powerMode.policies[source] == policy)
         }
         store.stop()
         print("PASS: live read-only state, observer registration, renewed volume hint and shutdown")

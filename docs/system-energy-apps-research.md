@@ -87,7 +87,7 @@ report_duration                 NSNumber
 
 ## 早期探针记录
 
-独立探针已从仓库清理；当前实现见 [EnergyHelper.m](../Combo/EnergyHelper.m)。早期探针只读、输出 JSON；含符号、响应结构、平行数组长度和窗口检查，15 秒进程级超时。
+独立探针已从仓库清理；当前实现见 [EnergyHelper.m](../Combo/Battery/EnergyHelper.m)。早期探针只读、输出 JSON；含符号、响应结构、平行数组长度和窗口检查，15 秒进程级超时。
 为避免把推导的 ABI 当成跨版本契约，主动拒绝未经验证的系统构建。
 退出 0 仅表示数据源与响应结构检查通过，不表示系统菜单一致性已通过。
 未在沙盒应用或其他 macOS 构建上验证。

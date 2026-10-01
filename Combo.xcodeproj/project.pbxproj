@@ -18,7 +18,7 @@
 		7012FCA18A931EE3D6402869 /* InjectionNext in Frameworks */ = {isa = PBXBuildFile; productRef = 0ECE20A209DF30F65F7EC3A4 /* InjectionNext */; };
 		756D3DABE9C8837B37E031FE /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = 16B2FA3A515D354A30BCEC75 /* Inject */; };
 		806396930CB40D61BD38E445 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45FEC6A6DB0E3328C1EB77 /* Store.swift */; };
-		82EC1A0CE1BDECA3461169B8 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F951B1AB68E4AC17144EF10 /* Icon.swift */; };
+		82EC1A0CE1BDECA3461169B8 /* IconTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F951B1AB68E4AC17144EF10 /* IconTransition.swift */; };
 		8916AEC4AA95CCE6EB2B924E /* AirPodsControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */; };
 		ABCD12340000000000000001 /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000001 /* OnboardingState.swift */; };
 		ABCD12340000000000000002 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000002 /* OnboardingView.swift */; };
@@ -31,8 +31,18 @@
 		D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */; };
 		E9389571F13E1CBB3B732459 /* MediaPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */; };
 		F10C80F2ECA567F263086DC1 /* HotspotControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0761E92A852EF53B66972DA /* HotspotControl.swift */; };
-		F167C07E33420695912C062F /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A78ED80A91E3BE2FDD52277 /* Views.swift */; };
+		F167C07E33420695912C062F /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A78ED80A91E3BE2FDD52277 /* Theme.swift */; };
 		F44BAAD3AA4CE1463CC4CD81 /* PowerModeControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */; };
+		75532254095A42BA9DC365C5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D54D08915E2455AB5B921B3 /* SettingsView.swift */; };
+		5FD40C2AFE024D728E210C68 /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560A84B06FED44A09CBCC0AD /* PanelView.swift */; };
+		A2B82EEA79E249D2AB69201A /* SoundSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 724FA7F8C78C449A93434865 /* SoundSections.swift */; };
+		766CEEF22B3A4665BFA9FFCE /* BatterySections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18CFAB0D2474FDBB947237D /* BatterySections.swift */; };
+		B96F6D588719478F84969E4C /* WiFiSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76685DF749374187A6431997 /* WiFiSections.swift */; };
+		AFA2F91CCEE742DEAE9C0D76 /* WiFiIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */; };
+		BBDFDCFDFA4043FEB1A05A4D /* IconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360D743C5A0F4A49B67622DA /* IconRenderer.swift */; };
+		3C556937A23E487C92858565 /* ComboIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */; };
+		F093460E736B44B681262DD8 /* BatteryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC6FB7D6A024102BD2E9F79 /* BatteryStore.swift */; };
+		9F566B0DC2CD4AB99A876F17 /* AudioStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84944DB5015F43C89D9DB5E3 /* AudioStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,8 +51,8 @@
 		092B442EC711CC51B8749ADA /* Combo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Combo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B45FEC6A6DB0E3328C1EB77 /* Store.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		12994A42967FE55612E83F0C /* NetworkStatus.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NetworkStatus.swift; sourceTree = "<group>"; };
-		2F951B1AB68E4AC17144EF10 /* Icon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
-		3A78ED80A91E3BE2FDD52277 /* Views.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
+		2F951B1AB68E4AC17144EF10 /* IconTransition.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IconTransition.swift; sourceTree = "<group>"; };
+		3A78ED80A91E3BE2FDD52277 /* Theme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		3ABDC3E82DEC91AD9967B5D2 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4E707D0608019378308FCC72 /* MenuDiagnostics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuDiagnostics.swift; sourceTree = "<group>"; };
 		572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuFoldExperiment.swift; sourceTree = "<group>"; };
@@ -67,6 +77,16 @@
 		CAD8F5DF85A5699BF4EF74DD /* State.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = State.swift; sourceTree = "<group>"; };
 		EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuBarSetup.swift; sourceTree = "<group>"; };
 		F6CE5149DF92562886DF166F /* AirPodsHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = AirPodsHelper.m; sourceTree = "<group>"; };
+		1D54D08915E2455AB5B921B3 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		560A84B06FED44A09CBCC0AD /* PanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PanelView.swift; sourceTree = "<group>"; };
+		724FA7F8C78C449A93434865 /* SoundSections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SoundSections.swift; sourceTree = "<group>"; };
+		B18CFAB0D2474FDBB947237D /* BatterySections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BatterySections.swift; sourceTree = "<group>"; };
+		76685DF749374187A6431997 /* WiFiSections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiSections.swift; sourceTree = "<group>"; };
+		63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiIcon.swift; sourceTree = "<group>"; };
+		360D743C5A0F4A49B67622DA /* IconRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IconRenderer.swift; sourceTree = "<group>"; };
+		52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ComboIcon.swift; sourceTree = "<group>"; };
+		DEC6FB7D6A024102BD2E9F79 /* BatteryStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BatteryStore.swift; sourceTree = "<group>"; };
+		84944DB5015F43C89D9DB5E3 /* AudioStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,35 +114,15 @@
 		4451806E1B3B5BE316D9CC3E /* Combo */ = {
 			isa = PBXGroup;
 			children = (
-				76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */,
-				65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */,
-				75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */,
-				89D8B2128427EB6D64D4651E /* EnergyApps.swift */,
-				A0761E92A852EF53B66972DA /* HotspotControl.swift */,
-				2F951B1AB68E4AC17144EF10 /* Icon.swift */,
-				7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */,
-				DCBA43210000000000000001 /* OnboardingState.swift */,
-				DCBA43210000000000000002 /* OnboardingView.swift */,
-				EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */,
-				4E707D0608019378308FCC72 /* MenuDiagnostics.swift */,
-				572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */,
-				12994A42967FE55612E83F0C /* NetworkStatus.swift */,
-				B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */,
-				CAD8F5DF85A5699BF4EF74DD /* State.swift */,
-				0B45FEC6A6DB0E3328C1EB77 /* Store.swift */,
-				3A78ED80A91E3BE2FDD52277 /* Views.swift */,
-				62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */,
-				0141C7E0B4B8033FEFD4E6E3 /* main.swift */,
-				0733EE4F313F9A37B63C241D /* Combo.icns */,
-				DCBA43210000000000000003 /* MenuBarBefore.png */,
-				DCBA43210000000000000004 /* MenuBarAfter.png */,
-				3ABDC3E82DEC91AD9967B5D2 /* Info.plist */,
-				B9833BCDE5F7EAD64C9BA2B3 /* ChargeHelper.m */,
-				A7C6E6FC3866A2286D6176F1 /* EnergyHelper.m */,
-				628947417B405D94700C64C2 /* AirPodsContext.c */,
-				F6CE5149DF92562886DF166F /* AirPodsHelper.m */,
-				832EB9E7923BEB3E683D893F /* MediaPlaybackHelper.m */,
-				A3A453DCC82C729938A532C5 /* HoverScroller.swift */,
+				477A1BE9857448B78B2C3D65 /* App */,
+				D0BB29948FD940CFAF28711A /* Audio */,
+				5571A3256A8942BAB16B8F6F /* Battery */,
+				42AF82BC159C493597535D65 /* Network */,
+				275E14D7993944F3A200D4BC /* MenuBar */,
+				1D8D29E072EA45598FE7D157 /* Onboarding */,
+				FB37982F6EFE4EDAB569B50B /* Rendering */,
+				69079DF3A660422CB8FF703F /* Stores */,
+				CD8E7DF5640F4EEDB84056B3 /* Views */,
 			);
 			path = Combo;
 			sourceTree = "<group>";
@@ -150,6 +150,108 @@
 				7B0EC1FEBC72CEF03CCA2F9E /* Frameworks */,
 				4451806E1B3B5BE316D9CC3E /* Combo */,
 			);
+			sourceTree = "<group>";
+		};
+		CD8E7DF5640F4EEDB84056B3 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A3A453DCC82C729938A532C5 /* HoverScroller.swift */,
+				3A78ED80A91E3BE2FDD52277 /* Theme.swift */,
+				1D54D08915E2455AB5B921B3 /* SettingsView.swift */,
+				560A84B06FED44A09CBCC0AD /* PanelView.swift */,
+				724FA7F8C78C449A93434865 /* SoundSections.swift */,
+				B18CFAB0D2474FDBB947237D /* BatterySections.swift */,
+				76685DF749374187A6431997 /* WiFiSections.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		FB37982F6EFE4EDAB569B50B /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				2F951B1AB68E4AC17144EF10 /* IconTransition.swift */,
+				63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */,
+				360D743C5A0F4A49B67622DA /* IconRenderer.swift */,
+				52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */,
+			);
+			path = Rendering;
+			sourceTree = "<group>";
+		};
+		69079DF3A660422CB8FF703F /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				0B45FEC6A6DB0E3328C1EB77 /* Store.swift */,
+				DEC6FB7D6A024102BD2E9F79 /* BatteryStore.swift */,
+				84944DB5015F43C89D9DB5E3 /* AudioStore.swift */,
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		477A1BE9857448B78B2C3D65 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				0141C7E0B4B8033FEFD4E6E3 /* main.swift */,
+				3ABDC3E82DEC91AD9967B5D2 /* Info.plist */,
+				CAD8F5DF85A5699BF4EF74DD /* State.swift */,
+				0733EE4F313F9A37B63C241D /* Combo.icns */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D0BB29948FD940CFAF28711A /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				628947417B405D94700C64C2 /* AirPodsContext.c */,
+				76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */,
+				F6CE5149DF92562886DF166F /* AirPodsHelper.m */,
+				65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */,
+				7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */,
+				832EB9E7923BEB3E683D893F /* MediaPlaybackHelper.m */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		5571A3256A8942BAB16B8F6F /* Battery */ = {
+			isa = PBXGroup;
+			children = (
+				75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */,
+				B9833BCDE5F7EAD64C9BA2B3 /* ChargeHelper.m */,
+				89D8B2128427EB6D64D4651E /* EnergyApps.swift */,
+				A7C6E6FC3866A2286D6176F1 /* EnergyHelper.m */,
+				B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */,
+			);
+			path = Battery;
+			sourceTree = "<group>";
+		};
+		42AF82BC159C493597535D65 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				A0761E92A852EF53B66972DA /* HotspotControl.swift */,
+				12994A42967FE55612E83F0C /* NetworkStatus.swift */,
+				62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		275E14D7993944F3A200D4BC /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */,
+				4E707D0608019378308FCC72 /* MenuDiagnostics.swift */,
+				572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		1D8D29E072EA45598FE7D157 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				DCBA43210000000000000001 /* OnboardingState.swift */,
+				DCBA43210000000000000002 /* OnboardingView.swift */,
+				DCBA43210000000000000003 /* MenuBarBefore.png */,
+				DCBA43210000000000000004 /* MenuBarAfter.png */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -230,11 +332,11 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Combo/ChargeHelper.m",
-				"$(SRCROOT)/Combo/EnergyHelper.m",
-				"$(SRCROOT)/Combo/AirPodsContext.c",
-				"$(SRCROOT)/Combo/AirPodsHelper.m",
-				"$(SRCROOT)/Combo/MediaPlaybackHelper.m",
+				"$(SRCROOT)/Combo/Battery/ChargeHelper.m",
+				"$(SRCROOT)/Combo/Battery/EnergyHelper.m",
+				"$(SRCROOT)/Combo/Audio/AirPodsContext.c",
+				"$(SRCROOT)/Combo/Audio/AirPodsHelper.m",
+				"$(SRCROOT)/Combo/Audio/MediaPlaybackHelper.m",
 			);
 			name = "Build and sign helpers";
 			outputFileListPaths = (
@@ -248,7 +350,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/zsh;
-			shellScript = "set -eu\nmkdir -p \"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Helpers\"\ncd \"$SRCROOT\"\nOUT=\"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Helpers\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -framework Foundation -framework IOKit Combo/ChargeHelper.m -o \"$OUT/ComboChargeHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/EnergyHelper.m -o \"$OUT/ComboEnergyHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -dynamiclib -Wall -Wextra -Werror Combo/AirPodsContext.c -framework CoreFoundation -framework Security -o \"$OUT/ComboAirPodsContext.dylib\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -Wall -Wextra -Werror Combo/AirPodsHelper.m -framework Foundation -framework CoreAudio -framework IOBluetooth -o \"$OUT/ComboAirPodsHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -dynamiclib -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/MediaPlaybackHelper.m -o \"$OUT/ComboMediaPlayback.dylib\"\nfor file in \"$OUT\"/*; do codesign --force --sign - \"$file\"; done\n";
+			shellScript = "set -eu\nmkdir -p \"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Helpers\"\ncd \"$SRCROOT\"\nOUT=\"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Helpers\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -framework Foundation -framework IOKit Combo/Battery/ChargeHelper.m -o \"$OUT/ComboChargeHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/Battery/EnergyHelper.m -o \"$OUT/ComboEnergyHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -dynamiclib -Wall -Wextra -Werror Combo/Audio/AirPodsContext.c -framework CoreFoundation -framework Security -o \"$OUT/ComboAirPodsContext.dylib\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -Wall -Wextra -Werror Combo/Audio/AirPodsHelper.m -framework Foundation -framework CoreAudio -framework IOBluetooth -o \"$OUT/ComboAirPodsHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -dynamiclib -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/Audio/MediaPlaybackHelper.m -o \"$OUT/ComboMediaPlayback.dylib\"\nfor file in \"$OUT\"/*; do codesign --force --sign - \"$file\"; done\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -262,7 +364,10 @@
 				3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */,
 				126858ABDF709C9A021EA8DC /* EnergyApps.swift in Sources */,
 				F10C80F2ECA567F263086DC1 /* HotspotControl.swift in Sources */,
-				82EC1A0CE1BDECA3461169B8 /* Icon.swift in Sources */,
+				82EC1A0CE1BDECA3461169B8 /* IconTransition.swift in Sources */,
+				AFA2F91CCEE742DEAE9C0D76 /* WiFiIcon.swift in Sources */,
+				BBDFDCFDFA4043FEB1A05A4D /* IconRenderer.swift in Sources */,
+				3C556937A23E487C92858565 /* ComboIcon.swift in Sources */,
 				E9389571F13E1CBB3B732459 /* MediaPlayback.swift in Sources */,
 				ABCD12340000000000000001 /* OnboardingState.swift in Sources */,
 				ABCD12340000000000000002 /* OnboardingView.swift in Sources */,
@@ -273,7 +378,14 @@
 				F44BAAD3AA4CE1463CC4CD81 /* PowerModeControl.swift in Sources */,
 				20AF98593CEC5902E72C031C /* State.swift in Sources */,
 				806396930CB40D61BD38E445 /* Store.swift in Sources */,
-				F167C07E33420695912C062F /* Views.swift in Sources */,
+				F093460E736B44B681262DD8 /* BatteryStore.swift in Sources */,
+				9F566B0DC2CD4AB99A876F17 /* AudioStore.swift in Sources */,
+				F167C07E33420695912C062F /* Theme.swift in Sources */,
+				75532254095A42BA9DC365C5 /* SettingsView.swift in Sources */,
+				5FD40C2AFE024D728E210C68 /* PanelView.swift in Sources */,
+				A2B82EEA79E249D2AB69201A /* SoundSections.swift in Sources */,
+				766CEEF22B3A4665BFA9FFCE /* BatterySections.swift in Sources */,
+				B96F6D588719478F84969E4C /* WiFiSections.swift in Sources */,
 				5E00D0EE72AF68EB37B88EE6 /* WiFiControl.swift in Sources */,
 				186320F179D22AB5DDE7273E /* main.swift in Sources */,
 				07AC77614721507B247E230C /* HoverScroller.swift in Sources */,
@@ -298,7 +410,7 @@
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Combo/Info.plist;
+				INFOPLIST_FILE = Combo/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -333,7 +445,7 @@
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Combo/Info.plist;
+				INFOPLIST_FILE = Combo/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

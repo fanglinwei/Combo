@@ -7,6 +7,7 @@ import Inject
 struct OnboardingView: View {
     @ObserveInjection var inject
     @ObservedObject var store: Store
+    @ObservedObject var battery: BatteryStore
     @ObservedObject var setup: MenuBarSetup
     @ObservedObject var wifi: WiFiControl
     @ObservedObject var bluetooth: BluetoothPermission
@@ -17,9 +18,10 @@ struct OnboardingView: View {
 
     init(store: Store, finish: @escaping () -> Void) {
         self.store = store
+        self.battery = store.battery
         self.setup = store.menuSetup
         self.wifi = store.wifi
-        self.bluetooth = store.bluetoothPermission
+        self.bluetooth = store.audio.bluetoothPermission
         self.finish = finish
     }
 
@@ -52,7 +54,7 @@ struct OnboardingView: View {
 
     private var menuStep: some View {
         VStack(alignment: .leading, spacing: 17) {
-            Text(store.hasInternalBattery ? "一个图标，查看 Wi‑Fi、电池和声音" : "一个图标，查看 Wi‑Fi 和声音")
+            Text(battery.hasInternalBattery ? "一个图标，查看 Wi‑Fi、电池和声音" : "一个图标，查看 Wi‑Fi 和声音")
                 .font(.system(size: 18, weight: .semibold))
             Text("Combo 集中了这些菜单栏功能。你可以隐藏系统原图标，让菜单栏更简洁；保留它们也不影响 Combo 使用。隐藏图标不会关闭 Wi‑Fi、声音或控制中心的功能。")
                 .font(.system(size: 13)).foregroundStyle(.secondary)
@@ -64,13 +66,13 @@ struct OnboardingView: View {
             }
             .padding(15)
             .background(palette.surface, in: RoundedRectangle(cornerRadius: 12))
-            Text(store.hasInternalBattery ? "取消 Wi‑Fi、电池、声音左侧的勾选：" : "取消 Wi‑Fi、声音左侧的勾选：")
+            Text(battery.hasInternalBattery ? "取消 Wi‑Fi、电池、声音左侧的勾选：" : "取消 Wi‑Fi、声音左侧的勾选：")
                 .font(.system(size: 13, weight: .medium))
             HStack(alignment: .top, spacing: 12) {
                 menuScreenshot("关闭前 · 蓝色勾选", image: "MenuBarBefore")
                 menuScreenshot("关闭后 · 取消勾选", image: "MenuBarAfter")
             }
-            if !store.hasInternalBattery {
+            if !battery.hasInternalBattery {
                 Text("图中电池项目仅适用于有内置电池的 Mac。")
                     .font(.caption).foregroundStyle(.secondary)
             }

@@ -8,7 +8,7 @@
 
 后续按用户“按计划执行，高级功能能实现尽量实现”的指示，已将电量、通透/自适应/降噪、对话感知接入 Combo 声音面板。初始只读探针已清理，真实切换验证脚本仍保留；所有测试操作均已恢复原耳机设置。没有执行 Git 写操作。
 
-实现入口：`Combo/AirPodsHelper.m`、`Combo/AirPodsContext.c`、`Combo/AirPodsControl.swift`、`Combo/Views.swift` 中的 `AirPodsSection`。`Combo/AudioVolume.swift` 提供主通道/左右声道回退，供 Store 读写与事件监听共用。
+实现入口：`Combo/Audio/AirPodsHelper.m`、`Combo/Audio/AirPodsContext.c`、`Combo/Audio/AirPodsControl.swift`、`Combo/Views/SoundSections.swift` 中的 `AirPodsSection`。`Combo/Audio/AudioVolume.swift` 提供主通道/左右声道回退，供 AudioStore 读写与事件监听共用。
 
 ## 结论
 
@@ -16,7 +16,7 @@
 
 | 功能 | 证据 | 结论 |
 | --- | --- | --- |
-| 设备枚举、默认输出切换 | Combo/Store.swift 已有 refreshOutputs / setOutput，CoreAudio 公开接口 | 复用现有实现；本轮没有切换输出 |
+| 设备枚举、默认输出切换 | Combo/Stores/AudioStore.swift 中的 refreshOutputs / setOutput，CoreAudio 公开接口 | 复用现有实现；本轮没有切换输出 |
 | 音量、静音 | 本机 CoreAudio 属性查询 | 已实现左右声道回退、读写与监听；主通道音量不可读时仍可使用滑块 |
 | 电量 | IOBluetoothDevice 私有 getter 实际返回左右耳电量 | 可读；盒子休眠/零值/不支持统一保留未知，不能伪装成实时 0% |
 | 聆听模式 | AVOutputDevice 实际写入与独立进程回读 | 降噪→通透→降噪、降噪→自适应→降噪均成功；面板提供这三种模式 |
@@ -61,7 +61,7 @@ python3 Tests/airpods-live-check.py build/airpods-panel/Combo.app --write
 
 独立只读探针已从仓库清理；当前验证入口是上文的 `./build.sh` 和 `Tests/airpods-live-check.py`。原探针输出 JSON，不输出蓝牙地址、序列号、设备名称；null 表示未知/不可读，不能转成关闭、0% 或不支持。自检曾覆盖电量类型、范围、未知值，以及不存在的 getter，并完成普通/适配两种实机读取。
 
-正式实现中的 [AirPodsContext.c](../Combo/AirPodsContext.c) 仅为新启动的 helper 进程适配私有 entitlement 查询，其余查询转给原函数。不注入系统进程，不修改 SIP，也不安装到 /Applications。应用内 helper 的本地 ad-hoc 打包与运行已验证；尚未验证 Developer ID、公证或沙盒分发。
+正式实现中的 [AirPodsContext.c](../Combo/Audio/AirPodsContext.c) 仅为新启动的 helper 进程适配私有 entitlement 查询，其余查询转给原函数。不注入系统进程，不修改 SIP，也不安装到 /Applications。应用内 helper 的本地 ad-hoc 打包与运行已验证；尚未验证 Developer ID、公证或沙盒分发。
 
 ## GitHub 来源与可复用内容
 

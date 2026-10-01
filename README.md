@@ -51,7 +51,7 @@
 
 ### SwiftUI 热重载
 
-安装 [InjectionNext 2.0.1](https://github.com/johnno1962/InjectionNext/releases/tag/2.0.1) 到 `/Applications`，退出 Xcode，然后从 InjectionNext 菜单栏图标选择 **Launch Xcode**。在 Xcode 里运行 Combo 的 Debug scheme；InjectionNext 图标变橙色表示应用已连接。若保存文件后没有检测到改动，在 InjectionNext 中选择 **...or Watch Project** 并指定仓库根目录。保存 `Combo/Views.swift` 或 `Combo/Icon.swift` 中的 SwiftUI 视图实现后，InjectionNext 会编译改动并注入运行中的应用。属性布局、函数签名等结构性修改仍需重新构建运行。Debug 配置含 `-interposable`，并关闭沙盒与强化运行时以允许代码注入；Release 不设置注入链接参数。
+安装 [InjectionNext 2.0.1](https://github.com/johnno1962/InjectionNext/releases/tag/2.0.1) 到 `/Applications`，退出 Xcode，然后从 InjectionNext 菜单栏图标选择 **Launch Xcode**。在 Xcode 里运行 Combo 的 Debug scheme；InjectionNext 图标变橙色表示应用已连接。若保存文件后没有检测到改动，在 InjectionNext 中选择 **...or Watch Project** 并指定仓库根目录。保存 `Combo/Views/` 或 `Combo/Rendering/` 中的 SwiftUI 视图实现后，InjectionNext 会编译改动并注入运行中的应用。属性布局、函数签名等结构性修改仍需重新构建运行。Debug 配置含 `-interposable`，并关闭沙盒与强化运行时以允许代码注入；Release 不设置注入链接参数。
 
 构建、状态测试与代码签名校验通过；在 macOS 27.0 开发机检查三合一面板与 Wi‑Fi、声音、电池系统设置跳转。Wi‑Fi 实际连接、输出设备切换、钥匙串写入、辅助功能读取及退出恢复尚未完成实机验证。
 
@@ -59,7 +59,7 @@
 
 2026-09-24：补齐电池电源与上限展示，测试覆盖重复/失效/冲突限制及未知状态；能耗模式完成适配器 0 → 1 → 0 的实际写入与回读，电池模式保持不变。“立即充满电”已加入正式面板；本机补测单独临时解除手动上限即可开始充电，优化充电仍保持开启，系统显示将在 06:00 恢复 80% 上限。界面不承诺固定恢复时刻，暂不支持仅优化充电暂缓。超时、请求失败、状态变化和重复点击有自动化检查；跨系统兼容及实际到时恢复仍未验证，详见 [电池操作记录](docs/battery-controls.md)。
 
-源码：`Combo/State.swift` 纯显示规则；`Store.swift` 系统数据；`Icon.swift` 共享图标绘制；`Views.swift` 面板与设置；`main.swift` 应用生命周期。
+源码：`Combo/App/` 放入口、共享状态与应用元数据；`Combo/Audio/`、`Combo/Battery/`、`Combo/Network/`、`Combo/MenuBar/` 和 `Combo/Onboarding/` 按功能放实现与辅助程序；`Combo/Stores/` 汇总状态，`Combo/Rendering/` 绘制图标，`Combo/Views/` 放主面板、设置及共用视图。
 
 品牌：应用图标与设置中的 Logo 使用电量弧、无线连接和音量四点，强调色 `#148C78`；菜单栏仍使用原有实时单色状态图标。矢量资源与配色说明见 [`docs/assets/brand/README.md`](docs/assets/brand/README.md)。构建会生成应用图标并打包到 `.app`，不依赖 Pillow。
 
@@ -76,7 +76,7 @@
 当前绘图输出：[原生 16 状态对照图](docs/assets/combo-native-icon-review.png)。APP 图标保留原版；Wi-Fi 在菜单栏、设置、网络列表和透明 Logo 中统一为两条加粗圆头弧线加圆润倒三角，弧线间隙收紧，保留信号强弱及关闭、异常、连接中状态。下列命令将当前 16 状态对照图输出到 `build/combo-priority-review.png`：
 
 ```sh
-xcrun swiftc -sdk /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk -swift-version 5 -parse-as-library Combo/State.swift Combo/Icon.swift Tests/RenderIcons.swift -o build/render-icons
+xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -swift-version 5 -parse-as-library Combo/App/State.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift Tests/RenderIcons.swift -o build/render-icons
 ./build/render-icons
 ```
 
@@ -93,7 +93,7 @@ xcrun swiftc -sdk /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk -swift-v
 复现只读运行检查：
 
 ```sh
-xcrun swiftc -sdk /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk -swift-version 5 -parse-as-library Combo/State.swift Combo/NetworkStatus.swift Combo/WiFiControl.swift Combo/HotspotControl.swift Combo/MenuBarSetup.swift Combo/MenuDiagnostics.swift Combo/MenuFoldExperiment.swift Combo/PowerModeControl.swift Combo/ChargeControl.swift Combo/EnergyApps.swift Combo/Store.swift Tests/LiveState.swift -o build/live-state-check
+xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -swift-version 5 -parse-as-library Combo/App/State.swift Combo/Rendering/IconTransition.swift Combo/Network/NetworkStatus.swift Combo/Network/WiFiControl.swift Combo/Network/HotspotControl.swift Combo/MenuBar/MenuBarSetup.swift Combo/MenuBar/MenuDiagnostics.swift Combo/MenuBar/MenuFoldExperiment.swift Combo/Battery/PowerModeControl.swift Combo/Battery/ChargeControl.swift Combo/Battery/EnergyApps.swift Combo/Audio/AudioVolume.swift Combo/Audio/AirPodsControl.swift Combo/Audio/MediaPlayback.swift Combo/Stores/BatteryStore.swift Combo/Stores/AudioStore.swift Combo/Stores/Store.swift Tests/LiveState.swift -o build/live-state-check
 ./build/live-state-check
 ```
 

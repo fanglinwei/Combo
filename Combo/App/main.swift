@@ -100,7 +100,7 @@ final class ComboPanel: NSPanel {
             overviewHeight = 0; detailHeight = 0; detailHeightSection = nil; selectedSection = nil
             revealTask?.cancel()
             let showSettings = { [weak self] in _ = self?.openSettings() }
-            let view = PanelView(store: store, bluetoothPermission: store.bluetoothPermission, showSettings: showSettings, compact: panelCompact, maxHeight: visible.height - 16,
+            let view = PanelView(store: store, battery: store.battery, audio: store.audio, bluetoothPermission: store.audio.bluetoothPermission, showSettings: showSettings, compact: panelCompact, maxHeight: visible.height - 16,
                                  resize: { [weak self] selected in self?.resizePanel(selected: selected) },
                                  reportHeight: { [weak self] section, value in self?.updatePanelHeight(for: section, value) })
             let frame = NSRect(x: visible.maxX - PanelView.width - 12, y: visible.maxY - height - 8,

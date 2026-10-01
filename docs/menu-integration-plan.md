@@ -26,7 +26,7 @@ Thaw 的[公开源码](thaw-menu-folding-research.md)证明了分区、识别、
 
 此 worktree 的 Combo.app 已重新加入辅助功能列表并获得授权；ad-hoc 重新签名后仍需重新授权。应用内只读检测查询 `com.apple.controlcenter` 和 `com.apple.systemuiserver` 的 `AXMenuBar`、`AXExtrasMenuBar`，四个根属性均返回 `-25212`（`kAXErrorNoValue`）。改从 `MenuBarAgent` 根节点定向扫描后，Combo 找到三项 ID 的候选，并读到点击动作与位置属性。扫描找到首项即停止，尚未证明多显示器下的唯一性或实际可见。短时限制让目标项从辅助功能树中消失，尚缺屏幕像素的视觉证据。
 
-较早的 macOS 26 SDK CLI 探针通过编译和参数保护检查，但执行进程当时未获辅助功能权限；它不能证明原生菜单或折叠可用。该历史探针已清理，应用内当前检测位于 `Combo/MenuDiagnostics.swift`。旧的“先在 Control Center 根项找三个标识，再 AXPress”的顺序已被上述 macOS 27 结果取代。
+较早的 macOS 26 SDK CLI 探针通过编译和参数保护检查，但执行进程当时未获辅助功能权限；它不能证明原生菜单或折叠可用。该历史探针已清理，应用内当前检测位于 `Combo/MenuBar/MenuDiagnostics.swift`。旧的“先在 Control Center 根项找三个标识，再 AXPress”的顺序已被上述 macOS 27 结果取代。
 
 ## 推荐实施顺序
 

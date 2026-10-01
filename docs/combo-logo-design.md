@@ -31,6 +31,6 @@ Combo 将电量、网络和音频状态收拢到一个 macOS 菜单栏入口。L
 - [透明 Logo SVG](assets/brand/combo-iris-logo.svg)：文档与品牌展示。
 - [应用图标 SVG](assets/brand/combo-iris-app-icon.svg)：图标设计源文件。
 - [主题预览](assets/brand/combo-brand-preview.png)：配色与浅深色示意，不是实际 APP 截图。
-- `Tests/RenderBrand.swift` 在构建时绘制 PNG，`build.sh` 打包为 `Combo.icns`；`Combo/Views.swift` 使用主题强调色与背景色。
+- `Tests/RenderBrand.swift` 在构建时绘制 PNG，`build.sh` 打包为 `Combo.icns`；`Combo/Views/Theme.swift` 定义主题强调色与背景色。
 
 菜单栏中的实时图标继续根据系统状态以单色绘制；不要用静态品牌 Logo 替代它。应用图标或主题色修改时，应同步检查 SVG、构建绘制代码和浅深色界面。

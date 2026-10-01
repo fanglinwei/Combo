@@ -140,20 +140,20 @@ AirPods 播放中调到 75%：中央临时显示 `75`，底部显示三颗亮点
 | 个人热点与高耗能应用 | 读取中、不可用、可用；可用但列表为空时各有空状态说明。 |
 | 充电上限 | 读取中、无法判断、未检测到活动上限、具体百分比、多个限制冲突。 |
 
-这些界面分支见 [Views.swift](../Combo/Views.swift#L66-L161)、[MenuBarSetup.swift](../Combo/MenuBarSetup.swift#L4-L11) 与 [State.swift](../Combo/State.swift#L171-L181)。
+这些界面分支见 [SettingsView.swift](../Combo/Views/SettingsView.swift) 与 [PanelView.swift](../Combo/Views/PanelView.swift)、[MenuBarSetup.swift](../Combo/MenuBar/MenuBarSetup.swift#L4-L11) 与 [State.swift](../Combo/App/State.swift#L171-L181)。
 
 ## 来源与重绘
 
-- 场景与演示数据：[State.swift](../Combo/State.swift#L44-L139)。
-- 中央选择、优先级、转场、绘制：[Icon.swift](../Combo/Icon.swift#L5-L244)。
-- 实时场景、阈值与提示到期：[Store.swift](../Combo/Store.swift#L15-L116)。
+- 场景与演示数据：[State.swift](../Combo/App/State.swift#L44-L139)。
+- 中央选择、优先级、转场、绘制：[IconTransition.swift](../Combo/Rendering/IconTransition.swift) 与 [IconRenderer.swift](../Combo/Rendering/IconRenderer.swift)。
+- 实时场景、阈值与提示到期：[Store.swift](../Combo/Stores/Store.swift) 与 [BatteryStore.swift](../Combo/Stores/BatteryStore.swift)。
 - GIF 生成脚本：[render_current_states.swift](assets/render_current_states.swift)。它只生成文档资源，不修改应用或系统状态。
 
 在仓库根目录重绘（使用与项目构建相同的 macOS 26 SDK）：
 
 ```sh
 mkdir -p build
-xcrun swiftc -sdk /Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk -target arm64-apple-macosx26.0 -swift-version 5 -parse-as-library Combo/State.swift Combo/Icon.swift docs/assets/render_current_states.swift -o build/render-current-states
+xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -target arm64-apple-macosx26.0 -swift-version 5 -parse-as-library Combo/App/State.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift docs/assets/render_current_states.swift -o build/render-current-states
 ./build/render-current-states
 ```
 
