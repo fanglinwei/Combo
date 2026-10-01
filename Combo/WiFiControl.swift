@@ -86,6 +86,7 @@ enum WiFiPasswordLookup: Equatable {
     @Published var currentSecurity: CWSecurity = .unknown
     @Published var knownNames: Set<String>?
     @Published var hasScanned = false
+    @Published private(set) var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
     @Published var passwordRequest: WiFiChoice?
     @Published private(set) var systemAccessDeclined = false
     @Published var useSystemPasswords: Bool {
@@ -114,6 +115,7 @@ enum WiFiPasswordLookup: Equatable {
         self.defaults = defaults; self.systemPassword = systemPassword; self.associate = associate
         useSystemPasswords = defaults.object(forKey: "wifiUseSystemPasswords") as? Bool ?? true
         super.init(); location.delegate = self
+        locationAuthorizationStatus = location.authorizationStatus
     }
 
     func allowSystemPasswordRequests() {
@@ -155,8 +157,13 @@ enum WiFiPasswordLookup: Equatable {
             message = "未能获取系统保存的密码，请手动输入，或使用 Combo 已记住的密码。"
         }
     }
-    var nameAccess: Bool { location.authorizationStatus == .authorizedAlways }
+    var nameAccess: Bool { locationAuthorizationStatus == .authorizedAlways }
+    func requestLocationAccess() {
+        guard locationAuthorizationStatus == .notDetermined else { return }
+        location.requestWhenInUseAuthorization()
+    }
     func refresh() {
+        locationAuthorizationStatus = location.authorizationStatus
         let interface = interface
         powerOn = interface?.powerOn()
         currentSSID = nameAccess && powerOn == true ? interface?.ssid() : nil
@@ -172,6 +179,7 @@ enum WiFiPasswordLookup: Equatable {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         Task { @MainActor [weak self] in
             guard let self else { return }
+            locationAuthorizationStatus = manager.authorizationStatus
             refresh()
             if scanAfterAuthorization && nameAccess { scanAfterAuthorization = false; scan() }
         }
@@ -190,11 +198,11 @@ enum WiFiPasswordLookup: Equatable {
         guard !busy else { return }
         refresh()
         guard let interface, powerOn == true, !busy else { return }
-        switch location.authorizationStatus {
+        switch locationAuthorizationStatus {
         case .notDetermined:
             guard requestAccess else { return }
             scanAfterAuthorization = true
-            location.requestWhenInUseAuthorization()
+            requestLocationAccess()
             message = "请允许定位以显示附近网络；授权后会自动查找。"
             return
         case .authorizedAlways, .authorizedWhenInUse: break

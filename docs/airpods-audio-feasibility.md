@@ -6,7 +6,7 @@
 
 用户选择推荐方向：macOS 原生、自用原型；先验证音量、输出切换、AirPods 电量、聆听模式、对话感知。空间音频与 AirPlay 完整控制单独研究。
 
-后续按用户“按计划执行，高级功能能实现尽量实现”的指示，已将电量、通透/自适应/降噪、对话感知接入 Combo 声音面板。保留初始只读探针，并新增真实切换验证脚本；所有测试操作均已恢复原耳机设置。没有执行 Git 写操作。
+后续按用户“按计划执行，高级功能能实现尽量实现”的指示，已将电量、通透/自适应/降噪、对话感知接入 Combo 声音面板。初始只读探针已清理，真实切换验证脚本仍保留；所有测试操作均已恢复原耳机设置。没有执行 Git 写操作。
 
 实现入口：`Combo/AirPodsHelper.m`、`Combo/AirPodsContext.c`、`Combo/AirPodsControl.swift`、`Combo/Views.swift` 中的 `AirPodsSection`。`Combo/AudioVolume.swift` 提供主通道/左右声道回退，供 Store 读写与事件监听共用。
 
@@ -57,32 +57,11 @@ python3 Tests/airpods-live-check.py build/airpods-panel/Combo.app
 python3 Tests/airpods-live-check.py build/airpods-panel/Combo.app --write
 ```
 
-## 可重复运行
+## 早期探针记录
 
-在仓库根目录运行，需要 Xcode Command Line Tools：
+独立只读探针已从仓库清理；当前验证入口是上文的 `./build.sh` 和 `Tests/airpods-live-check.py`。原探针输出 JSON，不输出蓝牙地址、序列号、设备名称；null 表示未知/不可读，不能转成关闭、0% 或不支持。自检曾覆盖电量类型、范围、未知值，以及不存在的 getter，并完成普通/适配两种实机读取。
 
-```sh
-mkdir -p build
-xcrun clang -fobjc-arc -Wall -Wextra prototypes/airpods-audio-query.m \
-  -framework Foundation -framework CoreAudio -framework IOBluetooth \
-  -o build/airpods-audio-query
-build/airpods-audio-query --self-test
-build/airpods-audio-query
-```
-
-比较私有共享上下文的读取结果：
-
-```sh
-xcrun clang -dynamiclib -Wall -Wextra Combo/AirPodsContext.c \
-  -framework CoreFoundation -framework Security \
-  -o build/airpods-context-probe.dylib
-DYLD_INSERT_LIBRARIES="$PWD/build/airpods-context-probe.dylib" \
-  build/airpods-audio-query
-```
-
-动态库仅为新启动的探针/helper 进程拦截一项私有 entitlement 查询，其余查询转给原函数。不注入系统进程，不修改 SIP，也不安装到 /Applications。应用内 helper 的本地 ad-hoc 打包与运行已验证；尚未验证 Developer ID、公证或沙盒分发。
-
-探针输出 JSON，不输出蓝牙地址、序列号、设备名称。null 表示未知/不可读，不能转成关闭、0% 或不支持。self-test 覆盖电量类型、范围、未知值，以及不存在的 getter；编译与 self-test 已通过，并完成普通/适配两种实机读取。
+正式实现中的 [AirPodsContext.c](../Combo/AirPodsContext.c) 仅为新启动的 helper 进程适配私有 entitlement 查询，其余查询转给原函数。不注入系统进程，不修改 SIP，也不安装到 /Applications。应用内 helper 的本地 ad-hoc 打包与运行已验证；尚未验证 Developer ID、公证或沙盒分发。
 
 ## GitHub 来源与可复用内容
 

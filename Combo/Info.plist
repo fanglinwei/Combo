@@ -12,6 +12,7 @@
 <key>LSMinimumSystemVersion</key><string>26.0</string>
 <key>LSUIElement</key><true/>
 <key>NSHighResolutionCapable</key><true/>
-<key>NSLocationWhenInUseUsageDescription</key><string>查找可连接的 Wi‑Fi 网络并显示网络名称。</string>
-<key>NSBluetoothAlwaysUsageDescription</key><string>读取当前蓝牙耳机的电量并控制聆听模式。</string>
+<key>NSLocationUsageDescription</key><string>macOS 需要定位授权才能读取当前 Wi‑Fi 名称及附近网络。Combo 不读取坐标，也不上传网络列表。</string>
+<key>NSLocationWhenInUseUsageDescription</key><string>macOS 需要定位授权才能读取当前 Wi‑Fi 名称及附近网络。Combo 不读取坐标，也不上传网络列表。</string>
+<key>NSBluetoothAlwaysUsageDescription</key><string>显示已连接蓝牙耳机的电量和聆听模式，并在 Combo 中控制聆听模式。</string>
 </dict></plist>

@@ -20,6 +20,10 @@
 		806396930CB40D61BD38E445 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45FEC6A6DB0E3328C1EB77 /* Store.swift */; };
 		82EC1A0CE1BDECA3461169B8 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F951B1AB68E4AC17144EF10 /* Icon.swift */; };
 		8916AEC4AA95CCE6EB2B924E /* AirPodsControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */; };
+		ABCD12340000000000000001 /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000001 /* OnboardingState.swift */; };
+		ABCD12340000000000000002 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000002 /* OnboardingView.swift */; };
+		ABCD12340000000000000003 /* MenuBarBefore.png in Resources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000003 /* MenuBarBefore.png */; };
+		ABCD12340000000000000004 /* MenuBarAfter.png in Resources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000004 /* MenuBarAfter.png */; };
 		89D7E2AA404BE963A36E44D3 /* Combo.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0733EE4F313F9A37B63C241D /* Combo.icns */; };
 		8D0E3ADF639C9B4669A8DF0A /* MenuFoldExperiment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */; };
 		908640C6F77CB53C46879E70 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 682E6A0AC33379301D321FAB /* Cocoa.framework */; };
@@ -48,6 +52,10 @@
 		682E6A0AC33379301D321FAB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChargeControl.swift; sourceTree = "<group>"; };
 		76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPodsControl.swift; sourceTree = "<group>"; };
+		DCBA43210000000000000001 /* OnboardingState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingState.swift; sourceTree = "<group>"; };
+		DCBA43210000000000000002 /* OnboardingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		DCBA43210000000000000003 /* MenuBarBefore.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; path = MenuBarBefore.png; sourceTree = "<group>"; };
+		DCBA43210000000000000004 /* MenuBarAfter.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; path = MenuBarAfter.png; sourceTree = "<group>"; };
 		7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediaPlayback.swift; sourceTree = "<group>"; };
 		832EB9E7923BEB3E683D893F /* MediaPlaybackHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = MediaPlaybackHelper.m; sourceTree = "<group>"; };
 		89D8B2128427EB6D64D4651E /* EnergyApps.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EnergyApps.swift; sourceTree = "<group>"; };
@@ -93,6 +101,8 @@
 				A0761E92A852EF53B66972DA /* HotspotControl.swift */,
 				2F951B1AB68E4AC17144EF10 /* Icon.swift */,
 				7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */,
+				DCBA43210000000000000001 /* OnboardingState.swift */,
+				DCBA43210000000000000002 /* OnboardingView.swift */,
 				EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */,
 				4E707D0608019378308FCC72 /* MenuDiagnostics.swift */,
 				572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */,
@@ -104,6 +114,8 @@
 				62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */,
 				0141C7E0B4B8033FEFD4E6E3 /* main.swift */,
 				0733EE4F313F9A37B63C241D /* Combo.icns */,
+				DCBA43210000000000000003 /* MenuBarBefore.png */,
+				DCBA43210000000000000004 /* MenuBarAfter.png */,
 				3ABDC3E82DEC91AD9967B5D2 /* Info.plist */,
 				B9833BCDE5F7EAD64C9BA2B3 /* ChargeHelper.m */,
 				A7C6E6FC3866A2286D6176F1 /* EnergyHelper.m */,
@@ -202,6 +214,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				89D7E2AA404BE963A36E44D3 /* Combo.icns in Resources */,
+				ABCD12340000000000000003 /* MenuBarBefore.png in Resources */,
+				ABCD12340000000000000004 /* MenuBarAfter.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -250,6 +264,8 @@
 				F10C80F2ECA567F263086DC1 /* HotspotControl.swift in Sources */,
 				82EC1A0CE1BDECA3461169B8 /* Icon.swift in Sources */,
 				E9389571F13E1CBB3B732459 /* MediaPlayback.swift in Sources */,
+				ABCD12340000000000000001 /* OnboardingState.swift in Sources */,
+				ABCD12340000000000000002 /* OnboardingView.swift in Sources */,
 				D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */,
 				32E1CB35F0A51A0A3846C835 /* MenuDiagnostics.swift in Sources */,
 				8D0E3ADF639C9B4669A8DF0A /* MenuFoldExperiment.swift in Sources */,

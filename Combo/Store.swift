@@ -33,6 +33,7 @@ struct OutputChoice: Identifiable {
     let energyApps = EnergyApps()
     let hotspots = HotspotControl()
     let airpods = AirPodsControl()
+    let bluetoothPermission = BluetoothPermission()
     private let mediaPlayback = MediaPlayback()
     @Published var mediaTrack: MediaTrack?
     @Published var mediaVisible = false
@@ -51,6 +52,7 @@ struct OutputChoice: Identifiable {
     let powerMode = PowerModeControl()
     let chargeControl = ChargeControl()
     @Published var batteryOnAC: Bool?
+    @Published var hasInternalBattery = false
     @Published var batteryCharging: Bool?
     @Published var batteryCharged: Bool?
     @Published var batteryLimitBlocked: Bool?
@@ -164,7 +166,7 @@ struct OutputChoice: Identifiable {
     func refresh() {
         reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         login = SMAppService.mainApp.status == .enabled
-        refreshBattery(); refreshAudio(); refreshOutputs(); network.refresh(); wifi.refresh()
+        refreshBattery(); refreshAudio(); refreshOutputs(); network.refresh(); wifi.refresh(); bluetoothPermission.refresh()
     }
     func controlMedia(_ command: MediaCommand) { mediaPlayback.command(command) }
     func openMediaSource() {
@@ -194,6 +196,7 @@ struct OutputChoice: Identifiable {
                     batteryHealth = health == kIOPSGoodValue ? "良好" : health == kIOPSFairValue ? "一般" : health == kIOPSPoorValue ? "需检修" : "未提供"
                 }
             }
+            hasInternalBattery = found
             if !found { live.battery = nil }
         }
         if powerChange.update(onAC: batteryOnAC) { showCenterHint(.power) }

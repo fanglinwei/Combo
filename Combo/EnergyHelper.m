@@ -1,6 +1,5 @@
 // Read-only isolated system source; app attribution is handled by EnergyApps.swift.
 // ABI and defaults verified from ControlCenter on macOS 27.0 (26A428).
-// Build: clang -fobjc-arc -framework Foundation prototypes/system-energy-query.m -o /tmp/combo-system-energy-query
 #import <Foundation/Foundation.h>
 #include <dlfcn.h>
 #include <unistd.h>

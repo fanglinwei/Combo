@@ -111,7 +111,9 @@ struct SettingsView: View {
     @State private var page: Page = .appearance
     @State private var preview: Scene = .wired
     @State private var reset = false
+    @State private var showingOnboarding = false
     @State private var thresholdDraft: Int?
+    @AppStorage(OnboardingState.completedKey) private var onboardingCompleted = false
     @AppStorage("foldWifi") var foldWifi = true
     @AppStorage("foldSound") var foldSound = true
     @AppStorage("foldBattery") var foldBattery = true
@@ -123,6 +125,13 @@ struct SettingsView: View {
     }
     var body: some View {
         HStack(spacing: 0) {
+            if !onboardingCompleted || showingOnboarding {
+                OnboardingView(store: store) {
+                    onboardingCompleted = true
+                    showingOnboarding = false
+                    page = .general
+                }
+            } else {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 10) {
                     Image(nsImage: brandImage)
@@ -154,6 +163,7 @@ struct SettingsView: View {
                 }.padding(30).frame(maxWidth: 650, alignment: .leading).frame(maxWidth: .infinity)
                     .background(HoverScrollerBridge(accent: NSColor(palette.accent)))
             }.background(palette.canvasTop)
+            }
         }.frame(minWidth: 760, minHeight: 580).tint(palette.accent)
             .alert("恢复显示偏好？", isPresented: $reset) { Button("取消", role: .cancel) {}; Button("恢复") { store.resetDisplay() } } message: { Text("播放动效开启，电池显示阈值恢复为 50%。登录项和折叠选择保持不变。") }
             .sheet(isPresented: $store.showMenuPermission) { menuPermissionGuide }
@@ -229,14 +239,15 @@ struct SettingsView: View {
                 Toggle("登录时启动 Combo", isOn: Binding(get: { store.login }, set: { store.setLogin($0) })).toggleStyle(.switch)
                 Text("登录后显示菜单栏图标，不增加独立后台服务。").font(.caption).foregroundStyle(.secondary)
             }
+            Card { Button("重新查看首次使用引导") { showingOnboarding = true } }
             Card {
                 Label("手动隐藏系统图标", systemImage: "menubar.rectangle").font(.headline)
-                Text("在“系统设置 → 菜单栏”中，由你亲自关闭 Wi‑Fi、声音、电池的菜单栏显示。Combo 不会自动隐藏图标，也不会影响控制中心。")
+                Text("在“系统设置 → 菜单栏”中，由你亲自关闭 Wi‑Fi、声音，以及有内置电池的 Mac 上的电池图标显示。Combo 不会自动隐藏图标，也不会影响控制中心。")
                     .font(.caption).foregroundStyle(.secondary)
-                Text("先打开设置以记录原始状态；改完后返回这里重新检测。正常退出时 Combo 会尝试恢复原状，异常退出后可能需要手动恢复。")
+                Text("这里的状态记录和检测需要辅助功能权限。若已在引导中隐藏图标，Combo 没有更改前的记录；需要恢复时请手动操作。")
                     .font(.caption).foregroundStyle(.secondary)
                 HStack {
-                    Button("打开菜单栏设置并记录原状态") { setup.openAndCapture() }
+                    Button("打开设置并记录当前状态") { setup.openAndCapture() }
                     Button("重新检测") { setup.check() }.disabled(setup.busy)
                     if setup.busy { ProgressView().controlSize(.small) }
                 }
@@ -499,6 +510,7 @@ struct PanelView: View {
     }
     private var mutedText: Color { palette.mutedText }
     @ObservedObject var store: Store
+    @ObservedObject var bluetoothPermission: BluetoothPermission
     let showSettings: () -> Void
     let compact: Bool
     let maxHeight: CGFloat
@@ -534,8 +546,8 @@ struct PanelView: View {
                 do { try await Task.sleep(for: .seconds(30)) } catch { return }
             }
         }
-        .task(id: "\(store.panelVisible && store.screenActive && store.scene == .live && (store.live.outputIsAirPods || selected == .sound))-\(store.selectedOutputID)") {
-            guard store.panelVisible && store.screenActive && store.scene == .live && (store.live.outputIsAirPods || selected == .sound) else { store.airpods.cancel(); return }
+        .task(id: "\(store.panelVisible && store.screenActive && store.scene == .live && bluetoothPermission.authorization == .allowedAlways && (store.live.outputIsAirPods || selected == .sound))-\(store.selectedOutputID)") {
+            guard store.panelVisible && store.screenActive && store.scene == .live && bluetoothPermission.authorization == .allowedAlways && (store.live.outputIsAirPods || selected == .sound) else { store.airpods.cancel(); return }
             while !Task.isCancelled {
                 store.airpods.refresh(deviceID: store.selectedOutputID)
                 do { try await Task.sleep(for: .seconds(3)) } catch { return }
@@ -820,12 +832,13 @@ struct SoundOutputs: View {
     @ObserveInjection var inject
     @ObservedObject var store: Store
     @ObservedObject var control: AirPodsControl
+    @ObservedObject var bluetooth: BluetoothPermission
     @State private var expanded = true
     @State private var hoveredOutput: UInt32?
-    init(store: Store) { self.store = store; self.control = store.airpods }
+    init(store: Store) { self.store = store; self.control = store.airpods; self.bluetooth = store.bluetoothPermission }
     private var active: Bool { store.scene == .live && store.panelVisible && store.screenActive }
     private var state: AirPodsReply? {
-        guard store.scene == .live, let state = control.snapshot,
+        guard store.scene == .live, bluetooth.authorization == .allowedAlways, let state = control.snapshot,
               state.available, state.deviceID == store.selectedOutputID else { return nil }
         return state
     }
@@ -879,14 +892,27 @@ struct SoundOutputs: View {
                         .padding(.horizontal, -14).padding(.top, 5).padding(.bottom, 4)
                 }
             }
-            if active && control.snapshot == nil {
+            if active && store.live.outputIsAirPods && bluetooth.authorization != .allowedAlways {
+                Text("允许蓝牙后可查看耳机电量与聆听模式；音量控制仍可使用。")
+                    .font(.caption).foregroundStyle(.secondary).padding(.top, 6)
+                if bluetooth.authorization == .notDetermined {
+                    Button("请求蓝牙权限") { bluetooth.request() }.font(.caption)
+                } else {
+                    Text("系统设置 → 隐私与安全性 → 蓝牙 → Combo")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Button("打开系统设置") {
+                        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                    }.font(.caption)
+                }
+            }
+            if active && bluetooth.authorization == .allowedAlways && control.snapshot == nil {
                 Text(control.unavailable ? "耳机控制暂不可用" : "正在读取耳机状态…")
                     .font(.caption).foregroundStyle(.secondary).padding(.top, 6)
             }
             if !control.message.isEmpty {
                 Text(control.message).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true).padding(.top, 6)
             }
-            if control.unavailable {
+            if bluetooth.authorization == .allowedAlways && control.unavailable {
                 Button("重新读取耳机状态") { control.refresh(deviceID: store.selectedOutputID) }
                     .font(.caption).disabled(control.busy).padding(.top, 6)
             }
@@ -1257,6 +1283,17 @@ struct WiFiSection: View {
                 } else {
                     Text(wifi.nameAccess ? "未连接或网络名称暂不可用" : "允许定位后显示网络名称")
                         .font(.caption).foregroundStyle(.secondary)
+                    if !wifi.nameAccess {
+                        if wifi.locationAuthorizationStatus == .notDetermined {
+                            Button("请求定位权限") { wifi.requestLocationAccess() }.font(.caption)
+                        } else {
+                            Text("系统设置 → 隐私与安全性 → 定位服务 → Combo")
+                                .font(.caption).foregroundStyle(.secondary)
+                            Button("打开系统设置") {
+                                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                            }.font(.caption)
+                        }
+                    }
                 }
                 Divider()
                 PersonalHotspotSection(control: hotspots, openSettings: openSettings)

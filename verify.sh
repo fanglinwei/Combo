@@ -14,6 +14,8 @@ xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Co
 "$OUT/icon-transition-check"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/WiFiControl.swift Tests/WiFiControlCheck.swift -o "$OUT/wifi-control-check"
 "$OUT/wifi-control-check"
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/OnboardingState.swift Tests/OnboardingCheck.swift -o "$OUT/onboarding-check"
+"$OUT/onboarding-check"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/HotspotControl.swift Tests/HotspotControlCheck.swift -o "$OUT/hotspot-control-check"
 "$OUT/hotspot-control-check"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/State.swift Combo/ChargeControl.swift Tests/ChargeControlCheck.swift -o "$OUT/charge-control-check"

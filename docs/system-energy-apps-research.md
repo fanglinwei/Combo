@@ -54,7 +54,7 @@ SHA-256：`01a86af5e3c328c3c3af7b7007ed240e4c336777011b354b0dc23d659a3a9c45`。
 ### 系统菜单空状态对照（用户展开菜单后）
 
 通过计算机 UI 工具读取 `com.apple.controlcenter`，获得“控制中心”系统对话框，
-其中电池区域明确显示“没有使用大量能耗的App”。随后立即执行仓库中的只读探针，
+其中电池区域明确显示“没有使用大量能耗的App”。随后立即执行当时仓库中的只读探针，
 退出码为 0，`bundle_identifiers`、`responsible_bundle_identifiers`、`display_names`、
 `energy_impacts` 四个数组均为空，`report_duration` 为 120。
 
@@ -85,16 +85,9 @@ report_duration                 NSNumber
 这些 energy impact 值不是瓦数，也不是电池消耗百分比。120 是请求统计窗口，
 不代表应用必须每 120 秒刷新一次；刷新周期尚未验证。
 
-## 可复现探针
+## 早期探针记录
 
-在仓库根目录执行：
-
-```sh
-clang -fobjc-arc -framework Foundation prototypes/system-energy-query.m -o /tmp/combo-system-energy-query
-/tmp/combo-system-energy-query
-```
-
-探针只读、输出 JSON；含符号、响应结构、平行数组长度和窗口检查，15 秒进程级超时。
+独立探针已从仓库清理；当前实现见 [EnergyHelper.m](../Combo/EnergyHelper.m)。早期探针只读、输出 JSON；含符号、响应结构、平行数组长度和窗口检查，15 秒进程级超时。
 为避免把推导的 ABI 当成跨版本契约，主动拒绝未经验证的系统构建。
 退出 0 仅表示数据源与响应结构检查通过，不表示系统菜单一致性已通过。
 未在沙盒应用或其他 macOS 构建上验证。

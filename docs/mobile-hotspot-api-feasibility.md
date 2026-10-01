@@ -37,17 +37,9 @@ Combo 当前的个人热点区域只是打开系统设置的按钮，没有手�
 
 本次探针没有调用热点启用、连接或网络切换方法，也没有添加 entitlement 或使用 root。系统设置观察到当前连接仍是 OVU。这里只证明当前机器和进程环境可读取，不代表沙盒应用、签名发行版、其他系统版本或所有手机都能读取。发现设备也不等于已验证其互联网可用性。
 
-### 可复现命令与检查
+### 早期探针记录
 
-源码：[personal-hotspot-query.m](../prototypes/personal-hotspot-query.m)。这是独立可运行的初期验证程序；正式面板已使用 Swift 读取对象接入，见首节。
-
-```sh
-xcrun clang -Wall -Wextra -fobjc-arc -framework Foundation prototypes/personal-hotspot-query.m -o /tmp/combo-hotspot-query
-/tmp/combo-hotspot-query --self-test
-/tmp/combo-hotspot-query
-```
-
-自检覆盖字段投影、缺失字段、错误类型，以及保留未知网络类型；不触发实际发现。实际发现运行约 10 秒，输出 JSON。退出码：0 收到回调（可能为空列表），2 系统版本或能力不匹配，3 超时未收到回调。原型限制为本次核实的系统 build，避免把旧 ABI 当成跨版本保证。
+独立 Objective-C 探针曾用于上述初期验证，现已从仓库清理。正式面板使用 [HotspotControl.swift](../Combo/HotspotControl.swift) 读取对象；`Tests/HotspotControlCheck.swift` 覆盖字段异常、设备移除和会话生命周期。早期探针的自检覆盖字段投影、缺失字段、错误类型及保留未知网络类型；实机发现约运行 10 秒并输出 JSON。该验证仅针对当时核实的系统 build，不能作为跨版本保证。
 
 ### 接入建议
 

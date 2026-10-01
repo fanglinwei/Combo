@@ -15,6 +15,12 @@ enum MenuIconState: String {
     private let activeKey = "menuSetupSessionActive"
     private let menuBarURL = URL(string: "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension?MenuBar")!
 
+    func openWithoutCapture() -> Bool {
+        if NSWorkspace.shared.open(menuBarURL) { return true }
+        guard let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.systempreferences") else { return false }
+        return NSWorkspace.shared.open(app)
+    }
+
     func openAndCapture() {
         guard NSWorkspace.shared.open(menuBarURL) else { message = "无法打开菜单栏设置。请手动进入“系统设置 → 菜单栏”。"; return }
         busy = true

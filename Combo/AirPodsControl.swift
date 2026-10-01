@@ -1,5 +1,20 @@
 import Foundation
 import Combine
+import CoreBluetooth
+
+@MainActor final class BluetoothPermission: NSObject, ObservableObject, CBCentralManagerDelegate {
+    @Published private(set) var authorization = CBManager.authorization
+    private var manager: CBCentralManager?
+
+    func request() {
+        guard authorization == .notDetermined, manager == nil else { return }
+        manager = CBCentralManager(delegate: self, queue: nil, options: [CBCentralManagerOptionShowPowerAlertKey: false])
+    }
+    func refresh() { authorization = CBManager.authorization }
+    nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        Task { @MainActor [weak self] in self?.refresh() }
+    }
+}
 
 enum ListeningMode: String, CaseIterable, Codable, Identifiable {
     case transparency, adaptive, noiseCancellation = "noise-cancellation", off
