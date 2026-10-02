@@ -28,6 +28,37 @@ private struct WiFiName: View {
     }
 }
 
+private struct VolumeScroll: NSViewRepresentable {
+    let adjust: (NSEvent) -> Void
+
+    func makeNSView(context: Context) -> Catcher { Catcher() }
+    func updateNSView(_ view: Catcher, context: Context) { view.adjust = adjust }
+
+    final class Catcher: NSView {
+        var adjust: ((NSEvent) -> Void)?
+        private var monitor: Any?
+
+        // Transparent to clicks, drags and hovers: only the event monitor reacts.
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if window == nil {
+                if let monitor { NSEvent.removeMonitor(monitor); self.monitor = nil }
+            } else if monitor == nil {
+                monitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
+                    guard let self, let window = self.window, event.window === window,
+                          bounds.contains(convert(event.locationInWindow, from: nil)) else { return event }
+                    adjust?(event)
+                    return nil
+                }
+            }
+        }
+
+        deinit { if let monitor { NSEvent.removeMonitor(monitor) } }
+    }
+}
+
 struct PanelView: View {
     @ObserveInjection var inject
     @ObservedObject private var localization = Localization.shared
@@ -235,6 +266,7 @@ struct PanelView: View {
                         .disabled(store.scene != .live || !audio.canVolume || s.volume == nil)
                         .accessibilityLabel(L("系统音量"))
                         .tint(.gray)
+                        .overlay(volumeScroll)
                     Text(s.muted ? L("静音") : s.volumeText).allowsHitTesting(false)
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .monospacedDigit().frame(width: 42, alignment: .trailing)
@@ -289,6 +321,16 @@ struct PanelView: View {
                 }.buttonStyle(.plain).font(.system(size: 15)).disabled(!store.mediaControlsAvailable)
             }
         }
+    }
+    // Two-finger scrolling or a mouse wheel over the volume slider adjusts the system volume.
+    // Monitor-based, so the overlay stays click-through: dragging the slider keeps working.
+    private var volumeScroll: some View {
+        VolumeScroll { event in
+            guard store.scene == .live, audio.canVolume, let current = audio.volume else { return }
+            audio.setVolume(scrollVolume(current: current, scrollingDelta: event.scrollingDeltaY,
+                                         precise: event.hasPreciseScrollingDeltas,
+                                         inverted: event.isDirectionInvertedFromDevice), isLive: true)
+        }.padding(-6)
     }
     private func choose(_ section: PanelSection) {
         detailTask?.cancel()
@@ -353,6 +395,7 @@ struct PanelView: View {
                 HStack { Text(s.muted ? L("静音") : L("音量")); Spacer(); Text(s.volumeText).foregroundStyle(.secondary) }.font(.caption)
                 Slider(value: Binding(get: { s.volume ?? 0 }, set: { audio.setVolume($0, isLive: store.scene == .live) }), in: 0...1).disabled(store.scene != .live || !audio.canVolume).accessibilityLabel(L("系统音量"))
                     .tint(.gray)
+                    .overlay(volumeScroll)
                 SoundOutputs(store: store)
                 HStack { Button(s.muted ? L("取消静音") : L("静音")) { audio.toggleMute(isLive: store.scene == .live) }.disabled(store.scene != .live || !audio.canMute); Button(L("声音设置 / AirPods")) { store.openSystemSettings("sound") } }.font(.caption)
             }

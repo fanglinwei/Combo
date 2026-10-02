@@ -51,6 +51,12 @@ func bottomState(muted: Bool, adjusting: Bool, playing: Bool, animate: Bool) -> 
     if adjusting { return .volume }
     return playing && animate ? .playing : .volume
 }
+// Scrolling up (fingers up on a trackpad, wheel away from the user) raises the volume. Trackpads report points, wheels report lines.
+func scrollVolume(current: Double, scrollingDelta: Double, precise: Bool, inverted: Bool) -> Double {
+    guard current.isFinite, scrollingDelta.isFinite else { return current }
+    let step = (inverted ? -scrollingDelta : scrollingDelta) * (precise ? 1.0 / 300.0 : 0.05)
+    return min(1, max(0, current + step))
+}
 enum Scene: String, CaseIterable, Identifiable {
     var title: String { LKey(rawValue) }
     case live = "本机状态", wifi = "无线正常", wired = "有线 · 默认", music = "媒体播放", adjusting = "调整音量", paused = "暂停 / 未播放", mute = "系统静音", low = "低电量", charging = "充电 + 播放", offline = "网络异常", reduced = "减少动态效果"
