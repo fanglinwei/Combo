@@ -1,6 +1,34 @@
 import SwiftUI
 import AppKit
 
+/// 动效 token 集中处：曲线 + 时长都从这里取，避免动画参数散落到业务文件里。
+enum Motion {
+    /// 强 ease-out：用于"出现/消失"。首帧行程大、收尾快。
+    static let out = CAMediaTimingFunction(controlPoints: 0.23, 1, 0.32, 1)
+
+    /// 抽屉曲线：面板开合用。首帧就走位移、落位不顿。进和出用同一条，保证可逆过渡的缓动互为镜像。
+    static let drawer = CAMediaTimingFunction(controlPoints: 0.32, 0.72, 0, 1)
+
+    // 时长（秒）。进慢出快是有意的：打开值得看，关闭不该等人。
+    static let panelReveal: TimeInterval = 0.3    // 面板滑入 + 淡入
+    static let panelClose: TimeInterval = 0.14    // 面板滑出
+    static let detailShow: TimeInterval = 0.28    // 详情窗淡入
+    static let detailHide: TimeInterval = 0.15    // 详情窗淡出
+    static let detailResize: TimeInterval = 0.18  // 内容变化时的高度缓动，防止高度瞬跳
+    static let reducedFade: TimeInterval = 0.12   // 减弱动态：只淡入，不位移不缩放
+
+    static func animation(_ duration: Double) -> Animation {
+        .timingCurve(0.23, 1, 0.32, 1, duration: duration)
+    }
+
+    /// Apple's spring vocabulary: `response` = time to reach the target, `bounce` = overshoot
+    /// (0 = critically damped, the house default; overshoot only after real momentum).
+    static func smooth(_ response: Double, bounce: Double = 0) -> Animation {
+        .spring(response: response, dampingFraction: 1 - bounce)
+    }
+
+}
+
 private func themeColor(_ rgb: UInt32) -> Color {
     Color(red: Double((rgb >> 16) & 0xFF) / 255,
           green: Double((rgb >> 8) & 0xFF) / 255,

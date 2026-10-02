@@ -287,4 +287,45 @@ struct BottomTransition {
     }
 }
 
+/// Lights the status item while the panel is open — the reference recording keeps that highlight on
+/// for as long as the panel is up. Same shape as `BottomTransition`: a value we ease over time and
+/// redraw from the animator timer.
+/// 菜单栏图标的高亮底色补间（0↔1）。
+/// 手写而不是用 NSAnimationContext：图标的底色是 layer 属性，走不了窗口的 animator 代理，
+/// 所以复用本文件既有的做法——由 60fps 的 drawIcon 时钟每帧取值绘制。
+struct PanelHighlightTransition {
+    static let duration = 0.14
+    private var startValue = 0.0
+    private var endValue: Double?
+    private var started: Double?
+
+    mutating func update(active: Bool, animate: Bool, at now: Double, reducedMotion: Bool) {
+        let end = active ? 1.0 : 0.0
+        guard animate, !reducedMotion else {
+            startValue = end; endValue = end; started = nil
+            return
+        }
+        guard let previous = endValue else {
+            startValue = end; endValue = end
+            return
+        }
+        guard previous != end else { return }
+        startValue = value(at: now)
+        endValue = end
+        started = now
+    }
+
+    func value(at now: Double) -> Double {
+        guard let started, let end = endValue else { return startValue }
+        let t = min(1, max(0, (now - started) / Self.duration))
+        let eased = t * t * (3 - 2 * t)
+        return startValue + (end - startValue) * eased
+    }
+
+    func isAnimating(at now: Double) -> Bool {
+        guard let started, let end = endValue else { return false }
+        return startValue != end && now - started < Self.duration
+    }
+}
+
 // Pixel-measured from Tests/WiFiReference.png, in the menu-bar renderer's 100 × 100 coordinates.

@@ -10,11 +10,13 @@ final class ComboPanel: NSPanel {
     let store = Store()
     var status: NSStatusItem!
     var panel: ComboPanel?
-    private var panelCompact = false
     private var overviewHeight: CGFloat = 0
-    private var detailHeight: CGFloat = 0
-    private var detailHeightSection: PanelSection?
-    private var selectedSection: PanelSection?
+    /// 滑入进行中。期间冻结窗口 frame 更新，否则内容测量会把窗口拽回终点、把滑动打断。
+    private var revealing = false
+    private var detailWindow: ComboPanel?
+    private var detailChange: AnyCancellable?
+    private var escapeMonitor: Any?
+    private var detailTask: Task<Void, Never>?
     private var revealTask: Task<Void, Never>?
     var settings: NSWindow?
     var change: AnyCancellable?
@@ -23,6 +25,7 @@ final class ComboPanel: NSPanel {
     var animator: Timer?
     private var iconTransition = IconTransition()
     private var bottomTransition = BottomTransition()
+    private var panelHighlight = PanelHighlightTransition()
     private var terminating = false
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -33,7 +36,12 @@ final class ComboPanel: NSPanel {
         root.submenu = submenu; NSApp.mainMenu = menu
         status = NSStatusBar.system.statusItem(withLength: 30)
         status.button?.target = self; status.button?.action = #selector(togglePanel)
+        status.button?.wantsLayer = true
+        status.button?.layer?.cornerRadius = 12
         change = store.objectWillChange.sink { [weak self] _ in DispatchQueue.main.async { self?.updateIcon() } }
+        detailChange = store.$detailSection.removeDuplicates().sink { [weak self] section in
+            DispatchQueue.main.async { self?.updateDetailWindow(section) }
+        }
         appearanceChange = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification, object: UserDefaults.standard)
             .sink { [weak self] _ in DispatchQueue.main.async { self?.updateWindowAppearance() } }
         languageChange = Localization.shared.$language.dropFirst()
@@ -72,12 +80,15 @@ final class ComboPanel: NSPanel {
                               reducedMotion: s.reducedMotion || store.reduceMotion, active: store.screenActive)
         bottomTransition.update(s, animate: store.animate, at: now,
                                 reducedMotion: s.reducedMotion || store.reduceMotion, active: store.screenActive)
+        panelHighlight.update(active: store.panelVisible, animate: store.animate, at: now,
+                              reducedMotion: s.reducedMotion || store.reduceMotion)
         drawIcon()
     }
     func drawIcon() {
         let s = store.snapshot
         let now = ProcessInfo.processInfo.systemUptime
-        let transitioning = (iconTransition.isAnimating(at: now) || bottomTransition.isAnimating(at: now)) && store.screenActive
+        let transitioning = (iconTransition.isAnimating(at: now) || bottomTransition.isAnimating(at: now)
+                             || panelHighlight.isAnimating(at: now)) && store.screenActive
         let playing = s.playing && store.animate && !s.silenced && !s.adjusting && !s.reducedMotion && !store.reduceMotion && store.screenActive
         let interval = transitioning ? 1.0 / 60 : 0.05
         let connecting = s.wifiConnecting && !s.reducedMotion && !store.reduceMotion && store.screenActive
@@ -94,6 +105,8 @@ final class ComboPanel: NSPanel {
                                        transition: iconTransition.frame(at: now), bottomProgress: bottomTransition.value(at: now))
         image.isTemplate = false
         status.button?.image = image
+        let highlight = panelHighlight.value(at: now)
+        status.button?.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.22 * highlight).cgColor
         let description = L("\(store.scene == .live ? "" : L("演示 · "))\(s.powerHintText)电量 \(s.batteryText) · \(LKey(s.network)) · 音量 \(s.volumeText)")
         if status.button?.toolTip != description {
             status.button?.toolTip = description
@@ -105,14 +118,16 @@ final class ComboPanel: NSPanel {
         else if let screen = status.button?.window?.screen ?? NSScreen.main {
             store.refresh()
             let visible = screen.visibleFrame
-            let height = min(500, visible.height - 16)
-            panelCompact = visible.width < PanelView.width * 2 + 34
-            overviewHeight = 0; detailHeight = 0; detailHeightSection = nil; selectedSection = nil
+            // Reuse the height measured last time so the sliding frame is already the right size.
+            // 沿用上次测到的高度：滑进来的那一帧尺寸就是对的，落位后不用再跳一次。
+            let height = min(overviewHeight > 0 ? overviewHeight : 500, visible.height - 16)
+            revealing = true
+            store.panelRevealed = false
             revealTask?.cancel()
             let showSettings = { [weak self] in _ = self?.openSettings() }
-            let view = PanelView(store: store, battery: store.battery, audio: store.audio, bluetoothPermission: store.audio.bluetoothPermission, showSettings: showSettings, compact: panelCompact, maxHeight: visible.height - 16,
-                                 resize: { [weak self] selected in self?.resizePanel(selected: selected) },
-                                 reportHeight: { [weak self] section, value in self?.updatePanelHeight(for: section, value) })
+            let view = PanelView(store: store, battery: store.battery, audio: store.audio, bluetoothPermission: store.audio.bluetoothPermission,
+                                 mode: .overview, showSettings: showSettings, maxHeight: visible.height - 16,
+                                 reportHeight: { [weak self] value in self?.updatePanelHeight(value) })
             let frame = NSRect(x: visible.maxX - PanelView.width - 12, y: visible.maxY - height - 8,
                                width: PanelView.width, height: height)
             let window = panel ?? ComboPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -120,7 +135,11 @@ final class ComboPanel: NSPanel {
             let hosting = NSHostingView(rootView: view)
             hosting.sizingOptions = []
             window.contentView = hosting
-            window.setFrame(frame, display: false)
+            // Land off-screen to the right; the reveal slides it left into `frame`. Reduce Motion skips
+            // the travel and just fades in place.
+            var start = frame
+            if !store.reduceMotion { start.origin.x = visible.maxX + 20 }
+            window.setFrame(start, display: false)
             window.isOpaque = false
             window.backgroundColor = .clear
             window.hasShadow = true
@@ -129,84 +148,155 @@ final class ComboPanel: NSPanel {
             window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             panel = window
             window.alphaValue = 0
-            configurePanelReveal(hosting)
             window.makeKeyAndOrderFront(nil)
             store.panelVisible = true
-            revealTask = Task { @MainActor [weak self, weak window, weak hosting] in
+            revealTask = Task { @MainActor [weak self, weak window] in
                 try? await Task.sleep(for: .milliseconds(20))
-                guard !Task.isCancelled, let self, let window, let hosting, self.panel === window, window.isVisible else { return }
-                await self.runPanelReveal(window, hosting)
+                guard !Task.isCancelled, let self, let window, self.panel === window, window.isVisible else { return }
+                self.store.panelRevealed = true
+                await self.runPanelReveal(window, to: frame)
             }
         }
     }
-    private func resizePanel(selected: PanelSection?) {
-        selectedSection = selected
-        updatePanelFrame()
-    }
-    private func updatePanelHeight(for section: PanelSection?, _ value: CGFloat) {
+    private func updatePanelHeight(_ value: CGFloat) {
         guard value.isFinite, value > 0 else { return }
-        if section == nil { overviewHeight = ceil(value) }
-        else if selectedSection == nil || section == selectedSection {
-            detailHeight = ceil(value)
-            detailHeightSection = section
-        } else { return }
-        updatePanelFrame()
+        let hadMeasurement = overviewHeight > 0
+        overviewHeight = ceil(value)
+        updatePanelFrame(animated: hadMeasurement)
     }
-    private func updatePanelFrame() {
+    private func updatePanelFrame(animated: Bool = false) {
+        guard !revealing else { return }
         guard let panel, let screen = panel.screen else { return }
         let visible = screen.visibleFrame
-        let width = selectedSection != nil && !panelCompact ? PanelView.width * 2 + 10 : PanelView.width
-        let overview = overviewHeight > 0 ? overviewHeight : panel.frame.height
-        let detail = detailHeightSection == selectedSection ? detailHeight : 0
-        let desired = selectedSection == nil ? overview : panelCompact ? (detail > 0 ? detail : overview) : max(overview, detail)
-        let height = min(max(1, desired), max(1, visible.height - 16))
-        let frame = NSRect(x: visible.maxX - width - 12, y: visible.maxY - height - 8, width: width, height: height)
-        guard abs(panel.frame.width - frame.width) > 0.5 || abs(panel.frame.height - frame.height) > 0.5 || abs(panel.frame.minY - frame.minY) > 0.5 else { return }
-        panel.setFrame(frame, display: true)
-    }
-    // Panel pop: scale up from the top-right corner (nearest the menu-bar icon) while fading in.
-    // A strong ease-out reads as "snappy"; the old ease-in-out alpha fade was what felt stiff.
-    private static let panelRevealScale: CGFloat = 0.9
-    private static let panelRevealDuration: TimeInterval = 0.22
-    private static let panelRevealReducedDuration: TimeInterval = 0.12
-
-    private func configurePanelReveal(_ hosting: NSView) {
-        guard !store.reduceMotion else { return }
-        hosting.wantsLayer = true
-        guard let layer = hosting.layer else { return }
-        let bounds = hosting.bounds
-        // NSHostingView is flipped (y-down), so (1,0) is the top-right corner — the menu-bar icon side.
-        layer.anchorPoint = CGPoint(x: 1, y: 0)
-        layer.position = CGPoint(x: bounds.maxX, y: bounds.minY)
-        layer.transform = CATransform3DMakeScale(Self.panelRevealScale, Self.panelRevealScale, 1)
-    }
-
-    private func runPanelReveal(_ window: NSWindow, _ hosting: NSView) async {
-        let reduced = store.reduceMotion
-        let duration = reduced ? Self.panelRevealReducedDuration : Self.panelRevealDuration
-        let curve = CAMediaTimingFunction(controlPoints: 0.23, 1, 0.32, 1)
-        if !reduced, let layer = hosting.layer {
-            let scale = CABasicAnimation(keyPath: "transform")
-            scale.fromValue = NSValue(caTransform3D: CATransform3DMakeScale(Self.panelRevealScale, Self.panelRevealScale, 1))
-            scale.toValue = NSValue(caTransform3D: CATransform3DIdentity)
-            scale.duration = duration
-            scale.timingFunction = curve
-            layer.add(scale, forKey: "panelRevealScale")
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            layer.transform = CATransform3DIdentity
-            CATransaction.commit()
+        let height = min(max(1, overviewHeight > 0 ? overviewHeight : panel.frame.height), max(1, visible.height - 16))
+        let frame = NSRect(x: visible.maxX - PanelView.width - 12, y: visible.maxY - height - 8, width: PanelView.width, height: height)
+        let growth = abs(panel.frame.height - frame.height)
+        guard growth > 0.5 || abs(panel.frame.minY - frame.minY) > 0.5 else { return }
+        // The first measurement after opening is the panel's real size — snap. Later content changes
+        // (media card, message) ease in instead of teleporting.
+        // 首次定位直接落定；之后内容变化（媒体卡出现、提示行）才 0.18s 缓动，避免高度瞬跳。
+        // growth 上限 120pt 是安全阀：异常大的跳变（首次测量）不走动画。
+        guard animated, !store.reduceMotion, growth < 120 else {
+            panel.setFrame(frame, display: true)
+            return
         }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Motion.detailResize
+            context.timingFunction = Motion.out
+            panel.animator().setFrame(frame, display: true)
+        }
+    }
+    // The section detail lives in its own window beside the panel, as in the reference. Measured off
+    // that recording: the window lands on its final frame and fades in — no scale, no slide — over
+    // ~200ms ease-out, swaps pages with a cross-fade, and leaves by fading back out.
+    private static let detailHeight: CGFloat = 570
+    private static let detailGap: CGFloat = 12
+    /// Reduce Motion keeps fades and drops movement, so these replace the old instant cuts.
+
+    private func detailFrame() -> NSRect {
+        let visible = (panel?.screen ?? NSScreen.main)?.visibleFrame ?? .zero
+        let height = min(Self.detailHeight, visible.height - 16)
+        let x = (panel?.frame.minX ?? visible.maxX) - PanelView.width - Self.detailGap
+        return NSRect(x: max(visible.minX + 8, x), y: visible.maxY - height - 8, width: PanelView.width, height: height)
+    }
+
+    private func updateDetailWindow(_ section: PanelSection?) {
+        detailTask?.cancel()
+        guard let section else {
+            if let escapeMonitor { NSEvent.removeMonitor(escapeMonitor); self.escapeMonitor = nil }
+            guard let window = detailWindow, window.isVisible else { return }
+            detailTask = Task { @MainActor in
+                await NSAnimationContext.runAnimationGroup { context in
+                    context.duration = store.reduceMotion ? Motion.reducedFade : Motion.detailHide
+                    context.timingFunction = Motion.out
+                    window.animator().alphaValue = 0
+                }
+                guard !Task.isCancelled, store.detailSection == nil else { return }
+                window.orderOut(nil)
+            }
+            return
+        }
+        let frame = detailFrame()
+        let window: ComboPanel
+        if let existing = detailWindow {
+            window = existing
+        } else {
+            let showSettings = { [weak self] in _ = self?.openSettings() }
+            let view = PanelView(store: store, battery: store.battery, audio: store.audio, bluetoothPermission: store.audio.bluetoothPermission,
+                                 mode: .detail, showSettings: showSettings, maxHeight: frame.height, reportHeight: { _ in })
+            window = ComboPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+            window.appearance = selectedAppearance
+            let hosting = NSHostingView(rootView: view)
+            hosting.sizingOptions = []
+            window.contentView = hosting
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.hasShadow = true
+            window.hidesOnDeactivate = false
+            window.level = .floating
+            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+            detailWindow = window
+        }
+        if escapeMonitor == nil {
+            // Esc closes the detail window; it is not key, so the monitor catches the event app-wide.
+            escapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard event.keyCode == 53, let self, self.store.detailSection != nil else { return event }
+                self.store.detailSection = nil
+                return nil
+            }
+        }
+        window.setFrame(frame, display: window.isVisible)
+        guard !window.isVisible else { window.alphaValue = 1; return }
+        window.alphaValue = 0
+        window.orderFront(nil)
+        detailTask = Task { @MainActor in
+            if !store.reduceMotion { try? await Task.sleep(for: .milliseconds(20)) }
+            guard !Task.isCancelled, store.detailSection == section else { return }
+            await NSAnimationContext.runAnimationGroup { context in
+                context.duration = store.reduceMotion ? Motion.reducedFade : Motion.detailShow
+                context.timingFunction = Motion.out
+                window.animator().alphaValue = 1
+            }
+        }
+    }
+    // Panel reveal: it slides in from the right edge of the screen — the mirror of the close, which
+    // leaves the same way — while fading up, on the drawer curve. ease-in was tried here and held the
+    // panel off-screen for ~90ms before arriving; the drawer curve moves from the first frame and still
+    // settles softly. Reduce Motion keeps a gentle fade with no travel.
+
+    private func runPanelReveal(_ window: NSWindow, to target: NSRect) async {
         await NSAnimationContext.runAnimationGroup { context in
-            context.duration = duration
-            context.timingFunction = curve
+            context.duration = store.reduceMotion ? Motion.reducedFade : Motion.panelReveal
+            context.timingFunction = store.reduceMotion ? Motion.out : Motion.drawer
             window.animator().alphaValue = 1
+            if !store.reduceMotion { window.animator().setFrame(target, display: true) }
         }
+        guard !Task.isCancelled, panel === window, window.isVisible else { revealing = false; return }
+        revealing = false
+        updatePanelFrame(animated: true)
     }
+
+    // Reference close: the panel zips off to the right — toward the menu-bar icon — travelling its own
+    // width in ~0.14s (the recording measures ~116ms), then disappears past the screen edge. No fade,
+    // no shrink: it translates, on the drawer curve so the first frame carries ~40% of the travel.
 
     private func closePanel() {
         revealTask?.cancel()
-        panel?.orderOut(nil); store.panelVisible = false
+        store.detailSection = nil
+        store.panelRevealed = false
+        store.panelVisible = false
+        guard let panel else { return }
+        guard !store.reduceMotion else { panel.orderOut(nil); return }
+        var target = panel.frame
+        target.origin.x = (panel.screen?.visibleFrame.maxX ?? target.maxX) + 20
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Motion.panelClose
+            context.timingFunction = Motion.drawer
+            panel.animator().setFrame(target, display: true)
+        } completionHandler: { [weak self] in
+            guard let self, !self.store.panelVisible else { return }
+            panel.orderOut(nil)
+        }
     }
     @objc func openSettings() {
         if settings == nil {
