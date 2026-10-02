@@ -129,16 +129,13 @@ final class ComboPanel: NSPanel {
             window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             panel = window
             window.alphaValue = 0
+            configurePanelReveal(hosting)
             window.makeKeyAndOrderFront(nil)
             store.panelVisible = true
-            revealTask = Task { @MainActor [weak self, weak window] in
-                try? await Task.sleep(for: .milliseconds(30))
-                guard !Task.isCancelled, let self, let window, self.panel === window, window.isVisible else { return }
-                await NSAnimationContext.runAnimationGroup { context in
-                    context.duration = self.store.reduceMotion ? 0.12 : 0.22
-                    context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                    window.animator().alphaValue = 1
-                }
+            revealTask = Task { @MainActor [weak self, weak window, weak hosting] in
+                try? await Task.sleep(for: .milliseconds(20))
+                guard !Task.isCancelled, let self, let window, let hosting, self.panel === window, window.isVisible else { return }
+                await self.runPanelReveal(window, hosting)
             }
         }
     }
@@ -167,6 +164,46 @@ final class ComboPanel: NSPanel {
         guard abs(panel.frame.width - frame.width) > 0.5 || abs(panel.frame.height - frame.height) > 0.5 || abs(panel.frame.minY - frame.minY) > 0.5 else { return }
         panel.setFrame(frame, display: true)
     }
+    // Panel pop: scale up from the top-right corner (nearest the menu-bar icon) while fading in.
+    // A strong ease-out reads as "snappy"; the old ease-in-out alpha fade was what felt stiff.
+    private static let panelRevealScale: CGFloat = 0.9
+    private static let panelRevealDuration: TimeInterval = 0.22
+    private static let panelRevealReducedDuration: TimeInterval = 0.12
+
+    private func configurePanelReveal(_ hosting: NSView) {
+        guard !store.reduceMotion else { return }
+        hosting.wantsLayer = true
+        guard let layer = hosting.layer else { return }
+        let bounds = hosting.bounds
+        // NSHostingView is flipped (y-down), so (1,0) is the top-right corner — the menu-bar icon side.
+        layer.anchorPoint = CGPoint(x: 1, y: 0)
+        layer.position = CGPoint(x: bounds.maxX, y: bounds.minY)
+        layer.transform = CATransform3DMakeScale(Self.panelRevealScale, Self.panelRevealScale, 1)
+    }
+
+    private func runPanelReveal(_ window: NSWindow, _ hosting: NSView) async {
+        let reduced = store.reduceMotion
+        let duration = reduced ? Self.panelRevealReducedDuration : Self.panelRevealDuration
+        let curve = CAMediaTimingFunction(controlPoints: 0.23, 1, 0.32, 1)
+        if !reduced, let layer = hosting.layer {
+            let scale = CABasicAnimation(keyPath: "transform")
+            scale.fromValue = NSValue(caTransform3D: CATransform3DMakeScale(Self.panelRevealScale, Self.panelRevealScale, 1))
+            scale.toValue = NSValue(caTransform3D: CATransform3DIdentity)
+            scale.duration = duration
+            scale.timingFunction = curve
+            layer.add(scale, forKey: "panelRevealScale")
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            layer.transform = CATransform3DIdentity
+            CATransaction.commit()
+        }
+        await NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            context.timingFunction = curve
+            window.animator().alphaValue = 1
+        }
+    }
+
     private func closePanel() {
         revealTask?.cancel()
         panel?.orderOut(nil); store.panelVisible = false
