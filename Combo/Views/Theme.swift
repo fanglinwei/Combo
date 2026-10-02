@@ -5,10 +5,12 @@ import AppKit
 enum Motion {
     /// 强 ease-out：用于"出现/消失"。首帧行程大、收尾快。
     static let out = CAMediaTimingFunction(controlPoints: 0.23, 1, 0.32, 1)
+    /// 面板进/出：out 首帧太冲，长行程看着是一闪而过。这条平缓得多，进出共用所以来去对称。
+    static let panelEase = CAMediaTimingFunction(controlPoints: 0.4, 0, 0.2, 1)
 
     // 时长（秒）。进慢出快是有意的：打开值得看，关闭不该等人。
-    static let panelReveal: TimeInterval = 0.2   // 面板短距离滑入 + 淡入
-    static let panelClose: TimeInterval = 0.14   // 沿原路径退回 + 淡出
+    static let panelReveal: TimeInterval = 0.3   // 面板滑入 + 淡入
+    static let panelSweep: TimeInterval = 0.4    // 收起：整组右扫一个面板宽，行程长所以比进场更慢
     static let panelOffset: CGFloat = 12
     static let cardOffset: CGFloat = 16
     static let cardShow: TimeInterval = 0.2

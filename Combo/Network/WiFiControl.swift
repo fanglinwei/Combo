@@ -158,8 +158,11 @@ enum WiFiPasswordLookup: Equatable {
         }
     }
     var nameAccess: Bool { locationAuthorizationStatus == .authorizedAlways }
+    /// 请求时刻：面板据此认出"这次失焦是定位弹窗造成的"，不当成点了面板外面。
+    var locationAskedAt: TimeInterval?
     func requestLocationAccess() {
         guard locationAuthorizationStatus == .notDetermined else { return }
+        locationAskedAt = ProcessInfo.processInfo.systemUptime
         location.requestWhenInUseAuthorization()
     }
     func refresh() {

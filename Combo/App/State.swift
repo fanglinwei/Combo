@@ -184,6 +184,18 @@ func calloutOrigin(anchor: CGRect, size: CGSize, visible: CGRect) -> CGPoint {
                    y: anchor.minY - size.height - 6)
 }
 
+/// 面板失焦后要不要收起：只有"点了面板外面"才收。详情窗算面板的一部分，
+/// 刚请求过权限时那次失焦是系统弹窗造成的，都不能收。
+func shouldDismissPanel(panelVisible: Bool, permissionPrompt: Bool, comboWindowKey: Bool) -> Bool {
+    panelVisible && !permissionPrompt && !comboWindowKey
+}
+
+/// 系统权限弹窗在请求后约 1 秒内抢走焦点；只吞掉那一次失焦，所以窗口给 5 秒。
+func permissionAskedRecently(_ askedAt: TimeInterval?, now: TimeInterval) -> Bool {
+    guard let askedAt else { return false }
+    return now >= askedAt && now - askedAt < 5
+}
+
 enum ChargeLimit: Equatable {
     case loading, unknown, none, value(Int), conflicting
     var text: String {

@@ -32,6 +32,12 @@ import ServiceManagement
         return mediaTrack.title.isEmpty ? L("正在获取媒体信息") : mediaTrack.title
     }
     @Published var panelVisible = false
+    /// 刚在面板里点过「请求权限」：系统弹窗会抢走焦点，那一次失焦不该把面板收起来。
+    var permissionPromptActive: Bool {
+        let now = ProcessInfo.processInfo.systemUptime
+        return permissionAskedRecently(wifi.locationAskedAt, now: now)
+            || permissionAskedRecently(audio.bluetoothPermission.askedAt, now: now)
+    }
     /// 引导第 1 步把浮层指向真实菜单栏图标；面板打开或离开该步即收起。
     @Published var menuBarPointer = false
     /// 面板窗口真正上屏后才置真。内容入场必须等它，不能用 panelVisible：

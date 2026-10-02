@@ -14,6 +14,7 @@ final class ComboPanel: NSPanel {
     /// 开合进行中冻结 frame 更新，避免内容测量打断运动。
     private var revealing = false
     private var detailWindow: ComboPanel?
+    private var panelKeyObserver: NSObjectProtocol?
     private var pointerWindow: NSPanel?
     private var pointerChange: AnyCancellable?
     private var detailChange: AnyCancellable?
@@ -166,6 +167,12 @@ final class ComboPanel: NSPanel {
             window.level = .floating
             window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             panel = window
+            if panelKeyObserver == nil {
+                // 面板丢 key 就说明用户点了别处。
+                panelKeyObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: window, queue: .main) { [weak self] _ in
+                    Task { @MainActor in await self?.dismissPanelIfFocusLeft() }
+                }
+            }
             window.alphaValue = 0
             window.makeKeyAndOrderFront(nil)
             store.panelVisible = true
@@ -271,8 +278,11 @@ final class ComboPanel: NSPanel {
             guard let window = detailWindow, window.isVisible else { return }
             detailTask = Task { @MainActor in
                 await NSAnimationContext.runAnimationGroup { context in
-                    context.duration = store.reduceMotion ? Motion.reducedFade : Motion.detailHide
-                    context.timingFunction = Motion.out
+                    // 面板一起收起时用整组右扫的时长：淡出比行程短的话，后半个行程是白跑的。
+                    let closingWithPanel = !store.panelVisible
+                    context.duration = store.reduceMotion ? Motion.reducedFade
+                        : (closingWithPanel ? Motion.panelSweep : Motion.detailHide)
+                    context.timingFunction = closingWithPanel ? Motion.panelEase : Motion.out
                     window.animator().alphaValue = 0
                 }
                 guard !Task.isCancelled, store.detailSection == nil else { return }
@@ -327,7 +337,7 @@ final class ComboPanel: NSPanel {
     private func runPanelReveal(_ window: NSWindow, to target: NSRect) async {
         await NSAnimationContext.runAnimationGroup { context in
             context.duration = store.reduceMotion ? Motion.reducedFade : Motion.panelReveal
-            context.timingFunction = Motion.out
+            context.timingFunction = Motion.panelEase
             window.animator().alphaValue = 1
             if !store.reduceMotion { window.animator().setFrame(target, display: true) }
         }
@@ -336,21 +346,41 @@ final class ComboPanel: NSPanel {
         updatePanelFrame(animated: true)
     }
 
-    // Leave along the same short path; Reduce Motion retains only the fade.
+    /// 面板丢了 key：等一拍再判断，因为 key 在窗口间交接时，旧窗口先失焦、新窗口才拿到 key。
+    /// 详情窗属于面板；刚请求权限时那次失焦是系统弹窗造成的。两种情况都不收。
+    private func dismissPanelIfFocusLeft() async {
+        try? await Task.sleep(for: .milliseconds(80))
+        // key 为 nil（切到别的 App）时不能拿它和 nil 的详情窗比：nil === nil 会是 true。
+        let key = NSApp.keyWindow
+        guard shouldDismissPanel(panelVisible: store.panelVisible,
+                                 permissionPrompt: store.permissionPromptActive,
+                                 comboWindowKey: key.map { $0 === panel || $0 === detailWindow } ?? false) else { return }
+        closePanel()
+    }
+
+    // Reduce Motion retains only the fade.
     private func closePanel() {
         revealTask?.cancel()
+        let detail = store.detailSection != nil ? detailWindow : nil
         store.detailSection = nil
         store.panelRevealed = false
         store.panelVisible = false
         guard let panel else { return }
         revealing = true
+        // 整组往右扫出去：走过一个面板宽度，正好越过屏幕右缘，而不是原地溶解。
+        let travel = PanelView.width + Motion.panelOffset
         var target = panel.frame
-        target.origin.x += Motion.panelOffset
+        target.origin.x += travel
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = store.reduceMotion ? Motion.reducedFade : Motion.panelClose
-            context.timingFunction = Motion.out
+            context.duration = store.reduceMotion ? Motion.reducedFade : Motion.panelSweep
+            context.timingFunction = Motion.panelEase
             panel.animator().alphaValue = 0
-            if !store.reduceMotion { panel.animator().setFrame(target, display: true) }
+            if !store.reduceMotion {
+                panel.animator().setFrame(target, display: true)
+                if let detail, detail.isVisible {
+                    detail.animator().setFrame(detail.frame.offsetBy(dx: travel, dy: 0), display: true)
+                }
+            }
         } completionHandler: { [weak self] in
             guard let self, !self.store.panelVisible else { return }
             self.revealing = false

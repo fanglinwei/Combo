@@ -131,3 +131,13 @@ assert(calloutOrigin(anchor: CGRect(x: 1410, y: 876, width: 30, height: 24), siz
 assert(calloutOrigin(anchor: CGRect(x: 0, y: 876, width: 20, height: 24), size: calloutSize, visible: calloutScreen) == CGPoint(x: 8, y: 802))
 assert(calloutOrigin(anchor: CGRect(x: 1000, y: 876, width: 30, height: 24), size: calloutSize, visible: CGRect(x: 0, y: 0, width: 200, height: 900)).x == 8)
 print("PASS: menu bar callout stays centered on the icon and inside the screen")
+
+assert(!shouldDismissPanel(panelVisible: false, permissionPrompt: false, comboWindowKey: false))
+assert(shouldDismissPanel(panelVisible: true, permissionPrompt: false, comboWindowKey: false))
+assert(!shouldDismissPanel(panelVisible: true, permissionPrompt: true, comboWindowKey: false))
+assert(!shouldDismissPanel(panelVisible: true, permissionPrompt: false, comboWindowKey: true))
+assert(!permissionAskedRecently(nil, now: 100))
+assert(permissionAskedRecently(100, now: 100.5))
+assert(!permissionAskedRecently(100, now: 105))
+assert(!permissionAskedRecently(100, now: 99))
+print("PASS: panel dismiss guard and permission-prompt window")

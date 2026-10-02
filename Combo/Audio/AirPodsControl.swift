@@ -6,8 +6,11 @@ import CoreBluetooth
     @Published private(set) var authorization = CBManager.authorization
     private var manager: CBCentralManager?
 
+    /// 请求时刻：面板据此认出"这次失焦是蓝牙弹窗造成的"，不当成点了面板外面。
+    var askedAt: TimeInterval?
     func request() {
         guard authorization == .notDetermined, manager == nil else { return }
+        askedAt = ProcessInfo.processInfo.systemUptime
         manager = CBCentralManager(delegate: self, queue: nil, options: [CBCentralManagerOptionShowPowerAlertKey: false])
     }
     func refresh() { authorization = CBManager.authorization }

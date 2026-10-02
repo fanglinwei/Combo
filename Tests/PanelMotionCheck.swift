@@ -14,7 +14,7 @@ import AppKit
         try await Task.sleep(for: .milliseconds(60))
         let panel = try require(delegate.panel)
         let firstHeight = panel.frame.height
-        try await Task.sleep(for: .milliseconds(300))
+        try await Task.sleep(for: .milliseconds(450))
         assert(abs(panel.frame.height - firstHeight) < 1,
                "First opening must measure its height before becoming visible")
         assert(panel.isVisible && panel.alphaValue > 0.99)
@@ -26,7 +26,7 @@ import AppKit
         delegate.togglePanel()
         assert(delegate.store.panelVisible && delegate.panel === panel && panel.contentView === hosting,
                "Reopening during close must reuse the live window and card state")
-        try await Task.sleep(for: .milliseconds(300))
+        try await Task.sleep(for: .milliseconds(450))
         assert(panel.isVisible && panel.alphaValue > 0.99 && abs(panel.frame.minX - resting.minX) < 1,
                "A stale close completion must not hide a reopened panel")
 
