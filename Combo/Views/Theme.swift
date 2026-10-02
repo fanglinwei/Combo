@@ -85,7 +85,7 @@ extension EnvironmentValues {
         set { self[ComboPaletteKey.self] = newValue }
     }
 }
-let brandImage = NSImage(contentsOfFile: Bundle.main.path(forResource: "Combo", ofType: "icns") ?? "")
+let brandImage = NSImage(named: NSImage.applicationIconName)
     ?? NSImage(systemSymbolName: "circle.dotted.circle", accessibilityDescription: nil)!
 enum ComboAppearance: String, CaseIterable, Identifiable {
     case system, light, dark

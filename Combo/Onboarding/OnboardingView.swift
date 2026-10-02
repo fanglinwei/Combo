@@ -209,8 +209,7 @@ struct OnboardingView: View {
     private func menuScreenshot(_ title: String, image: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title).font(.system(size: 13, weight: .semibold))
-            if let path = Bundle.main.path(forResource: image, ofType: "png"),
-               let screenshot = NSImage(contentsOfFile: path) {
+            if let screenshot = NSImage(named: image) {
                 Image(nsImage: screenshot).resizable().scaledToFit()
                     .clipShape(RoundedRectangle(cornerRadius: 7))
                     .accessibilityLabel(title)

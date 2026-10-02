@@ -352,12 +352,11 @@
 "已连接" = "Connected";
 "已连接，" = "Connected, ";
 "需要密码，" = "Password Required, ";
-"信号 %lld 格" = "Signal: %lld Bars";
+"信号 %lld 格" = "Signal bars: %lld";
 "信号未知" = "Signal Unknown";
 "Wi‑Fi 不可用" = "Wi-Fi Unavailable";
 "未连接或名称不可用" = "Not Connected or Name Unavailable";
 "允许定位以显示名称" = "Allow Location Access to Show the Name";
-"返回总览" = "Back to Overview";
 "部分演示" = "Partial Demo";
 "设置" = "Settings";
 "演示数据" = "Demo Data";
@@ -421,7 +420,6 @@
 "正在读取能耗模式…" = "Reading Energy Mode…";
 "能耗模式无法读取，请打开电池设置。" = "Could not read energy mode. Open Battery settings.";
 "开始使用 Combo" = "Get Started with Combo";
-"整理菜单栏" = "Organize the Menu Bar";
 "按需授权" = "Authorize as Needed";
 "一个图标，查看 Wi‑Fi、电池和声音" = "Wi-Fi, Battery, and Sound in One Icon";
 "一个图标，查看 Wi‑Fi 和声音" = "Wi-Fi and Sound in One Icon";
@@ -446,7 +444,6 @@
 "尚未请求" = "Not Requested Yet";
 "请求权限" = "Request Access";
 "系统设置 → %@" = "System Settings → %@";
-"找到菜单栏图标" = "Find the Menu Bar Icon";
 "第 %lld 步，共 %lld 步" = "Step %lld of %lld";
 "它只占菜单栏右上角的一个位置：点一下打开面板，再点一下收起。" = "It takes one spot at the right of the menu bar: click to open the panel, click again to close it.";
 "点这里" = "Click here";
