@@ -2,13 +2,14 @@ import AppKit
 import ApplicationServices
 
 enum MenuIconState: String {
+    var title: String { LKey(rawValue) }
     case shown = "设置为显示", hidden = "设置为隐藏", unknown = "无法判断"
 }
 
 @MainActor final class MenuBarSetup: ObservableObject {
     @Published var states: [String: MenuIconState] = [:]
     @Published var busy = false
-    @Published var message = "尚未读取系统设置；结果只作辅助确认。"
+    @Published var message: LocalizedText = "尚未读取系统设置；结果只作辅助确认。"
     @Published var needsRecovery = UserDefaults.standard.bool(forKey: "menuSetupSessionActive")
     private let ids = ["wifi": "controlcenter-wifi-id", "battery": "controlcenter-battery-id", "sound": "controlcenter-sound-id"]
     private let baselineKey = "menuSetupBaseline"

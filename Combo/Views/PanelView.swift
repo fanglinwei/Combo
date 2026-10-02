@@ -3,6 +3,7 @@ import Inject
 import AppKit
 
 enum PanelSection: String {
+    var title: String { LKey(rawValue) }
     case battery = "电池", wifi = "Wi‑Fi", sound = "声音"
     var symbol: String {
         switch self {
@@ -14,20 +15,22 @@ enum PanelSection: String {
 }
 private struct WiFiName: View {
     @ObserveInjection var inject
+    @ObservedObject private var localization = Localization.shared
     @ObservedObject var wifi: WiFiControl
     var body: some View {
         Text(name).lineLimit(1).minimumScaleFactor(0.8).help(name)
     }
     private var name: String {
-        if wifi.powerOn == false { return "Wi‑Fi 已关闭" }
-        if wifi.powerOn == nil { return "Wi‑Fi 不可用" }
+        if wifi.powerOn == false { return L("Wi‑Fi 已关闭") }
+        if wifi.powerOn == nil { return L("Wi‑Fi 不可用") }
         if let ssid = wifi.currentSSID, !ssid.isEmpty { return ssid }
-        return wifi.nameAccess ? "未连接或名称不可用" : "允许定位以显示名称"
+        return wifi.nameAccess ? L("未连接或名称不可用") : L("允许定位以显示名称")
     }
 }
 
 struct PanelView: View {
     @ObserveInjection var inject
+    @ObservedObject private var localization = Localization.shared
     static let width: CGFloat = 420
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage("themeFamily") private var themeFamily: ComboTheme = .blue
@@ -93,12 +96,12 @@ struct PanelView: View {
         panel(for: section) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    if compact { Button("返回总览") { choose(section) }.font(.caption) }
-                    else { Text(section.rawValue).font(.headline) }
+                    if compact { Button(L("返回总览")) { choose(section) }.font(.caption) }
+                    else { Text(section.title).font(.headline) }
                     Spacer()
                 }
                 tile { detail(section) }
-                if compact && !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
+                if compact && !store.message.isEmpty { Text(store.message.string).font(.caption).foregroundStyle(.orange) }
             }
         }
         .opacity(detailVisible ? 1 : 0)
@@ -169,10 +172,10 @@ struct PanelView: View {
                     ComboIcon(snapshot: s, animate: store.animate, size: 56)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Combo").font(.system(size: 24, weight: .semibold))
-                        Text("状态，合而为一").font(.system(size: 12)).foregroundStyle(mutedText)
+                        Text(L("状态，合而为一")).font(.system(size: 12)).foregroundStyle(mutedText)
                     }
                     Spacer()
-                    Text(store.scene == .live ? "本机状态" : "部分演示")
+                    Text(store.scene == .live ? L("本机状态") : L("部分演示"))
                         .font(.system(size: 12, weight: .medium)).foregroundStyle(mutedText)
                 }.padding(.horizontal, 4).padding(.bottom, 6)
                 if store.mediaVisible { mediaCard(store.mediaTrack) }
@@ -181,13 +184,13 @@ struct PanelView: View {
                     sectionCard(.wifi, snapshot: s)
                 }.fixedSize(horizontal: false, vertical: true)
                 soundCard(snapshot: s)
-                if !store.message.isEmpty { Text(store.message).font(.caption).foregroundStyle(.orange) }
+                if !store.message.isEmpty { Text(store.message.string).font(.caption).foregroundStyle(.orange) }
                 HStack {
-                    Button { NSApp.terminate(nil) } label: { Label("退出 Combo", systemImage: "rectangle.portrait.and.arrow.right") }
-                        .buttonStyle(.plain).help("退出 Combo")
+                    Button { NSApp.terminate(nil) } label: { Label(L("退出 Combo"), systemImage: "rectangle.portrait.and.arrow.right") }
+                        .buttonStyle(.plain).help(L("退出 Combo"))
                     Spacer()
                     Button(action: showSettings) { Image(systemName: "gearshape.fill").font(.system(size: 17)) }
-                        .buttonStyle(.plain).help("设置…").accessibilityLabel("设置")
+                        .buttonStyle(.plain).help(L("设置…")).accessibilityLabel(L("设置"))
                 }.foregroundStyle(mutedText).font(.system(size: 12, weight: .medium)).padding(.horizontal, 4).padding(.top, 9)
             }
         }
@@ -199,7 +202,7 @@ struct PanelView: View {
                     HStack(spacing: 9) {
                         Image(systemName: section.symbol).frame(width: 20)
                             .foregroundStyle(palette.accent)
-                        Text(section.rawValue).font(.system(size: 13, weight: .semibold))
+                        Text(section.title).font(.system(size: 13, weight: .semibold))
                         Spacer(minLength: 0)
                     }
                     Group {
@@ -208,7 +211,7 @@ struct PanelView: View {
                     }
                     .font(.system(size: section == .wifi ? 17 : 21, weight: .semibold, design: .rounded))
                     if section == .battery {
-                        Text(store.scene == .live ? battery.statusText : "演示数据")
+                        Text(store.scene == .live ? battery.statusText : L("演示数据"))
                             .font(.system(size: 11)).foregroundStyle(mutedText).lineLimit(2)
                     }
                 }.frame(maxHeight: .infinity, alignment: .top)
@@ -220,23 +223,23 @@ struct PanelView: View {
     }
     private func soundCard(snapshot s: Snapshot) -> some View {
         tile(interactive: true, hoverID: PanelSection.sound.rawValue,
-             action: { choose(.sound) }, actionLabel: "声音详情") {
+             action: { choose(.sound) }, actionLabel: L("声音详情")) {
             VStack(alignment: .leading, spacing: 9) {
                 HStack(spacing: 9) {
                     Image(systemName: PanelSection.sound.symbol).frame(width: 20).foregroundStyle(palette.accent)
-                    Text("声音").font(.system(size: 13, weight: .semibold))
+                    Text(L("声音")).font(.system(size: 13, weight: .semibold))
                     Spacer()
                 }.allowsHitTesting(false)
                 HStack(spacing: 12) {
                     Slider(value: Binding(get: { store.snapshot.volume ?? 0 }, set: { audio.setVolume($0, isLive: store.scene == .live) }), in: 0...1)
                         .disabled(store.scene != .live || !audio.canVolume || s.volume == nil)
-                        .accessibilityLabel("系统音量")
+                        .accessibilityLabel(L("系统音量"))
                         .tint(.gray)
-                    Text(s.muted ? "静音" : s.volumeText).allowsHitTesting(false)
+                    Text(s.muted ? L("静音") : s.volumeText).allowsHitTesting(false)
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .monospacedDigit().frame(width: 42, alignment: .trailing)
                 }
-                Text(s.output).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1).allowsHitTesting(false)
+                Text(s.output.string).font(.system(size: 12)).foregroundStyle(mutedText).lineLimit(1).allowsHitTesting(false)
                 if store.scene == .live, s.outputIsAirPods, let state = audio.airpods.snapshot,
                    state.available, state.deviceID == audio.selectedOutputID,
                    state.left != nil || state.right != nil || state.caseBattery != nil || state.single != nil {
@@ -244,7 +247,7 @@ struct PanelView: View {
                         if let left = state.left { Label("\(left)%", systemImage: "airpods.pro.left") }
                         if let right = state.right { Label("\(right)%", systemImage: "airpods.pro.right") }
                         if let charge = state.caseBattery { Label("\(charge)%", systemImage: "airpodspro.chargingcase.wireless") }
-                        if let single = state.single, state.left == nil && state.right == nil { Text("电量 \(single)%") }
+                        if let single = state.single, state.left == nil && state.right == nil { Text(L("电量 \(single)%")) }
                     }.font(.system(size: 11)).foregroundStyle(mutedText).allowsHitTesting(false)
                         .accessibilityElement(children: .ignore).accessibilityLabel(state.batteryText)
                 }
@@ -255,7 +258,7 @@ struct PanelView: View {
     }
     private func mediaCard(_ track: MediaTrack?) -> some View {
         tile(interactive: true, hoverID: "媒体", action: track?.bundleIdentifier == nil ? nil : { store.openMediaSource() },
-             actionLabel: "打开\(track?.source ?? "媒体来源")") {
+             actionLabel: L("打开\(track?.source ?? L("媒体来源"))")) {
             VStack(alignment: .leading, spacing: 9) {
                 HStack(spacing: 11) {
                     Group {
@@ -272,16 +275,16 @@ struct PanelView: View {
                         if let source = track?.source, !source.isEmpty { Text(source).font(.system(size: 11)).foregroundStyle(mutedText).lineLimit(1) }
                     }
                     Spacer(minLength: 0)
-                    Text(store.mediaControlsAvailable ? (store.live.playing ? "播放中" : "已暂停") : "重新连接中").font(.system(size: 11)).foregroundStyle(mutedText)
+                    Text(store.mediaControlsAvailable ? (store.live.playing ? L("播放中") : L("已暂停")) : L("重新连接中")).font(.system(size: 11)).foregroundStyle(mutedText)
                 }.allowsHitTesting(false)
                 HStack(spacing: 18) {
                     Spacer()
                     Button { store.controlMedia(.previous) } label: { Image(systemName: "backward.end.fill").frame(width: 30, height: 28) }
-                        .help("上一首").accessibilityLabel("上一首")
+                        .help(L("上一首")).accessibilityLabel(L("上一首"))
                     Button { store.controlMedia(.toggle) } label: { Image(systemName: store.live.playing ? "pause.fill" : "play.fill").frame(width: 30, height: 28) }
-                        .help(store.live.playing ? "暂停" : "播放").accessibilityLabel(store.live.playing ? "暂停" : "播放")
+                        .help(store.live.playing ? L("暂停") : L("播放")).accessibilityLabel(store.live.playing ? L("暂停") : L("播放"))
                     Button { store.controlMedia(.next) } label: { Image(systemName: "forward.end.fill").frame(width: 30, height: 28) }
-                        .help("下一首").accessibilityLabel("下一首")
+                        .help(L("下一首")).accessibilityLabel(L("下一首"))
                     Spacer()
                 }.buttonStyle(.plain).font(.system(size: 15)).disabled(!store.mediaControlsAvailable)
             }
@@ -324,34 +327,34 @@ struct PanelView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(s.batteryText).font(.system(size: 28, weight: .medium, design: .rounded))
                         if store.scene == .live {
-                            Text("电源：\(battery.sourceText)").font(.caption).foregroundStyle(.secondary)
+                            Text(L("电源：\(battery.sourceText)")).font(.caption).foregroundStyle(.secondary)
                             Text(battery.statusText).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                        } else { Text("演示数据 · 不改变系统状态").font(.caption).foregroundStyle(.secondary) }
+                        } else { Text(L("演示数据 · 不改变系统状态")).font(.caption).foregroundStyle(.secondary) }
                     }
                 }
                 if store.scene == .live {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text("当前充电上限：\(battery.chargeLimit.text)")
-                        Text("健康：\(battery.health) · 低电量模式：\(battery.lowPowerMode ? "开" : "关")")
+                        Text(L("当前充电上限：\(battery.chargeLimit.text)"))
+                        Text(L("健康：\(LKey(battery.health)) · 低电量模式：\(battery.lowPowerMode ? L("开") : L("关"))"))
                     }.font(.caption).foregroundStyle(.secondary)
                     ChargeFullSection(control: battery.chargeControl, eligible: battery.canRequestFullCharge(scene: store.scene),
                                       expectedLimit: battery.chargeLimit, action: { battery.requestFullCharge(scene: store.scene) })
                     PowerModeSection(control: battery.powerMode, source: battery.onAC.map { $0 ? .adapter : .battery }) { battery.refreshBattery() }
                     EnergyAppsSection(control: battery.energyApps, limit: battery.energyAppLimit)
-                } else { Button("返回本机状态") { store.scene = .live }.font(.caption) }
-                HStack { Button("电池设置") { store.openSystemSettings("battery") }; Button("耗电应用") { store.openActivityMonitor() } }.font(.caption)
+                } else { Button(L("返回本机状态")) { store.scene = .live }.font(.caption) }
+                HStack { Button(L("电池设置")) { store.openSystemSettings("battery") }; Button(L("耗电应用")) { store.openActivityMonitor() } }.font(.caption)
             }
         case .wifi:
-            WiFiSection(wifi: store.wifi, hotspots: store.hotspots, connection: s.network, active: store.screenActive,
+            WiFiSection(wifi: store.wifi, hotspots: store.hotspots, connection: LKey(s.network), active: store.screenActive,
                         openSettings: { store.openSystemSettings("wifi") })
         case .sound:
             VStack(alignment: .leading, spacing: 16) {
-                Label("声音", systemImage: "speaker.wave.2").font(.headline)
-                HStack { Text(s.muted ? "静音" : "音量"); Spacer(); Text(s.volumeText).foregroundStyle(.secondary) }.font(.caption)
-                Slider(value: Binding(get: { s.volume ?? 0 }, set: { audio.setVolume($0, isLive: store.scene == .live) }), in: 0...1).disabled(store.scene != .live || !audio.canVolume).accessibilityLabel("系统音量")
+                Label(L("声音"), systemImage: "speaker.wave.2").font(.headline)
+                HStack { Text(s.muted ? L("静音") : L("音量")); Spacer(); Text(s.volumeText).foregroundStyle(.secondary) }.font(.caption)
+                Slider(value: Binding(get: { s.volume ?? 0 }, set: { audio.setVolume($0, isLive: store.scene == .live) }), in: 0...1).disabled(store.scene != .live || !audio.canVolume).accessibilityLabel(L("系统音量"))
                     .tint(.gray)
                 SoundOutputs(store: store)
-                HStack { Button(s.muted ? "取消静音" : "静音") { audio.toggleMute(isLive: store.scene == .live) }.disabled(store.scene != .live || !audio.canMute); Button("声音设置 / AirPods") { store.openSystemSettings("sound") } }.font(.caption)
+                HStack { Button(s.muted ? L("取消静音") : L("静音")) { audio.toggleMute(isLive: store.scene == .live) }.disabled(store.scene != .live || !audio.canMute); Button(L("声音设置 / AirPods")) { store.openSystemSettings("sound") } }.font(.caption)
             }
         }
     }

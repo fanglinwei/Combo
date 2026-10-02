@@ -28,22 +28,22 @@ import ServiceManagement
     @Published var mediaVisible = false
     @Published var mediaControlsAvailable = false
     var mediaTitle: String {
-        guard let mediaTrack else { return "未识别到媒体" }
-        return mediaTrack.title.isEmpty ? "正在获取媒体信息" : mediaTrack.title
+        guard let mediaTrack else { return L("未识别到媒体") }
+        return mediaTrack.title.isEmpty ? L("正在获取媒体信息") : mediaTrack.title
     }
     @Published var panelVisible = false
     private var hotspotActivity: AnyCancellable?
     @Published var login = false
-    @Published var message = ""
+    @Published var message: LocalizedText = ""
     @Published var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
     @Published var screenActive = true
-    @Published var observation = "系统监听初始化中"
-    @Published var menuDiagnostic = "尚未检测；不会自动请求授权"
+    @Published var observation: LocalizedText = "系统监听初始化中"
+    @Published var menuDiagnostic: LocalizedText = "尚未检测；不会自动请求授权"
     @Published var checkingMenus = false
     @Published var showMenuPermission = false
     @Published var menuAccessGranted = AXIsProcessTrusted()
-    @Published var menuPermissionMessage = ""
-    @Published var foldExperimentMessage = "折叠实验已暂停：曾同时隐藏 Combo 图标。"
+    @Published var menuPermissionMessage: LocalizedText = ""
+    @Published var foldExperimentMessage: LocalizedText = "折叠实验已暂停：曾同时隐藏 Combo 图标。"
     let foldExperiment = MenuFoldExperiment()
     private var volumeHint: Task<Void, Never>?
     private var centerHint = CenterHint()

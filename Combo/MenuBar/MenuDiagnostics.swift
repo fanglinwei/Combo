@@ -35,23 +35,29 @@ private func menuBarItems(pid: pid_t, wanted: Set<String>) -> (items: [String: [
     return (matches, visited, ProcessInfo.processInfo.systemUptime >= deadline)
 }
 
-func inspectMenuBarAgent(pid: pid_t) -> String {
+func inspectMenuBarAgent(pid: pid_t) -> LocalizedText {
     guard AXIsProcessTrusted() else { return "MenuBarAgent：需要辅助功能授权。" }
     let result = menuBarItems(pid: pid, wanted: Set(menuTargets.map { $0.1 }))
     if result.timedOut { return "MenuBarAgent：扫描超时；结果未采用。" }
-    return "MenuBarAgent：" + menuTargets.map { name, id in
+    let rows = menuTargets.map { name, id -> (String, Bool, Bool, Bool) in
         let hits = result.items[id] ?? []
-        if hits.isEmpty { return "\(name) 未定位" }
+        guard let item = hits.first else { return (name, false, false, false) }
         var actions: CFArray?
-        let pressable = AXUIElementCopyActionNames(hits[0], &actions) == .success && (actions as? [String] ?? []).contains(kAXPressAction)
+        let pressable = AXUIElementCopyActionNames(item, &actions) == .success && (actions as? [String] ?? []).contains(kAXPressAction)
         var position: CFTypeRef?
-        let positioned = AXUIElementCopyAttributeValue(hits[0], kAXPositionAttribute as CFString, &position) == .success
-        return "\(name) 已定位候选；点击\(pressable ? "可用" : "未声明")，位置\(positioned ? "可读" : "不可读")"
-    }.joined(separator: "、") + "。扫描 \(result.visited) 个节点；仅完成识别，未点击或折叠。"
+        let positioned = AXUIElementCopyAttributeValue(item, kAXPositionAttribute as CFString, &position) == .success
+        return (name, true, pressable, positioned)
+    }
+    return LocalizedText {
+        L("MenuBarAgent：") + rows.map { name, found, pressable, positioned in
+            if !found { return L("\(LKey(name)) 未定位") }
+            return L("\(LKey(name)) 已定位候选；点击\(pressable ? L("可用") : L("未声明"))，位置\(positioned ? L("可读") : L("不可读"))")
+        }.joined(separator: L("、")) + L("。扫描 \(result.visited) 个节点；仅完成识别，未点击或折叠。")
+    }
 }
 
 // Read-only and explicitly initiated. Never press controls or change menu-bar layout.
-func inspectSystemMenus(pid: pid_t, source: String) -> String {
+func inspectSystemMenus(pid: pid_t, source: String) -> LocalizedText {
     guard AXIsProcessTrusted() else { return "需要辅助功能授权。未读取菜单、未触发权限弹窗。" }
     let root = AXUIElementCreateApplication(pid)
     let deadline = ProcessInfo.processInfo.systemUptime + 5
@@ -59,7 +65,7 @@ func inspectSystemMenus(pid: pid_t, source: String) -> String {
     var identifiers: [String] = []
     var count = 0
     var pressable = 0
-    var roots: [String] = []
+    var roots: [LocalizedText] = []
     func attribute(_ element: AXUIElement, _ key: String) -> CFTypeRef? {
         guard ProcessInfo.processInfo.systemUptime < deadline else { return nil }
         var value: CFTypeRef?
@@ -84,19 +90,21 @@ func inspectSystemMenus(pid: pid_t, source: String) -> String {
         let error = AXUIElementCopyAttributeValue(root, key as CFString, &value)
         let kind = key == kAXMenuBarAttribute ? "主菜单" : "状态菜单"
         if error == .success, let value, CFGetTypeID(value) == AXUIElementGetTypeID() {
-            roots.append("\(kind)：可读")
+            roots.append(LocalizedText { L("\(LKey(kind))：可读") })
             visit(unsafeBitCast(value,to:AXUIElement.self),depth:0)
-        } else { roots.append("\(kind)：不可读（AX \(error.rawValue)）") }
+        } else { roots.append(LocalizedText { L("\(LKey(kind))：不可读（AX \(error.rawValue)）") }) }
     }
-    guard ProcessInfo.processInfo.systemUptime < deadline, visited.count < 120 else { return "\(source)：检测超时或超过读取上限，结果未采用；未执行点击。" }
-    guard count > 0 else { return "\(source)：未发现公开 AX 菜单栏项目；\(roots.joined(separator: "、"))。不能据此启用折叠。" }
+    guard ProcessInfo.processInfo.systemUptime < deadline, visited.count < 120 else { return LocalizedText { L("\(LKey(source))：检测超时或超过读取上限，结果未采用；未执行点击。") } }
+    guard count > 0 else { return LocalizedText { L("\(LKey(source))：未发现公开 AX 菜单栏项目；\(roots.map(\.string).joined(separator: L("、")))。不能据此启用折叠。") } }
     // Candidate identity is diagnostic evidence only, not a supported system contract.
     let targets: [(String,[String])] = [("Wi-Fi",["com.apple.menuextra.wifi","com.apple.controlcenter.wifi","WiFi"]), ("声音",["com.apple.menuextra.volume","com.apple.controlcenter.sound","Sound"]), ("电池",["com.apple.menuextra.battery","com.apple.controlcenter.battery","Battery"])]
-    let rows = targets.map { title, names in
-        let matches = identifiers.filter { names.contains($0) }.count
-        return "\(title)：\(matches == 1 ? "发现标识候选，尚未验证点击" : matches > 1 ? "标识存在歧义" : "未定位，需进一步适配")"
+    return LocalizedText {
+        let rows = targets.map { title, names in
+            let matches = identifiers.filter { names.contains($0) }.count
+            return L("\(LKey(title))：\(matches == 1 ? L("发现标识候选，尚未验证点击") : matches > 1 ? L("标识存在歧义") : L("未定位，需进一步适配"))")
+        }
+        return L("\(LKey(source))：读取到 \(count) 个菜单项，\(pressable) 个声明支持点击。\n") + rows.joined(separator: "\n") + L("\n只读检测完成；不代表折叠或恢复已可用。")
     }
-    return "\(source)：读取到 \(count) 个菜单项，\(pressable) 个声明支持点击。\n" + rows.joined(separator:"\n") + "\n只读检测完成；不代表折叠或恢复已可用。"
 }
 
 extension Store {
@@ -113,9 +121,9 @@ extension Store {
         checkingMenus = true
         Task { [weak self] in
             let result = await Task.detached(priority: .utility) {
-                sources.map { name, pid in
+                LocalizedText.joined(sources.map { name, pid in
                     name == "菜单栏代理" ? inspectMenuBarAgent(pid: pid) : inspectSystemMenus(pid: pid, source: name)
-                }.joined(separator: "\n")
+                }, separator: "\n")
             }.value
             self?.menuDiagnostic = result; self?.checkingMenus = false
         }

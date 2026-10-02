@@ -4,7 +4,7 @@ import Combine
 @MainActor final class PowerModeControl: ObservableObject {
     @Published private(set) var policies: [PowerSource: PowerModePolicy] = [:]
     @Published private(set) var busy = false
-    @Published private(set) var message = ""
+    @Published private(set) var message: LocalizedText = ""
 
     func refresh() async {
         guard !busy else { return }
@@ -22,18 +22,19 @@ import Combine
         guard let policy = policies[source], let command = policy.command(source: source, mode: mode) else {
             message = "无法读取此电源类型的模式，请在电池设置中操作。"; return
         }
-        guard policy.mode != mode else { message = "\(source.title)已设为\(mode.title)。"; return }
-        message = "正在请求授权：\(source.title) → \(mode.title)…"
+        guard policy.mode != mode else { message = LocalizedText { L("\(source.title)已设为\(mode.title)。") }; return }
+        message = LocalizedText { L("正在请求授权：\(source.title) → \(mode.title)…") }
         // Only enum-derived, fixed command text reaches the privileged shell.
+        let prompt = L("Combo：将\(source.title)时的能耗模式设为\(mode.title)。此设置在退出 Combo 后保留。")
         let script = """
         with timeout of 120 seconds
-            do shell script "\(command)" with administrator privileges with prompt "Combo：将\(source.title)时的能耗模式设为\(mode.title)。此设置在退出 Combo 后保留。"
+            do shell script "\(command)" with administrator privileges with prompt "\(prompt)"
         end timeout
         """
         let result = await Self.run("/usr/bin/osascript", ["-e", script], timeout: 130)
         policies = await Self.readPolicies()
         if result.status == 0, policies[source]?.mode == mode {
-            message = "\(source.title)已设为\(mode.title)；退出 Combo 后保留。"
+            message = LocalizedText { L("\(source.title)已设为\(mode.title)；退出 Combo 后保留。") }
         } else if result.output.contains("(-128)") {
             message = "已取消授权。"
         } else {

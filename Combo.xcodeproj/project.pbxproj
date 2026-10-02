@@ -43,6 +43,9 @@
 		3C556937A23E487C92858565 /* ComboIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */; };
 		F093460E736B44B681262DD8 /* BatteryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC6FB7D6A024102BD2E9F79 /* BatteryStore.swift */; };
 		9F566B0DC2CD4AB99A876F17 /* AudioStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84944DB5015F43C89D9DB5E3 /* AudioStore.swift */; };
+		A10100000000000000000002 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000001; };
+		A10100000000000000000005 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000004; };
+		A10100000000000000000007 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000006; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -87,6 +90,11 @@
 		52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ComboIcon.swift; sourceTree = "<group>"; };
 		DEC6FB7D6A024102BD2E9F79 /* BatteryStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BatteryStore.swift; sourceTree = "<group>"; };
 		84944DB5015F43C89D9DB5E3 /* AudioStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioStore.swift; sourceTree = "<group>"; };
+		A10100000000000000000001 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		A10100000000000000000008 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A10100000000000000000009 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		A1010000000000000000000A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		A1010000000000000000000B /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				477A1BE9857448B78B2C3D65 /* App */,
+				A10100000000000000000003 /* Localization */,
 				D0BB29948FD940CFAF28711A /* Audio */,
 				5571A3256A8942BAB16B8F6F /* Battery */,
 				42AF82BC159C493597535D65 /* Network */,
@@ -191,6 +200,7 @@
 			isa = PBXGroup;
 			children = (
 				0141C7E0B4B8033FEFD4E6E3 /* main.swift */,
+				A10100000000000000000001 /* Localization.swift */,
 				3ABDC3E82DEC91AD9967B5D2 /* Info.plist */,
 				CAD8F5DF85A5699BF4EF74DD /* State.swift */,
 				0733EE4F313F9A37B63C241D /* Combo.icns */,
@@ -254,7 +264,13 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
+		A10100000000000000000003 /* Localization */ = {isa = PBXGroup; children = (A10100000000000000000004, A10100000000000000000006); path = Localization; sourceTree = "<group>"; };
 /* End PBXGroup section */
+
+/* Begin PBXVariantGroup section */
+		A10100000000000000000004 /* Localizable.strings */ = {isa = PBXVariantGroup; children = (A10100000000000000000008, A10100000000000000000009); name = Localizable.strings; sourceTree = "<group>"; };
+		A10100000000000000000006 /* InfoPlist.strings */ = {isa = PBXVariantGroup; children = (A1010000000000000000000A, A1010000000000000000000B); name = InfoPlist.strings; sourceTree = "<group>"; };
+/* End PBXVariantGroup section */
 
 /* Begin PBXNativeTarget section */
 		BF3EB1ECE2EE2421FFF26086 /* Combo */ = {
@@ -295,6 +311,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = CD922D4D2A542514D8565DDF;
 			packageReferences = (
@@ -316,6 +333,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				89D7E2AA404BE963A36E44D3 /* Combo.icns in Resources */,
+				A10100000000000000000005 /* Localizable.strings in Resources */,
+				A10100000000000000000007 /* InfoPlist.strings in Resources */,
 				ABCD12340000000000000003 /* MenuBarBefore.png in Resources */,
 				ABCD12340000000000000004 /* MenuBarAfter.png in Resources */,
 			);
@@ -359,6 +378,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10100000000000000000002 /* Localization.swift in Sources */,
 				8916AEC4AA95CCE6EB2B924E /* AirPodsControl.swift in Sources */,
 				6C74CABA6CF5033FA7B8715C /* AudioVolume.swift in Sources */,
 				3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */,

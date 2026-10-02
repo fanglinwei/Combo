@@ -4,7 +4,7 @@ import Combine
 @MainActor final class ChargeControl: ObservableObject {
     @Published private(set) var snapshot: ChargeHelperReply?
     @Published private(set) var busy = false
-    @Published private(set) var message = ""
+    @Published private(set) var message: LocalizedText = ""
     private let helperURL: URL
     private var process: Process?
     private var requestTask: Task<Void, Never>?

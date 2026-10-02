@@ -3,12 +3,12 @@ import Foundation
 enum PowerSource: String, CaseIterable {
     case battery = "Battery Power", adapter = "AC Power"
     var flag: String { self == .battery ? "-b" : "-c" }
-    var title: String { self == .battery ? "使用电池" : "连接电源" }
+    var title: String { self == .battery ? L("使用电池") : L("连接电源") }
 }
 enum PowerMode: Int, CaseIterable, Identifiable {
     case automatic = 0, low = 1, high = 2
     var id: Int { rawValue }
-    var title: String { ["自动", "低电量", "高能耗"][rawValue] }
+    var title: String { [L("自动"), L("低电量"), L("高能耗")][rawValue] }
 }
 struct PowerModePolicy: Equatable {
     let mode: PowerMode
@@ -52,6 +52,7 @@ func bottomState(muted: Bool, adjusting: Bool, playing: Bool, animate: Bool) -> 
     return playing && animate ? .playing : .volume
 }
 enum Scene: String, CaseIterable, Identifiable {
+    var title: String { LKey(rawValue) }
     case live = "本机状态", wifi = "无线正常", wired = "有线 · 默认", music = "媒体播放", adjusting = "调整音量", paused = "暂停 / 未播放", mute = "系统静音", low = "低电量", charging = "充电 + 播放", offline = "网络异常", reduced = "减少动态效果"
     var id: String { rawValue }
     var event: CenterEvent? {
@@ -93,7 +94,7 @@ struct Snapshot {
     var volume: Double? = nil
     var muted = false
     var silenced: Bool { muted || volume == 0 }
-    var output = "正在读取"
+    var output: LocalizedText = "正在读取"
     var outputIsAirPods = false
     var playing = false
     var adjusting = false
@@ -138,8 +139,8 @@ struct Snapshot {
         return s
     }
     var batteryText: String { battery.map { "\(Int(($0 * 100).rounded()))%" } ?? "—" }
-    var volumeText: String { volume.map { "\(Int(($0 * 100).rounded()))%" } ?? "由设备控制" }
-    var powerHintText: String { centerEvent == .power ? (plugged ? "已插入电源，" : "已拔出电源，") : "" }
+    var volumeText: String { volume.map { "\(Int(($0 * 100).rounded()))%" } ?? L("由设备控制") }
+    var powerHintText: String { centerEvent == .power ? (plugged ? L("已插入电源，") : L("已拔出电源，")) : "" }
 }
 
 struct PowerChange {
@@ -172,11 +173,11 @@ enum ChargeLimit: Equatable {
     case loading, unknown, none, value(Int), conflicting
     var text: String {
         switch self {
-        case .loading: "读取中"
-        case .unknown: "无法判断"
-        case .none: "未检测到活动上限"
+        case .loading: L("读取中")
+        case .unknown: L("无法判断")
+        case .none: L("未检测到活动上限")
         case .value(let value): "\(value)%"
-        case .conflicting: "多个限制，无法判断"
+        case .conflicting: L("多个限制，无法判断")
         }
     }
 }
@@ -226,14 +227,14 @@ func parseChargeLimit(_ output: String) -> ChargeLimit {
 }
 
 func batteryChargeText(onAC: Bool?, charging: Bool?, charged: Bool?, limitBlocked: Bool?, limit: ChargeLimit) -> String {
-    guard let onAC else { return "充电状态无法判断" }
-    if !onAC { return "正在使用电池" }
-    guard let charging else { return "充电状态无法判断" }
-    if charging { return "正在充电" }
+    guard let onAC else { return L("充电状态无法判断") }
+    if !onAC { return L("正在使用电池") }
+    guard let charging else { return L("充电状态无法判断") }
+    if charging { return L("正在充电") }
     if limitBlocked == true {
-        if case .value(let value) = limit { return "已充电至 \(value)% 上限" }
-        return "充电已暂停：系统上限"
+        if case .value(let value) = limit { return L("已充电至 \(value)% 上限") }
+        return L("充电已暂停：系统上限")
     }
-    if charged == true { return "已充满电" }
-    return "已连接电源，未充电"
+    if charged == true { return L("已充满电") }
+    return L("已连接电源，未充电")
 }

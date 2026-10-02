@@ -41,14 +41,14 @@ import Foundation
             let calls = try String(contentsOfFile: helper.path + ".calls", encoding: .utf8)
             assert(calls == "request\n")
             if scenario == "success" {
-                assert(control.message.contains("已确认开始充电"))
+                assert(control.message.string.contains("已确认开始充电"))
                 assert(control.snapshot?.charging == true)
                 try FileManager.default.removeItem(atPath: helper.path + ".requested")
                 control.refresh(); await wait(control)
                 assert(control.message.isEmpty, "restored limit must clear the old success message")
             } else {
-                assert(!control.message.contains("已确认开始充电"))
-                assert(control.message.contains(scenario == "stale" ? "本次未执行" : "未能确认"))
+                assert(!control.message.string.contains("已确认开始充电"))
+                assert(control.message.string.contains(scenario == "stale" ? "本次未执行" : "未能确认"))
             }
             control.stop()
         }

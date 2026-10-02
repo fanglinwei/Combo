@@ -20,7 +20,7 @@ enum ComboTheme: String, CaseIterable, Identifiable {
     case blue, purple, gold
     var id: String { rawValue }
     var title: String {
-        switch self { case .blue: "蓝色"; case .purple: "紫色"; case .gold: "暖金色" }
+        switch self { case .blue: L("蓝色"); case .purple: L("紫色"); case .gold: L("暖金色") }
     }
     func palette(isDark: Bool) -> ComboPalette {
         switch (self, isDark) {
@@ -67,7 +67,7 @@ enum ComboAppearance: String, CaseIterable, Identifiable {
     case system, light, dark
     var id: String { rawValue }
     var title: String {
-        switch self { case .system: "跟随系统"; case .light: "浅色"; case .dark: "深色" }
+        switch self { case .system: L("跟随系统"); case .light: L("浅色"); case .dark: L("深色") }
     }
     var nsAppearance: NSAppearance? {
         switch self { case .system: nil; case .light: NSAppearance(named: .aqua); case .dark: NSAppearance(named: .darkAqua) }

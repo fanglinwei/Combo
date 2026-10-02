@@ -20,7 +20,7 @@ enum ListeningMode: String, CaseIterable, Codable, Identifiable {
     case transparency, adaptive, noiseCancellation = "noise-cancellation", off
     var id: String { rawValue }
     var title: String {
-        switch self { case .transparency: "通透模式"; case .adaptive: "自适应"; case .noiseCancellation: "降噪"; case .off: "关闭" }
+        switch self { case .transparency: L("通透模式"); case .adaptive: L("自适应"); case .noiseCancellation: L("降噪"); case .off: L("关闭") }
     }
 }
 
@@ -60,10 +60,10 @@ struct AirPodsReply: Decodable, Equatable {
         return true
     }
     var batteryText: String {
-        let parts: [(String, Int?)] = [("左", left), ("右", right), ("充电盒", caseBattery)]
+        let parts: [(String, Int?)] = [(L("左"), left), (L("右"), right), (L("充电盒"), caseBattery)]
         let values = parts.compactMap { name, value in value.map { "\(name) \($0)%" } }
         if !values.isEmpty { return values.joined(separator: " · ") }
-        return single.map { "电量 \($0)%" } ?? "电量暂不可用"
+        return single.map { L("电量 \($0)%") } ?? L("电量暂不可用")
     }
 }
 
@@ -75,7 +75,7 @@ struct AirPodsReply: Decodable, Equatable {
     @Published private(set) var pendingConversation: Bool?
     var displayedMode: ListeningMode? { pendingMode ?? snapshot?.mode }
     var displayedConversation: Bool? { pendingConversation ?? snapshot?.conversation }
-    @Published private(set) var message = ""
+    @Published private(set) var message: LocalizedText = ""
     @Published private(set) var unavailable = false
     private let helperURL: URL
     private let libraryURL: URL

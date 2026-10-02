@@ -6,6 +6,7 @@ import Inject
 struct ComboIcon: View {
 #if canImport(Inject)
     @ObserveInjection var inject
+    @ObservedObject private var localization = Localization.shared
 #endif
     let snapshot: Snapshot
     let animate: Bool
@@ -48,7 +49,7 @@ struct ComboIcon: View {
                     transition.update(IconContent(value), at: frameTime, reducedMotion: reducedMotion)
                     bottomTransition.update(value, animate: animate, at: frameTime, reducedMotion: reducedMotion)
                 }
-        }.accessibilityLabel("\(current.powerHintText)电量 \(snapshot.batteryText)，\(snapshot.network)，音量 \(snapshot.volumeText)")
+        }.accessibilityLabel(L("\(current.powerHintText)电量 \(snapshot.batteryText)，\(LKey(snapshot.network))，音量 \(snapshot.volumeText)"))
             .onChange(of: IconContent(snapshot), initial: true) { old, content in
                 let now = Date.timeIntervalSinceReferenceDate
                 if !old.sameState(as: content) || transition.target == nil { eventStarted = now }

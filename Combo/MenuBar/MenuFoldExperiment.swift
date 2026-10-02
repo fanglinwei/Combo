@@ -14,7 +14,7 @@ import ApplicationServices
     private var assertion: MenuRestriction?
     private var expiry: Task<Void, Never>?
 
-    func preview(systemID: Int, report: @escaping @MainActor (String) -> Void) {
+    func preview(systemID: Int, report: @escaping @MainActor (LocalizedText) -> Void) {
         release()
         guard Self.available else {
             report("折叠已暂停：实验会隐藏 Combo 图标，无法保证恢复入口始终可见。")
@@ -37,7 +37,7 @@ import ApplicationServices
             return name.hasPrefix("Bartender") || name == "Ice" || name == "Thaw"
         }
         guard managers.isEmpty else {
-            report("请先退出 \(managers.map { $0.localizedName ?? "菜单栏管理器" }.joined(separator: "、"))，再试验折叠。")
+            report("请先退出 \(managers.map { $0.localizedName ?? L("菜单栏管理器") }.joined(separator: "、"))，再试验折叠。")
             return
         }
         guard Bundle(path: "/System/Library/PrivateFrameworks/MenuBarClientCore.framework")?.load() == true,

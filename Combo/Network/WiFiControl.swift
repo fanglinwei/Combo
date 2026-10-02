@@ -21,8 +21,8 @@ struct WiFiChoice: Identifiable {
     static func warning(for security: CWSecurity) -> String? {
         switch security {
         case .WEP, .dynamicWEP, .wpaPersonal, .wpaEnterprise, .wpaPersonalMixed, .wpaEnterpriseMixed:
-            return "低安全性：此网络支持旧式加密。"
-        case .none: return "开放网络：无线连接未加密。"
+            return L("低安全性：此网络支持旧式加密。")
+        case .none: return L("开放网络：无线连接未加密。")
         default: return nil
         }
     }
@@ -79,7 +79,7 @@ enum WiFiPasswordLookup: Equatable {
     @Published var networks: [WiFiChoice] = []
     @Published var busy = false
     @Published private(set) var connecting = false
-    @Published var message = ""
+    @Published var message: LocalizedText = ""
     @Published var currentSSID: String?
     @Published var currentBSSID: String?
     @Published var currentRSSI = 0
@@ -108,7 +108,7 @@ enum WiFiPasswordLookup: Equatable {
          systemPassword: @escaping (Data) -> WiFiPasswordLookup = { WiFiPasswordLookup.find(ssid: $0) },
          associate: @escaping (CWNetwork, String?) throws -> Void = { network, password in
              guard let interface = CWWiFiClient.shared().interface(), interface.powerOn() else {
-                 throw NSError(domain: "Combo.WiFi", code: 1, userInfo: [NSLocalizedDescriptionKey: "Wi‑Fi 已关闭或接口不可用。"])
+                 throw NSError(domain: "Combo.WiFi", code: 1, userInfo: [NSLocalizedDescriptionKey: L("Wi‑Fi 已关闭或接口不可用。")])
              }
              try interface.associate(to: network, password: password)
          }) {

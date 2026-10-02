@@ -6,6 +6,7 @@ import Inject
 
 struct OnboardingView: View {
     @ObserveInjection var inject
+    @ObservedObject private var localization = Localization.shared
     @ObservedObject var store: Store
     @ObservedObject var battery: BatteryStore
     @ObservedObject var setup: MenuBarSetup
@@ -31,11 +32,11 @@ struct OnboardingView: View {
                 HStack(spacing: 12) {
                     Image(nsImage: brandImage).resizable().frame(width: 40, height: 40).accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("开始使用 Combo").font(.system(size: 25, weight: .semibold))
-                        Text("第 \(step + 1) 步，共 2 步").font(.caption).foregroundStyle(.secondary)
+                        Text(L("开始使用 Combo")).font(.system(size: 25, weight: .semibold))
+                        Text(L("第 \(step + 1) 步，共 2 步")).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text(step == 0 ? "整理菜单栏" : "按需授权")
+                    Text(step == 0 ? L("整理菜单栏") : L("按需授权"))
                         .font(.caption).foregroundStyle(palette.accent)
                 }
                 if step == 0 { menuStep } else { permissionStep }
@@ -54,38 +55,38 @@ struct OnboardingView: View {
 
     private var menuStep: some View {
         VStack(alignment: .leading, spacing: 17) {
-            Text(battery.hasInternalBattery ? "一个图标，查看 Wi‑Fi、电池和声音" : "一个图标，查看 Wi‑Fi 和声音")
+            Text(battery.hasInternalBattery ? L("一个图标，查看 Wi‑Fi、电池和声音") : L("一个图标，查看 Wi‑Fi 和声音"))
                 .font(.system(size: 18, weight: .semibold))
-            Text("Combo 集中了这些菜单栏功能。你可以隐藏系统原图标，让菜单栏更简洁；保留它们也不影响 Combo 使用。隐藏图标不会关闭 Wi‑Fi、声音或控制中心的功能。")
+            Text(L("Combo 集中了这些菜单栏功能。你可以隐藏系统原图标，让菜单栏更简洁；保留它们也不影响 Combo 使用。隐藏图标不会关闭 Wi‑Fi、声音或控制中心的功能。"))
                 .font(.system(size: 13)).foregroundStyle(.secondary)
             HStack {
-                Label("系统设置 → 菜单栏", systemImage: "gearshape")
+                Label(L("系统设置 → 菜单栏"), systemImage: "gearshape")
                     .font(.system(size: 13, weight: .medium))
                 Spacer()
-                Button("打开菜单栏设置") { settingsError = !setup.openWithoutCapture() }
+                Button(L("打开菜单栏设置")) { settingsError = !setup.openWithoutCapture() }
             }
             .padding(15)
             .background(palette.surface, in: RoundedRectangle(cornerRadius: 12))
-            Text(battery.hasInternalBattery ? "取消 Wi‑Fi、电池、声音左侧的勾选：" : "取消 Wi‑Fi、声音左侧的勾选：")
+            Text(battery.hasInternalBattery ? L("取消 Wi‑Fi、电池、声音左侧的勾选：") : L("取消 Wi‑Fi、声音左侧的勾选："))
                 .font(.system(size: 13, weight: .medium))
             HStack(alignment: .top, spacing: 12) {
-                menuScreenshot("关闭前 · 蓝色勾选", image: "MenuBarBefore")
-                menuScreenshot("关闭后 · 取消勾选", image: "MenuBarAfter")
+                menuScreenshot(L("关闭前 · 蓝色勾选"), image: "MenuBarBefore")
+                menuScreenshot(L("关闭后 · 取消勾选"), image: "MenuBarAfter")
             }
             if !battery.hasInternalBattery {
-                Text("图中电池项目仅适用于有内置电池的 Mac。")
+                Text(L("图中电池项目仅适用于有内置电池的 Mac。"))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Text("不同 macOS 版本的排列可能略有差异，以项目名称和左侧勾选为准。")
+            Text(L("不同 macOS 版本的排列可能略有差异，以项目名称和左侧勾选为准。"))
                 .font(.caption).foregroundStyle(.secondary)
             if settingsError {
-                Text("无法打开系统设置。请从苹果菜单手动进入“系统设置 → 菜单栏”。")
+                Text(L("无法打开系统设置。请从苹果菜单手动进入“系统设置 → 菜单栏”。"))
                     .font(.caption).foregroundStyle(.orange)
             }
             HStack {
-                Button("跳过这一步") { settingsError = false; step = 1 }
+                Button(L("跳过这一步")) { settingsError = false; step = 1 }
                 Spacer()
-                Button("已设置，继续") { settingsError = false; step = 1 }.keyboardShortcut(.defaultAction)
+                Button(L("已设置，继续")) { settingsError = false; step = 1 }.keyboardShortcut(.defaultAction)
             }
         }
     }
@@ -107,37 +108,37 @@ struct OnboardingView: View {
 
     private var permissionStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("按需开启耳机与网络信息")
+            Text(L("按需开启耳机与网络信息"))
                 .font(.system(size: 18, weight: .semibold))
-            Text("两项权限各有用途。请在了解用途后分别点击申请；跳过也能使用 Combo 的基本功能。")
+            Text(L("两项权限各有用途。请在了解用途后分别点击申请；跳过也能使用 Combo 的基本功能。"))
                 .font(.system(size: 13)).foregroundStyle(.secondary)
             Card {
-                Label("蓝牙", systemImage: "headphones").font(.headline)
-                Text("用于读取已连接耳机的电量与聆听模式，并提供受支持的耳机模式控制。不授权仍可使用 Wi‑Fi、Mac 电池和系统音量。")
+                Label(L("蓝牙"), systemImage: "headphones").font(.headline)
+                Text(L("用于读取已连接耳机的电量与聆听模式，并提供受支持的耳机模式控制。不授权仍可使用 Wi‑Fi、Mac 电池和系统音量。"))
                     .font(.system(size: 13)).foregroundStyle(.secondary)
                 permissionAction(bluetooth.authorization == .allowedAlways,
                                  denied: bluetooth.authorization == .denied || bluetooth.authorization == .restricted,
-                                 request: { bluetooth.request() }, path: "隐私与安全性 → 蓝牙",
-                                 success: "蓝牙权限已开启", detail: "可以查看已连接耳机的状态")
+                                 request: { bluetooth.request() }, path: L("隐私与安全性 → 蓝牙"),
+                                 success: L("蓝牙权限已开启"), detail: L("可以查看已连接耳机的状态"))
             }
             Card {
-                Label("定位", systemImage: "location").font(.headline)
-                Text("macOS 将当前 Wi‑Fi 名称和附近网络纳入定位权限保护。Combo 用它显示网络信息；当前版本不请求坐标，也不上传扫描结果。")
+                Label(L("定位"), systemImage: "location").font(.headline)
+                Text(L("macOS 将当前 Wi‑Fi 名称和附近网络纳入定位权限保护。Combo 用它显示网络信息；当前版本不请求坐标，也不上传扫描结果。"))
                     .font(.system(size: 13)).foregroundStyle(.secondary)
                 permissionAction(wifi.nameAccess,
                                  denied: wifi.locationAuthorizationStatus == .denied || wifi.locationAuthorizationStatus == .restricted,
-                                 request: { wifi.requestLocationAccess() }, path: "隐私与安全性 → 定位服务 → Combo",
-                                 success: "定位权限已开启", detail: "可以显示 Wi‑Fi 网络信息")
+                                 request: { wifi.requestLocationAccess() }, path: L("隐私与安全性 → 定位服务 → Combo"),
+                                 success: L("定位权限已开启"), detail: L("可以显示 Wi‑Fi 网络信息"))
             }
             if settingsError {
-                Text("无法打开系统设置。请从苹果菜单手动进入对应的隐私与安全性页面。")
+                Text(L("无法打开系统设置。请从苹果菜单手动进入对应的隐私与安全性页面。"))
                     .font(.caption).foregroundStyle(.orange)
             }
             HStack {
-                Button("返回上一步") { step = 0 }
+                Button(L("返回上一步")) { step = 0 }
                 Spacer()
-                Button("稍后再说", action: finish)
-                Button("完成引导", action: finish).keyboardShortcut(.defaultAction)
+                Button(L("稍后再说"), action: finish)
+                Button(L("完成引导"), action: finish).keyboardShortcut(.defaultAction)
             }
         }
     }
@@ -161,14 +162,14 @@ struct OnboardingView: View {
         } else {
             VStack(alignment: .leading, spacing: 7) {
                 HStack {
-                    Label(denied ? "尚未允许" : "尚未请求", systemImage: "info.circle")
+                    Label(denied ? L("尚未允许") : L("尚未请求"), systemImage: "info.circle")
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button(denied ? "打开系统设置" : "请求权限") {
+                    Button(denied ? L("打开系统设置") : L("请求权限")) {
                         if denied { openSystemSettings() } else { request() }
                     }
                 }
-                if denied { Text("系统设置 → \(path)").foregroundStyle(.secondary) }
+                if denied { Text(L("系统设置 → \(path)")).foregroundStyle(.secondary) }
             }
             .font(.caption)
         }

@@ -1,0 +1,3 @@
+"NSLocationUsageDescription" = "macOS 需要定位授权才能读取当前 Wi‑Fi 名称及附近网络。Combo 不读取坐标，也不上传网络列表。";
+"NSLocationWhenInUseUsageDescription" = "macOS 需要定位授权才能读取当前 Wi‑Fi 名称及附近网络。Combo 不读取坐标，也不上传网络列表。";
+"NSBluetoothAlwaysUsageDescription" = "显示已连接蓝牙耳机的电量和聆听模式，并在 Combo 中控制聆听模式。";

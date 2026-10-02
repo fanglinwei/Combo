@@ -4,6 +4,7 @@ import AppKit
 
 struct SoundOutputs: View {
     @ObserveInjection var inject
+    @ObservedObject private var localization = Localization.shared
     @ObservedObject var store: Store
     @ObservedObject var audio: AudioStore
     @ObservedObject var control: AirPodsControl
@@ -20,8 +21,8 @@ struct SoundOutputs: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Divider().padding(.bottom, 10)
-            Text("输出").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary).padding(.bottom, 4)
-            if audio.outputDevices.isEmpty { Text("暂无可用输出设备").font(.caption).foregroundStyle(.secondary) }
+            Text(L("输出")).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary).padding(.bottom, 4)
+            if audio.outputDevices.isEmpty { Text(L("暂无可用输出设备")).font(.caption).foregroundStyle(.secondary) }
             ForEach(audio.outputDevices) { output in
                 let selected = output.id == audio.selectedOutputID
                 HStack(spacing: 0) {
@@ -41,7 +42,7 @@ struct SoundOutputs: View {
                     .buttonStyle(.plain)
                     .disabled(store.scene != .live)
                     .accessibilityLabel(output.name)
-                    .accessibilityValue(selected ? "当前输出" + (state.map { "，" + $0.batteryText } ?? "") : "")
+                    .accessibilityValue(selected ? L("当前输出") + (state.map { L("，") + $0.batteryText } ?? "") : "")
                     .accessibilityAddTraits(selected ? .isSelected : [])
                     if selected, let state, !state.modes.isEmpty || state.conversation != nil {
                         Button { expanded.toggle() } label: {
@@ -50,8 +51,8 @@ struct SoundOutputs: View {
                                 .frame(width: 28, height: 32).contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel(expanded ? "收起耳机选项" : "展开耳机选项")
-                        .accessibilityValue(expanded ? "已展开" : "已收起")
+                        .accessibilityLabel(expanded ? L("收起耳机选项") : L("展开耳机选项"))
+                        .accessibilityValue(expanded ? L("已展开") : L("已收起"))
                     }
                 }.padding(.vertical, 1)
                     .background {
@@ -68,27 +69,27 @@ struct SoundOutputs: View {
                 }
             }
             if active && audio.outputIsAirPods && bluetooth.authorization != .allowedAlways {
-                Text("允许蓝牙后可查看耳机电量与聆听模式；音量控制仍可使用。")
+                Text(L("允许蓝牙后可查看耳机电量与聆听模式；音量控制仍可使用。"))
                     .font(.caption).foregroundStyle(.secondary).padding(.top, 6)
                 if bluetooth.authorization == .notDetermined {
-                    Button("请求蓝牙权限") { bluetooth.request() }.font(.caption)
+                    Button(L("请求蓝牙权限")) { bluetooth.request() }.font(.caption)
                 } else {
-                    Text("系统设置 → 隐私与安全性 → 蓝牙 → Combo")
+                    Text(L("系统设置 → 隐私与安全性 → 蓝牙 → Combo"))
                         .font(.caption).foregroundStyle(.secondary)
-                    Button("打开系统设置") {
+                    Button(L("打开系统设置")) {
                         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
                     }.font(.caption)
                 }
             }
             if active && bluetooth.authorization == .allowedAlways && control.snapshot == nil {
-                Text(control.unavailable ? "耳机控制暂不可用" : "正在读取耳机状态…")
+                Text(control.unavailable ? L("耳机控制暂不可用") : L("正在读取耳机状态…"))
                     .font(.caption).foregroundStyle(.secondary).padding(.top, 6)
             }
             if !control.message.isEmpty {
-                Text(control.message).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true).padding(.top, 6)
+                Text(control.message.string).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true).padding(.top, 6)
             }
             if bluetooth.authorization == .allowedAlways && control.unavailable {
-                Button("重新读取耳机状态") { control.refresh(deviceID: audio.selectedOutputID) }
+                Button(L("重新读取耳机状态")) { control.refresh(deviceID: audio.selectedOutputID) }
                     .font(.caption).disabled(control.busy).padding(.top, 6)
             }
         }
@@ -107,13 +108,14 @@ struct SoundOutputs: View {
 }
 struct AirPodsSection: View {
     @ObserveInjection var inject
+    @ObservedObject private var localization = Localization.shared
     @ObservedObject var control: AirPodsControl
     let state: AirPodsReply
     @State private var hoveredOption: String?
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if !state.modes.isEmpty {
-                heading("聆听模式")
+                heading(L("聆听模式"))
                 let modes = state.modes.filter { $0 != .off }
                 AirPodsSegmentTrack(count: modes.count, selected: modes.firstIndex { $0 == control.displayedMode },
                                     enabled: state.canSetMode && !control.busy && !control.unavailable,
@@ -123,17 +125,17 @@ struct AirPodsSection: View {
                                enabled: state.canSetMode) { control.setMode(mode) }
                     }
                 }
-                if state.mode == nil { Text("当前模式暂不可用").font(.caption).foregroundStyle(.secondary) }
+                if state.mode == nil { Text(L("当前模式暂不可用")).font(.caption).foregroundStyle(.secondary) }
             }
             if let conversation = control.displayedConversation {
                 if !state.modes.isEmpty { Divider().padding(.vertical, 10) }
-                heading("对话感知")
+                heading(L("对话感知"))
                 AirPodsSegmentTrack(count: 2, selected: conversation ? 1 : 0,
                                     enabled: state.canSetConversation && !control.busy && !control.unavailable,
                                     select: { control.setConversation($0 == 1) }) {
-                    option("关闭", symbol: "person.wave.2.fill", selected: !conversation, pending: control.pendingConversation == false,
+                    option(L("关闭"), symbol: "person.wave.2.fill", selected: !conversation, pending: control.pendingConversation == false,
                            enabled: state.canSetConversation) { control.setConversation(false) }
-                    option("打开", symbol: "person.wave.2.fill", selected: conversation, pending: control.pendingConversation == true,
+                    option(L("打开"), symbol: "person.wave.2.fill", selected: conversation, pending: control.pendingConversation == true,
                            enabled: state.canSetConversation) { control.setConversation(true) }
                 }
             }
@@ -171,7 +173,7 @@ struct AirPodsSection: View {
         .buttonStyle(.plain)
         .onHover { hoveredOption = $0 ? title : nil }
         .accessibilityLabel(title)
-        .accessibilityValue(selected ? (pending ? "正在切换" : "已选中") : "未选中")
+        .accessibilityValue(selected ? (pending ? L("正在切换") : L("已选中")) : L("未选中"))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .disabled(control.busy || control.unavailable || !enabled)
     }

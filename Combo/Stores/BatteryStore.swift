@@ -33,7 +33,7 @@ import IOKit.ps
     private var chargeLimitProcess: Process?
     private var chargeLimitTimeout: DispatchWorkItem?
     var monitoringAvailable: Bool { batterySource != nil }
-    var sourceText: String { onAC.map { $0 ? "电源适配器" : "电池" } ?? "无法判断" }
+    var sourceText: String { onAC.map { $0 ? L("电源适配器") : L("电池") } ?? L("无法判断") }
     var statusText: String {
         batteryChargeText(onAC: onAC, charging: isCharging, charged: isCharged, limitBlocked: limitBlocked, limit: chargeLimit)
     }

@@ -19,6 +19,7 @@ final class ComboPanel: NSPanel {
     var settings: NSWindow?
     var change: AnyCancellable?
     private var appearanceChange: AnyCancellable?
+    private var languageChange: AnyCancellable?
     var animator: Timer?
     private var iconTransition = IconTransition()
     private var bottomTransition = BottomTransition()
@@ -27,14 +28,16 @@ final class ComboPanel: NSPanel {
         NSApp.setActivationPolicy(.accessory)
         let menu = NSMenu()
         let root = NSMenuItem(); menu.addItem(root)
-        let submenu = NSMenu(); submenu.addItem(withTitle: "设置…", action: #selector(openSettings), keyEquivalent: ",").target = self
-        submenu.addItem(withTitle: "退出 Combo", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let submenu = NSMenu(); submenu.addItem(withTitle: L("设置…"), action: #selector(openSettings), keyEquivalent: ",").target = self
+        submenu.addItem(withTitle: L("退出 Combo"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         root.submenu = submenu; NSApp.mainMenu = menu
         status = NSStatusBar.system.statusItem(withLength: 30)
         status.button?.target = self; status.button?.action = #selector(togglePanel)
         change = store.objectWillChange.sink { [weak self] _ in DispatchQueue.main.async { self?.updateIcon() } }
         appearanceChange = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification, object: UserDefaults.standard)
             .sink { [weak self] _ in DispatchQueue.main.async { self?.updateWindowAppearance() } }
+        languageChange = Localization.shared.$language.dropFirst()
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.updateLanguage() } }
         updateIcon()
         OnboardingState.migrate()
         #if DEBUG
@@ -53,6 +56,13 @@ final class ComboPanel: NSPanel {
         let appearance = selectedAppearance
         settings?.appearance = appearance
         panel?.appearance = appearance
+    }
+    private func updateLanguage() {
+        let menu = NSApp.mainMenu?.items.first?.submenu
+        menu?.items.first?.title = L("设置…")
+        menu?.items.last?.title = L("退出 Combo")
+        settings?.title = L("Combo 设置")
+        drawIcon()
     }
     func updateIcon() {
         guard status != nil else { return }
@@ -84,7 +94,7 @@ final class ComboPanel: NSPanel {
                                        transition: iconTransition.frame(at: now), bottomProgress: bottomTransition.value(at: now))
         image.isTemplate = false
         status.button?.image = image
-        let description = "\(store.scene == .live ? "" : "演示 · ")\(s.powerHintText)电量 \(s.batteryText) · \(s.network) · 音量 \(s.volumeText)"
+        let description = L("\(store.scene == .live ? "" : L("演示 · "))\(s.powerHintText)电量 \(s.batteryText) · \(LKey(s.network)) · 音量 \(s.volumeText)")
         if status.button?.toolTip != description {
             status.button?.toolTip = description
             status.button?.setAccessibilityLabel(description)
@@ -165,14 +175,14 @@ final class ComboPanel: NSPanel {
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 850, height: 690), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             window.appearance = selectedAppearance
-            window.title = "Combo 设置"; window.titlebarAppearsTransparent = true
+            window.title = L("Combo 设置"); window.titlebarAppearsTransparent = true
             window.contentView = NSHostingView(rootView: SettingsView(store: store))
             window.minSize = NSSize(width: 780, height: 620)
             window.isReleasedWhenClosed = false; window.center(); settings = window
         }
         NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
     }
-    func applicationDidBecomeActive(_ notification: Notification) { store.refresh() }
+    func applicationDidBecomeActive(_ notification: Notification) { Localization.shared.refresh(); store.refresh() }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { openSettings(); return true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !terminating else { return .terminateLater }
@@ -181,10 +191,10 @@ final class ComboPanel: NSPanel {
             if UserDefaults.standard.bool(forKey: "menuSetupSessionActive"), await !store.menuSetup.restore() {
                 NSApp.activate(ignoringOtherApps: true)
                 let alert = NSAlert()
-                alert.messageText = "系统图标尚未确认恢复"
-                alert.informativeText = store.menuSetup.message
-                alert.addButton(withTitle: "取消退出并手动检查")
-                alert.addButton(withTitle: "仍要退出")
+                alert.messageText = L("系统图标尚未确认恢复")
+                alert.informativeText = store.menuSetup.message.string
+                alert.addButton(withTitle: L("取消退出并手动检查"))
+                alert.addButton(withTitle: L("仍要退出"))
                 if alert.runModal() == .alertFirstButtonReturn { terminating = false; sender.reply(toApplicationShouldTerminate: false); return }
             }
             sender.reply(toApplicationShouldTerminate: true)

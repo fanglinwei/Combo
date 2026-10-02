@@ -11,18 +11,18 @@ struct OutputChoice: Identifiable {
 @MainActor final class AudioStore: ObservableObject {
     @Published var volume: Double?
     @Published var muted = false
-    @Published var output = ""
+    @Published var output: LocalizedText = ""
     @Published var outputIsAirPods = false
     @Published var outputDevices: [OutputChoice] = []
     @Published var canVolume = false
     @Published var canMute = false
-    @Published var message = "" { didSet { onMessage?(message) } }
+    @Published var message: LocalizedText = "" { didSet { onMessage?(message) } }
     let airpods = AirPodsControl()
     let bluetoothPermission = BluetoothPermission()
     var onUpdate: (() -> Void)?
     var onVolumeChange: (() -> Void)?
     var onAudioReset: ((Bool) -> Void)?
-    var onMessage: ((String) -> Void)?
+    var onMessage: ((LocalizedText) -> Void)?
     private var device: AudioDeviceID = 0
     private var audioListeners: [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
     private(set) var listenersAvailable = false
@@ -45,13 +45,13 @@ struct OutputChoice: Identifiable {
         a = address(kAudioObjectPropertyName, global: true)
         var name: Unmanaged<CFString>?
         size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
-        if AudioObjectGetPropertyData(id, &a, 0, nil, &size, &name) == noErr { output = name?.takeRetainedValue() as String? ?? "未知输出设备" }
+        if AudioObjectGetPropertyData(id, &a, 0, nil, &size, &name) == noErr { if let name = name?.takeRetainedValue() as String? { output = "\(name)" } }
         var transport: UInt32 = 0
         a = address(kAudioDevicePropertyTransportType, global: true); size = UInt32(MemoryLayout<UInt32>.size)
         _ = AudioObjectGetPropertyData(id, &a, 0, nil, &size, &transport)
         // ponytail: reuse the output list's name heuristic; use model identity for renamed AirPods.
         outputIsAirPods = [kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE].contains(transport)
-            && output.localizedCaseInsensitiveContains("AirPods")
+            && output.string.localizedCaseInsensitiveContains("AirPods")
         let reading = AudioVolume.read(id)
         volume = reading.value
         canVolume = reading.writable

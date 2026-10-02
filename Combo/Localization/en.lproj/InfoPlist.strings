@@ -1,0 +1,3 @@
+"NSLocationUsageDescription" = "macOS requires Location access to read the current Wi-Fi name and nearby networks. Combo does not read coordinates or upload network lists.";
+"NSLocationWhenInUseUsageDescription" = "macOS requires Location access to read the current Wi-Fi name and nearby networks. Combo does not read coordinates or upload network lists.";
+"NSBluetoothAlwaysUsageDescription" = "Show connected Bluetooth headphone battery levels and listening modes, and control supported listening modes in Combo.";
