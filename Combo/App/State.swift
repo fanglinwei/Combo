@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 enum PowerSource: String, CaseIterable {
@@ -173,6 +174,14 @@ func volumeHintActive(changedAt: TimeInterval?, now: TimeInterval) -> Bool {
 func menuBarRestoreKeys(original: [String: Bool], current: [String: Bool], keys: Set<String>) -> [String]? {
     guard Set(original.keys) == keys, keys.isSubset(of: Set(current.keys)) else { return nil }
     return keys.sorted().filter { original[$0] != current[$0] }
+}
+
+/// 引导浮层的落点：水平居中于真实状态栏图标，并夹在该屏可见范围内。
+/// 屏幕窄到放不下时先保住左边界，宁可箭头偏一点也不要浮层跑出屏幕。
+func calloutOrigin(anchor: CGRect, size: CGSize, visible: CGRect) -> CGPoint {
+    let left = visible.minX + 8
+    return CGPoint(x: min(max(left, anchor.midX - size.width / 2), max(left, visible.maxX - size.width - 8)),
+                   y: anchor.minY - size.height - 6)
 }
 
 enum ChargeLimit: Equatable {

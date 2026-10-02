@@ -14,11 +14,16 @@ final class ComboPanel: NSPanel {
     /// 开合进行中冻结 frame 更新，避免内容测量打断运动。
     private var revealing = false
     private var detailWindow: ComboPanel?
+    private var pointerWindow: NSPanel?
+    private var pointerChange: AnyCancellable?
     private var detailChange: AnyCancellable?
     private var escapeMonitor: Any?
     private var detailTask: Task<Void, Never>?
     private var revealTask: Task<Void, Never>?
     var settings: NSWindow?
+    /// 引导这一步要不要压在别人上面；真正的层级由 applyGuideLevel 结合前台应用决定。
+    private var guideWantsTop = false
+    private var activationObserver: NSObjectProtocol?
     var change: AnyCancellable?
     private var appearanceChange: AnyCancellable?
     private var languageChange: AnyCancellable?
@@ -42,16 +47,24 @@ final class ComboPanel: NSPanel {
         detailChange = store.$detailSection.removeDuplicates().sink { [weak self] section in
             DispatchQueue.main.async { self?.updateDetailWindow(section) }
         }
+        pointerChange = store.$menuBarPointer.removeDuplicates().sink { [weak self] show in
+            DispatchQueue.main.async { self?.updatePointer(show) }
+        }
         appearanceChange = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification, object: UserDefaults.standard)
             .sink { [weak self] _ in DispatchQueue.main.async { self?.updateWindowAppearance() } }
         languageChange = Localization.shared.$language.dropFirst()
             .sink { [weak self] _ in DispatchQueue.main.async { self?.updateLanguage() } }
+        // 切到系统设置时把引导让下去；切回 Combo 再抬起来。
+        activationObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
+            let active = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier
+            Task { @MainActor in self?.applyGuideLevel(active: active) }
+        }
         updateIcon()
         OnboardingState.migrate()
         #if DEBUG
         let showSettings = true
         #else
-        let showSettings = !UserDefaults.standard.bool(forKey: OnboardingState.completedKey) || CommandLine.arguments.contains("--settings") || store.menuSetup.needsRecovery
+        let showSettings = OnboardingState.showsGuide() || CommandLine.arguments.contains("--settings") || store.menuSetup.needsRecovery
         #endif
         if showSettings {
             openSettings(); UserDefaults.standard.set(true, forKey: "hasOpened")
@@ -144,10 +157,8 @@ final class ComboPanel: NSPanel {
             let hosting = NSHostingView(rootView: view)
             hosting.sizingOptions = []
             window.contentView = hosting
-            // A small offset keeps the panel near its resting place from the first visible frame.
-            var start = frame
-            if !store.reduceMotion { start.origin.x += Motion.panelOffset }
-            window.setFrame(start, display: false)
+            // 起始偏移只由 reveal task 决定（它在动画前才读一次 reduceMotion）。这里再提前 setFrame
+            // 会变成两次读取，两次之间偏好被改就会先落在偏移位、再跳回静止位。
             window.isOpaque = false
             window.backgroundColor = .clear
             window.hasShadow = true
@@ -213,6 +224,44 @@ final class ComboPanel: NSPanel {
         let height = min(Self.detailHeight, visible.height - 16)
         let x = (panel?.frame.minX ?? visible.maxX) - PanelView.width - Self.detailGap
         return NSRect(x: max(visible.minX + 8, x), y: visible.maxY - height - 8, width: PanelView.width, height: height)
+    }
+
+    /// 引导第 1 步的贴边浮层：落在真实状态栏图标正下方，忽略鼠标事件、不抢焦点，只负责指路。
+    /// 状态栏窗口在启动后一拍才落位，太早读到的是零高度占位 frame，所以要等它有效再放。
+    private func updatePointer(_ show: Bool, attempt: Int = 0) {
+        guard show else {
+            pointerWindow?.orderOut(nil)
+            return
+        }
+        guard let button = status.button, let anchorWindow = button.window,
+              let screen = anchorWindow.screen ?? NSScreen.main else { return }
+        // 状态栏窗口落位前 frame 高度为 0，此时窗口内坐标还换不成屏幕坐标。
+        guard anchorWindow.frame.height > 0 else {
+            guard attempt < 20 else { return }
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(250))
+                guard let self, self.store.menuBarPointer else { return }
+                self.updatePointer(true, attempt: attempt + 1)
+            }
+            return
+        }
+        let anchor = anchorWindow.convertToScreen(button.convert(button.bounds, to: nil))
+        let size = NSSize(width: 240, height: 68)
+        let frame = NSRect(origin: calloutOrigin(anchor: anchor, size: size, visible: screen.visibleFrame), size: size)
+        let pointer = pointerWindow ?? NSPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        if pointerWindow == nil {
+            pointer.appearance = selectedAppearance
+            pointer.contentView = NSHostingView(rootView: MenuBarCallout(reduceMotion: store.reduceMotion))
+            pointer.isOpaque = false
+            pointer.backgroundColor = .clear
+            pointer.hasShadow = true
+            pointer.level = .floating
+            pointer.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+            pointer.ignoresMouseEvents = true
+            pointerWindow = pointer
+        }
+        pointer.setFrame(frame, display: false)
+        pointer.orderFront(nil)
     }
 
     private func updateDetailWindow(_ section: PanelSection?) {
@@ -313,13 +362,26 @@ final class ComboPanel: NSPanel {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 850, height: 690), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             window.appearance = selectedAppearance
             window.title = L("Combo 设置"); window.titlebarAppearsTransparent = true
-            window.contentView = NSHostingView(rootView: SettingsView(store: store))
+            window.contentView = NSHostingView(rootView: SettingsView(store: store) { [weak self, weak window] onTop in
+                guard let self, let window else { return }
+                self.guideWantsTop = onTop
+                self.applyGuideLevel(window)
+            })
             window.minSize = NSSize(width: 780, height: 620)
             window.isReleasedWhenClosed = false; window.center(); settings = window
         }
         NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
     }
-    func applicationDidBecomeActive(_ notification: Notification) { Localization.shared.refresh(); store.refresh() }
+    func applicationDidBecomeActive(_ notification: Notification) { Localization.shared.refresh(); store.refresh(); applyGuideLevel() }
+
+    /// 引导平时压在最上层；只要“系统设置”在前台就让位——这一刻用户的任务在那一边，不该被引导盖住。
+    private func applyGuideLevel(_ window: NSWindow? = nil, active: String? = nil) {
+        guard let window = window ?? settings else { return }
+        let front = active ?? NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        let onTop = guideWantsTop && front != "com.apple.systempreferences"
+        window.level = onTop ? .floating : .normal
+        window.collectionBehavior = onTop ? [.moveToActiveSpace, .fullScreenAuxiliary] : []
+    }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { openSettings(); return true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !terminating else { return .terminateLater }

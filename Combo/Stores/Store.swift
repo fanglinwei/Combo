@@ -32,6 +32,8 @@ import ServiceManagement
         return mediaTrack.title.isEmpty ? L("正在获取媒体信息") : mediaTrack.title
     }
     @Published var panelVisible = false
+    /// 引导第 1 步把浮层指向真实菜单栏图标；面板打开或离开该步即收起。
+    @Published var menuBarPointer = false
     /// 面板窗口真正上屏后才置真。内容入场必须等它，不能用 panelVisible：
     /// 后者在 hosting view 安装前就翻真，新视图首帧即已是真值，onChange 不会触发（卡片会一直不出现）。
     @Published var panelRevealed = false

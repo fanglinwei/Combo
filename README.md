@@ -13,7 +13,7 @@
 
 ## 运行
 
-用 Xcode 打开 `Combo.xcodeproj` 并运行 Combo scheme，或在终端执行 `./build.sh` 后打开 Xcode 的 DerivedData/Build/Products/Debug/Combo.app。Debug 运行时自动打开设置窗口，Release 首次启动时打开；关闭窗口后菜单栏图标继续运行；点击菜单栏图标可操作三项功能。退出使用设置页或弹窗中的“退出 Combo”，也可按 Command-Q。
+用 Xcode 打开 `Combo.xcodeproj` 并运行 Combo scheme，或在终端执行 `./build.sh` 后打开 Xcode 的 DerivedData/Build/Products/Debug/Combo.app。Debug 运行时自动打开设置窗口；Release 首次启动会打开引导（找到并点开菜单栏图标 → 按需整理菜单栏 → 按需授权 → 完成页可选“登录时启动”）。每步都可以“稍后再说”，进度会保留，之后可从「设置 → 通用 → 重新查看首次使用引导」继续。关闭窗口后菜单栏图标继续运行；点击菜单栏图标可操作三项功能。退出使用设置页或弹窗中的“退出 Combo”，也可按 Command-Q。
 
 ## 可以体验
 

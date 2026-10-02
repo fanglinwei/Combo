@@ -38,13 +38,19 @@ struct SettingsView: View {
     @ObservedObject var store: Store
     @ObservedObject var battery: BatteryStore
     @ObservedObject var setup: MenuBarSetup
-    init(store: Store) { self.store = store; self.battery = store.battery; self.setup = store.menuSetup }
+    /// 引导是否在屏幕上。它决定窗口要不要抬到浮动层，逻辑留在 AppDelegate。
+    let setGuideOnTop: (Bool) -> Void
+    init(store: Store, setGuideOnTop: @escaping (Bool) -> Void) {
+        self.store = store; self.battery = store.battery; self.setup = store.menuSetup; self.setGuideOnTop = setGuideOnTop
+    }
     @State private var page: Page = .appearance
     @State private var preview: Scene = .wired
     @State private var reset = false
     @State private var showingOnboarding = false
     @State private var thresholdDraft: Int?
     @AppStorage(OnboardingState.completedKey) private var onboardingCompleted = false
+    @AppStorage(OnboardingState.postponedKey) private var onboardingPostponed = false
+    @AppStorage(OnboardingState.stepKey) private var onboardingStep = 0
     @AppStorage("foldWifi") var foldWifi = true
     @AppStorage("foldSound") var foldSound = true
     @AppStorage("foldBattery") var foldBattery = true
@@ -54,13 +60,17 @@ struct SettingsView: View {
     private var palette: ComboPalette {
         themeFamily.palette(isDark: colorScheme == .dark)
     }
+    /// 引导在屏幕上：首次没走完也没被“稍后再说”放行，或从“通用”里重新打开。
+    private var guideVisible: Bool { (!onboardingCompleted && !onboardingPostponed) || showingOnboarding }
+
     var body: some View {
         HStack(spacing: 0) {
-            if !onboardingCompleted || showingOnboarding {
-                OnboardingView(store: store) {
-                    onboardingCompleted = true
+            if guideVisible {
+                OnboardingView(store: store, step: $onboardingStep) { completed in
+                    onboardingCompleted = completed
+                    onboardingPostponed = !completed
+                    if completed { onboardingStep = 0; page = .general }
                     showingOnboarding = false
-                    page = .general
                 }
             } else {
             VStack(alignment: .leading, spacing: 6) {
@@ -96,6 +106,8 @@ struct SettingsView: View {
             }.background(palette.canvasTop)
             }
         }.frame(minWidth: 760, minHeight: 580).tint(palette.accent)
+            .onAppear { setGuideOnTop(guideVisible) }
+            .onChange(of: guideVisible) { _, visible in setGuideOnTop(visible) }
             .alert(L("恢复显示偏好？"), isPresented: $reset) { Button(L("取消"), role: .cancel) {}; Button(L("恢复")) { store.resetDisplay() } } message: { Text(L("播放动效开启，电池显示阈值恢复为 50%。登录项和折叠选择保持不变。")) }
             .sheet(isPresented: $store.showMenuPermission) { menuPermissionGuide }
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in

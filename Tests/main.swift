@@ -123,3 +123,11 @@ assert(Snapshot(battery: 1, symbol: "wifi").preferringBattery(threshold: 100).sy
 assert(Snapshot(battery: 0.99, symbol: "wifi").preferringBattery(threshold: 100).symbol == "")
 assert(Snapshot(battery: 1, charging: true, symbol: "wifi").preferringBattery(threshold: 0).symbol == "")
 print("PASS: battery display priority, threshold boundaries, missing data and power-change detection")
+
+let calloutSize = CGSize(width: 240, height: 68)
+let calloutScreen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+assert(calloutOrigin(anchor: CGRect(x: 985, y: 876, width: 30, height: 24), size: calloutSize, visible: calloutScreen) == CGPoint(x: 880, y: 802))
+assert(calloutOrigin(anchor: CGRect(x: 1410, y: 876, width: 30, height: 24), size: calloutSize, visible: calloutScreen) == CGPoint(x: 1192, y: 802))
+assert(calloutOrigin(anchor: CGRect(x: 0, y: 876, width: 20, height: 24), size: calloutSize, visible: calloutScreen) == CGPoint(x: 8, y: 802))
+assert(calloutOrigin(anchor: CGRect(x: 1000, y: 876, width: 30, height: 24), size: calloutSize, visible: CGRect(x: 0, y: 0, width: 200, height: 900)).x == 8)
+print("PASS: menu bar callout stays centered on the icon and inside the screen")
