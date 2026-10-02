@@ -120,16 +120,7 @@ struct PanelView: View {
         }
         .enableInjection()
     }
-    // Measured off the reference recordings: each card enters from the right — 80 px at 2x, i.e. 40 pt
-    // here — and fades up from nothing, staggered ~20 ms in reading order (防护 → 磁盘 → 内存 → 电池 →
-    // CPU → 网络 → 设备), starting with the frame itself. The frame, title and footer fade in place
-    // instead, so only the content cards take part. A spring, not a timed curve: it settles into place
-    // instead of stopping dead, and it re-targets mid-flight if the panel is toggled again.
-    private static let cardOffset: CGFloat = 40
-    // Apple's move/reposition spring: critically damped, so the cards settle instead of stopping dead,
-    // and the 30 ms stagger still reads as a reading-order progression.
-    private static let cardResponse: Double = 0.4
-    private static let cardStep: Double = 0.03
+    // Keep the reference's reading-order reveal, with less travel and a soft ease-out landing.
     private struct CardIn: ViewModifier {
         let index: Int
         let done: Bool
@@ -137,12 +128,12 @@ struct PanelView: View {
         func body(content: Content) -> some View {
             content
                 .opacity(done ? 1 : 0)
-                .offset(x: reduced || done ? 0 : PanelView.cardOffset)
-                .animation(entry.delay(reduced ? 0 : Double(index) * PanelView.cardStep), value: done)
+                .offset(x: reduced || done ? 0 : Motion.cardOffset)
+                .animation(entry.delay(done && !reduced ? Double(index) * Motion.cardStep : 0), value: done)
         }
-        // Reduced motion keeps a plain cross-fade: no spring, no movement.
+        // Reduced motion keeps a plain cross-fade, without travel or stagger.
         private var entry: Animation {
-            reduced ? Motion.animation(0.12) : Motion.smooth(PanelView.cardResponse)
+            Motion.animation(reduced ? Motion.reducedFade : Motion.cardShow)
         }
     }
     private func cardIn(_ index: Int) -> some ViewModifier {

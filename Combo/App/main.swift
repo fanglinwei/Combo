@@ -11,7 +11,7 @@ final class ComboPanel: NSPanel {
     var status: NSStatusItem!
     var panel: ComboPanel?
     private var overviewHeight: CGFloat = 0
-    /// 滑入进行中。期间冻结窗口 frame 更新，否则内容测量会把窗口拽回终点、把滑动打断。
+    /// 开合进行中冻结 frame 更新，避免内容测量打断运动。
     private var revealing = false
     private var detailWindow: ComboPanel?
     private var detailChange: AnyCancellable?
@@ -114,31 +114,39 @@ final class ComboPanel: NSPanel {
         }
     }
     @objc func togglePanel() {
-        if panel?.isVisible == true { closePanel() }
+        if store.panelVisible { closePanel() }
         else if let screen = status.button?.window?.screen ?? NSScreen.main {
             store.refresh()
             let visible = screen.visibleFrame
-            // Reuse the height measured last time so the sliding frame is already the right size.
-            // 沿用上次测到的高度：滑进来的那一帧尺寸就是对的，落位后不用再跳一次。
+            // Reuse the measured height so opening does not resize the surface mid-flight.
             let height = min(overviewHeight > 0 ? overviewHeight : 500, visible.height - 16)
+            let frame = NSRect(x: visible.maxX - PanelView.width - 12, y: visible.maxY - height - 8,
+                               width: PanelView.width, height: height)
             revealing = true
-            store.panelRevealed = false
             revealTask?.cancel()
+            // Reverse a closing panel in place, preserving its live frame, alpha and card state.
+            if let window = panel, window.isVisible {
+                store.panelVisible = true
+                store.panelRevealed = true
+                revealTask = Task { @MainActor [weak self, weak window] in
+                    guard let self, let window else { return }
+                    await self.runPanelReveal(window, to: frame)
+                }
+                return
+            }
+            store.panelRevealed = false
             let showSettings = { [weak self] in _ = self?.openSettings() }
             let view = PanelView(store: store, battery: store.battery, audio: store.audio, bluetoothPermission: store.audio.bluetoothPermission,
                                  mode: .overview, showSettings: showSettings, maxHeight: visible.height - 16,
                                  reportHeight: { [weak self] value in self?.updatePanelHeight(value) })
-            let frame = NSRect(x: visible.maxX - PanelView.width - 12, y: visible.maxY - height - 8,
-                               width: PanelView.width, height: height)
             let window = panel ?? ComboPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
             window.appearance = selectedAppearance
             let hosting = NSHostingView(rootView: view)
             hosting.sizingOptions = []
             window.contentView = hosting
-            // Land off-screen to the right; the reveal slides it left into `frame`. Reduce Motion skips
-            // the travel and just fades in place.
+            // A small offset keeps the panel near its resting place from the first visible frame.
             var start = frame
-            if !store.reduceMotion { start.origin.x = visible.maxX + 20 }
+            if !store.reduceMotion { start.origin.x += Motion.panelOffset }
             window.setFrame(start, display: false)
             window.isOpaque = false
             window.backgroundColor = .clear
@@ -153,8 +161,15 @@ final class ComboPanel: NSPanel {
             revealTask = Task { @MainActor [weak self, weak window] in
                 try? await Task.sleep(for: .milliseconds(20))
                 guard !Task.isCancelled, let self, let window, self.panel === window, window.isVisible else { return }
+                // Apply the first layout while still transparent, avoiding a height jump on landing.
+                var target = frame
+                target.size.height = min(self.overviewHeight > 0 ? self.overviewHeight : height, visible.height - 16)
+                target.origin.y = visible.maxY - target.height - 8
+                var measuredStart = target
+                if !self.store.reduceMotion { measuredStart.origin.x += Motion.panelOffset }
+                window.setFrame(measuredStart, display: false)
                 self.store.panelRevealed = true
-                await self.runPanelReveal(window, to: frame)
+                await self.runPanelReveal(window, to: target)
             }
         }
     }
@@ -259,42 +274,37 @@ final class ComboPanel: NSPanel {
             }
         }
     }
-    // Panel reveal: it slides in from the right edge of the screen — the mirror of the close, which
-    // leaves the same way — while fading up, on the drawer curve. ease-in was tried here and held the
-    // panel off-screen for ~90ms before arriving; the drawer curve moves from the first frame and still
-    // settles softly. Reduce Motion keeps a gentle fade with no travel.
-
+    // Native animators retarget the current frame and alpha when opening reverses a close.
     private func runPanelReveal(_ window: NSWindow, to target: NSRect) async {
         await NSAnimationContext.runAnimationGroup { context in
             context.duration = store.reduceMotion ? Motion.reducedFade : Motion.panelReveal
-            context.timingFunction = store.reduceMotion ? Motion.out : Motion.drawer
+            context.timingFunction = Motion.out
             window.animator().alphaValue = 1
             if !store.reduceMotion { window.animator().setFrame(target, display: true) }
         }
-        guard !Task.isCancelled, panel === window, window.isVisible else { revealing = false; return }
+        guard !Task.isCancelled, panel === window, window.isVisible else { return }
         revealing = false
         updatePanelFrame(animated: true)
     }
 
-    // Reference close: the panel zips off to the right — toward the menu-bar icon — travelling its own
-    // width in ~0.14s (the recording measures ~116ms), then disappears past the screen edge. No fade,
-    // no shrink: it translates, on the drawer curve so the first frame carries ~40% of the travel.
-
+    // Leave along the same short path; Reduce Motion retains only the fade.
     private func closePanel() {
         revealTask?.cancel()
         store.detailSection = nil
         store.panelRevealed = false
         store.panelVisible = false
         guard let panel else { return }
-        guard !store.reduceMotion else { panel.orderOut(nil); return }
+        revealing = true
         var target = panel.frame
-        target.origin.x = (panel.screen?.visibleFrame.maxX ?? target.maxX) + 20
+        target.origin.x += Motion.panelOffset
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = Motion.panelClose
-            context.timingFunction = Motion.drawer
-            panel.animator().setFrame(target, display: true)
+            context.duration = store.reduceMotion ? Motion.reducedFade : Motion.panelClose
+            context.timingFunction = Motion.out
+            panel.animator().alphaValue = 0
+            if !store.reduceMotion { panel.animator().setFrame(target, display: true) }
         } completionHandler: { [weak self] in
             guard let self, !self.store.panelVisible else { return }
+            self.revealing = false
             panel.orderOut(nil)
         }
     }
