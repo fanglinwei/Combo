@@ -110,14 +110,6 @@ struct PanelView: View {
                 do { try await Task.sleep(for: .seconds(30)) } catch { return }
             }
         }
-        .task(id: "\(mode == .detail && store.detailSection == .sound && store.scene == .live && bluetoothPermission.authorization == .allowedAlways && (store.live.outputIsAirPods || store.detailSection == .sound))-\(audio.selectedOutputID)") {
-            guard mode == .detail, store.detailSection == .sound, store.scene == .live, bluetoothPermission.authorization == .allowedAlways,
-                  store.live.outputIsAirPods || store.detailSection == .sound else { audio.airpods.cancel(); return }
-            while !Task.isCancelled {
-                audio.airpods.refresh(deviceID: audio.selectedOutputID)
-                do { try await Task.sleep(for: .seconds(3)) } catch { return }
-            }
-        }
         .enableInjection()
     }
     // Keep the reference's reading-order reveal, with less travel and a soft ease-out landing.

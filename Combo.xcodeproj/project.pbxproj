@@ -17,6 +17,9 @@
 		5E00D0EE72AF68EB37B88EE6 /* WiFiControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */; };
 		5FD40C2AFE024D728E210C68 /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560A84B06FED44A09CBCC0AD /* PanelView.swift */; };
 		6C74CABA6CF5033FA7B8715C /* AudioVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */; };
+		0DD0C0DE0000000000000002 /* OutputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000001 /* OutputDevice.swift */; };
+		0DD0C0DE0000000000000004 /* AirPlayRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000003 /* AirPlayRoute.swift */; };
+		0DD0C0DE0000000000000006 /* AirPlayDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */; };
 		7012FCA18A931EE3D6402869 /* InjectionNext in Frameworks */ = {isa = PBXBuildFile; productRef = 0ECE20A209DF30F65F7EC3A4 /* InjectionNext */; };
 		75532254095A42BA9DC365C5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D54D08915E2455AB5B921B3 /* SettingsView.swift */; };
 		756D3DABE9C8837B37E031FE /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = 16B2FA3A515D354A30BCEC75 /* Inject */; };
@@ -64,6 +67,9 @@
 		62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiControl.swift; sourceTree = "<group>"; };
 		63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiIcon.swift; sourceTree = "<group>"; };
 		65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioVolume.swift; sourceTree = "<group>"; };
+		0DD0C0DE0000000000000001 /* OutputDevice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutputDevice.swift; sourceTree = "<group>"; };
+		0DD0C0DE0000000000000003 /* AirPlayRoute.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPlayRoute.swift; sourceTree = "<group>"; };
+		0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPlayDiscovery.swift; sourceTree = "<group>"; };
 		682E6A0AC33379301D321FAB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		724FA7F8C78C449A93434865 /* SoundSections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SoundSections.swift; sourceTree = "<group>"; };
 		75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChargeControl.swift; sourceTree = "<group>"; };
@@ -250,6 +256,9 @@
 				76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */,
 				F6CE5149DF92562886DF166F /* AirPodsHelper.m */,
 				65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */,
+				0DD0C0DE0000000000000001 /* OutputDevice.swift */,
+				0DD0C0DE0000000000000003 /* AirPlayRoute.swift */,
+				0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */,
 				7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */,
 				832EB9E7923BEB3E683D893F /* MediaPlaybackHelper.m */,
 			);
@@ -376,6 +385,9 @@
 				A10100000000000000000002 /* Localization.swift in Sources */,
 				8916AEC4AA95CCE6EB2B924E /* AirPodsControl.swift in Sources */,
 				6C74CABA6CF5033FA7B8715C /* AudioVolume.swift in Sources */,
+				0DD0C0DE0000000000000002 /* OutputDevice.swift in Sources */,
+				0DD0C0DE0000000000000004 /* AirPlayRoute.swift in Sources */,
+				0DD0C0DE0000000000000006 /* AirPlayDiscovery.swift in Sources */,
 				3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */,
 				126858ABDF709C9A021EA8DC /* EnergyApps.swift in Sources */,
 				F10C80F2ECA567F263086DC1 /* HotspotControl.swift in Sources */,

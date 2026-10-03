@@ -13,7 +13,9 @@ struct IconContent: Equatable {
     var priority = 2
     var event: CenterEvent?
     var eventSerial = 0
-    var symbol: String?
+    /// 设备字形。中央只画 `Snapshot.deviceGlyph` 给出的这一个，来源可能是 SF Symbol，
+    /// 也可能是资源目录里的矢量图（第三方厂商 SVG，见 OutputDevice.swift）。
+    var glyph: DeviceGlyph?
     var networkState: String?
 
     init(kind: Kind, text: String = "", priority: Int = 2) {
@@ -23,6 +25,7 @@ struct IconContent: Equatable {
         case .wifiOff: networkState = "wifi.slash"
         case .connecting: networkState = "connecting"
         case .warning: networkState = "exclamationmark"
+        case .headphones: glyph = .symbol("headphones")
         default: break
         }
     }
@@ -39,7 +42,7 @@ struct IconContent: Equatable {
         else if snapshot.batteryPreferred || (snapshot.charging && snapshot.battery.map { $0.isFinite && (0...1).contains($0) } == true) {
             self.init(kind: .battery, text: snapshot.batteryText.replacingOccurrences(of: "%", with: ""))
         }
-        else if snapshot.outputIsAirPods { self.init(kind: .headphones) }
+        else if let deviceGlyph = snapshot.deviceGlyph { self.init(kind: .headphones); self.glyph = deviceGlyph }
         else if snapshot.symbol == "wifi" { self.init(kind: .wifi, priority: 1) }
         else {
             self.init(kind: .battery, text: snapshot.battery.map { String(Int(($0*100).rounded())) } ?? "—")
@@ -47,8 +50,7 @@ struct IconContent: Equatable {
         self.event = event
         networkState = snapshot.wifiConnecting && snapshot.symbol != "wifi.slash" ? "connecting" : snapshot.networkSymbol ?? snapshot.symbol
         eventSerial = event == nil ? 0 : snapshot.eventSerial
-        if kind == .headphones { symbol = "airpodspro" }
-        else if kind == .volume {
+        if kind == .volume {
             if snapshot.silenced { text = "0" }
             else if let volume = snapshot.volume, volume.isFinite, (0...1).contains(volume) {
                 text = String(Int((volume * 100).rounded()))
@@ -56,7 +58,7 @@ struct IconContent: Equatable {
         }
     }
     func sameState(as other: IconContent) -> Bool {
-        kind == other.kind && priority == other.priority && event == other.event && eventSerial == other.eventSerial
+        kind == other.kind && priority == other.priority && event == other.event && eventSerial == other.eventSerial && glyph == other.glyph
     }
     var isWiFiGlyph: Bool { [.wifi, .wifiOff, .connecting, .warning].contains(kind) }
     var networkContent: IconContent {

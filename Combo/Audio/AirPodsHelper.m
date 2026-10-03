@@ -32,6 +32,7 @@ static NSString *DeviceToken(AudioDeviceID device) {
     AudioObjectPropertyAddress a = {kAudioDevicePropertyDeviceUID, kAudioObjectPropertyScopeGlobal, 0};
     if (!device || AudioObjectGetPropertyData(device, &a, 0, NULL, &size, &uid) != noErr || !uid) return nil;
     NSData *bytes = [(__bridge_transfer NSString *)uid dataUsingEncoding:NSUTF8StringEncoding];
+    if (!bytes.length) return nil;
     unsigned char digest[CC_SHA256_DIGEST_LENGTH];
     CC_SHA256(bytes.bytes, (CC_LONG)bytes.length, digest);
     NSMutableString *token = NSMutableString.string;
@@ -45,6 +46,32 @@ static BOOL ContextMatches(id context, AudioDeviceID device) {
     AudioDeviceID mapped = 0; UInt32 size = sizeof(mapped);
     AudioObjectPropertyAddress a = {kAudioHardwarePropertyTranslateUIDToDevice, kAudioObjectPropertyScopeGlobal, 0};
     return AudioObjectGetPropertyData(kAudioObjectSystemObject, &a, sizeof(qualifier), &qualifier, &size, &mapped) == noErr && mapped == device && device != 0;
+}
+static id SystemAudioContext(void) {
+    dlopen("/System/Library/Frameworks/AVFoundation.framework/AVFoundation", RTLD_NOW | RTLD_LOCAL);
+    dlopen("/System/Library/Frameworks/AVRouting.framework/AVRouting", RTLD_NOW | RTLD_LOCAL);
+    id context = Value(NSClassFromString(@"AVOutputContext"), @"sharedSystemAudioContext")
+        ?: Value(NSClassFromString(@"AVOutputContext"), @"sharedSystemAudio");
+    [NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.3]];
+    return context;
+}
+static id RouteEndpoint(id context) {
+    id outputs = Value(context, @"outputDevices");
+    if ([outputs isKindOfClass:NSArray.class] && [outputs count] > 1) return nil;
+    id output = Value(context, @"outputDevice");
+    if (output) return output;
+    return [outputs isKindOfClass:NSArray.class] && [outputs count] == 1 ? outputs[0] : nil;
+}
+static BOOL AirPlayDevice(AudioDeviceID device) {
+    UInt32 transport = 0, size = sizeof(transport);
+    AudioObjectPropertyAddress a = {kAudioDevicePropertyTransportType, kAudioObjectPropertyScopeGlobal, 0};
+    return device && AudioObjectGetPropertyData(device, &a, 0, NULL, &size, &transport) == noErr
+        && transport == kAudioDeviceTransportTypeAirPlay;
+}
+static BOOL StableRoute(id context, AudioDeviceID device, NSString *token, NSString *endpointID) {
+    return DefaultOutput() == device && [DeviceToken(device) isEqual:token] && AirPlayDevice(device)
+        && ContextMatches(context, device) && endpointID.length
+        && [Value(RouteEndpoint(context), @"deviceID") isEqual:endpointID];
 }
 static BOOL Stable(id context, AudioDeviceID device, NSString *token, NSString *endpointID) {
     id output = Value(context, @"outputDevice");
@@ -74,16 +101,45 @@ static NSArray *AvailableModes(id output) {
 int main(int argc, const char *argv[]) {
     @autoreleasepool { @try {
         BOOL writing = argc == 5 && (!strcmp(argv[1], "--mode") || !strcmp(argv[1], "--conversation"));
-        if (!writing && !(argc == 1 || (argc == 2 && !strcmp(argv[1], "--status")))) return 2;
+        // Route metadata does not enumerate Bluetooth devices or request Bluetooth access.
+        BOOL route = (argc == 2 || argc == 4) && !strcmp(argv[1], "--route");
+        if (!writing && !route && !(argc == 1 || (argc == 2 && !strcmp(argv[1], "--status")))) return 2;
         NSString *command = writing ? @(argv[1]) : @"--status";
         NSString *requested = writing ? @(argv[2]) : nil;
         if (([command isEqual:@"--mode"] && !Modes()[requested]) ||
             ([command isEqual:@"--conversation"] && ![@[@"on", @"off"] containsObject:requested])) return 2;
         AudioDeviceID device = DefaultOutput();
         NSString *token = DeviceToken(device);
+        if (route) {
+            if (!AirPlayDevice(device) || token.length != 64) return 1;
+            // HAL IDs can differ between the app and this process after a route switch.
+            // Match the current device UID, and echo the caller's ID only as request correlation.
+            AudioDeviceID replyDevice = device;
+            if (argc == 4) {
+                NSString *requested = @(argv[2]);
+                long long value = requested.longLongValue;
+                if (value <= 0 || value > UINT32_MAX || ![requested isEqual:[@(value) stringValue]]
+                    || ![token isEqual:@(argv[3])]) return 1;
+                replyDevice = (AudioDeviceID)value;
+            }
+            id context = SystemAudioContext();
+            id endpoint = RouteEndpoint(context);
+            id identifier = Value(endpoint, @"deviceID");
+            NSString *endpointID = [identifier isKindOfClass:NSString.class] ? [identifier copy] : nil;
+            if (!StableRoute(context, device, token, endpointID)) return 1;
+            id model = Value(endpoint, @"modelID");
+            id name = Value(endpoint, @"name");
+            if (![model isKindOfClass:NSString.class] || ![name isKindOfClass:NSString.class]) return 1;
+            NSDictionary *result = @{@"deviceID": @(replyDevice), @"target": token, @"endpointID": endpointID,
+                @"model": model, @"name": name, @"canSetVolume": BoolValue(Value(endpoint, @"canSetVolume"))};
+            NSData *data = [NSJSONSerialization dataWithJSONObject:result options:0 error:nil];
+            if (!data || data.length > 8192 || !StableRoute(context, device, token, endpointID)) return 1;
+            [[NSFileHandle fileHandleWithStandardOutput] writeData:data];
+            return 0;
+        }
         NSMutableDictionary *reply = [@{@"deviceID": @(device), @"target": token ?: @"", @"available": @NO,
             @"modes": @[], @"canSetMode": @NO, @"canSetConversation": @NO,
-            @"attempted": @NO, @"verified": @NO} mutableCopy];
+            @"classOfDevice": NSNull.null, @"attempted": @NO, @"verified": @NO} mutableCopy];
         IOBluetoothDevice *bluetooth = nil;
         for (IOBluetoothDevice *candidate in IOBluetoothDevice.pairedDevices) {
             id mapped = Value(candidate, @"outputAudioDeviceID");
@@ -94,16 +150,14 @@ int main(int argc, const char *argv[]) {
         }
         if (bluetooth && token) {
             reply[@"available"] = @YES;
+            BluetoothClassOfDevice classOfDevice = bluetooth.classOfDevice;
+            if (classOfDevice > 0 && classOfDevice <= 0xffffff) reply[@"classOfDevice"] = @(classOfDevice);
             reply[@"left"] = Percent(Value(bluetooth, @"batteryPercentLeft"));
             reply[@"right"] = Percent(Value(bluetooth, @"batteryPercentRight"));
             reply[@"caseBattery"] = Percent(Value(bluetooth, @"batteryPercentCase"));
             reply[@"single"] = Percent(Value(bluetooth, @"batteryPercentSingle"));
         }
-        dlopen("/System/Library/Frameworks/AVFoundation.framework/AVFoundation", RTLD_NOW | RTLD_LOCAL);
-        dlopen("/System/Library/Frameworks/AVRouting.framework/AVRouting", RTLD_NOW | RTLD_LOCAL);
-        id context = Value(NSClassFromString(@"AVOutputContext"), @"sharedSystemAudioContext")
-            ?: Value(NSClassFromString(@"AVOutputContext"), @"sharedSystemAudio");
-        [NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.3]];
+        id context = SystemAudioContext();
         id output = Value(context, @"outputDevice");
         id identifier = Value(output, @"deviceID");
         NSString *endpointID = [identifier isKindOfClass:NSString.class] ? identifier : nil;
@@ -149,8 +203,12 @@ int main(int argc, const char *argv[]) {
         } else if (writing && !reply[@"error"]) reply[@"error"] = @"device_changed";
         if (DefaultOutput() != device || ![DeviceToken(device) isEqual:token]) {
             reply[@"available"] = @NO; reply[@"canSetMode"] = @NO; reply[@"canSetConversation"] = @NO;
+            reply[@"classOfDevice"] = NSNull.null;
             reply[@"error"] = @"device_changed";
         }
+        id mapped = Value(bluetooth, @"outputAudioDeviceID");
+        if (!bluetooth.isConnected || ![mapped isKindOfClass:NSNumber.class] || [mapped unsignedIntValue] != device)
+            reply[@"classOfDevice"] = NSNull.null;
         NSData *data = [NSJSONSerialization dataWithJSONObject:reply options:0 error:nil];
         if (!data || data.length > 8192) return 1;
         [[NSFileHandle fileHandleWithStandardOutput] writeData:data];

@@ -35,12 +35,12 @@ import AppKit
                         let px = (50 + (Double(x)-50)*1.06) * Double(bitmap.pixelsWide) / 100
                         let py = (50 + (Double(y)-45.5)*1.06) * Double(bitmap.pixelsHigh) / 100
                         let color = bitmap.colorAt(x: Int(px), y: Int(py))!.usingColorSpace(.sRGB)!
-                        // Render the reference through the same display color profile as the icon.
-                        let swatch = NSImage(size: NSSize(width: 1, height: 1))
-                        swatch.lockFocus()
-                        NSColor(srgbRed: CGFloat(rgb[0])/255, green: CGFloat(rgb[1])/255, blue: CGFloat(rgb[2])/255, alpha: 1).setFill()
-                        NSRect(x: 0, y: 0, width: 1, height: 1).fill()
-                        swatch.unlockFocus()
+                        // Render the reference through the same destination color profile as the icon.
+                        let swatch = NSImage(size: NSSize(width: 1, height: 1), flipped: false) { rect in
+                            NSColor(srgbRed: CGFloat(rgb[0])/255, green: CGFloat(rgb[1])/255, blue: CGFloat(rgb[2])/255, alpha: 1).setFill()
+                            rect.fill()
+                            return true
+                        }
                         let expected = NSBitmapImageRep(data: swatch.tiffRepresentation!)!.colorAt(x: 0, y: 0)!.usingColorSpace(.sRGB)!
                         for (actual, target) in zip([color.redComponent, color.greenComponent, color.blueComponent], [expected.redComponent, expected.greenComponent, expected.blueComponent]) {
                             assert(abs(actual - target) < 3/255, "Ring color: charging=\(charging), battery=\(battery), dark=\(dark), point=\(x),\(y)")

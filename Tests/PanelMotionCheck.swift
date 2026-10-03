@@ -5,7 +5,12 @@ import AppKit
     @MainActor static func main() async throws {
         _ = NSApplication.shared
         NSApp.setActivationPolicy(.prohibited)
-        let delegate = AppDelegate()
+        let suite = "Combo.PanelCheck.\(UUID())"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let discovery = AirPlayDiscovery(defaults: defaults, startBrowser: { _ in })
+        var permissionVisible = false
+        let delegate = AppDelegate(store: Store(audio: AudioStore(discovery: discovery), isSystemPermissionAlertVisible: { permissionVisible }))
         delegate.status = NSStatusBar.system.statusItem(withLength: 30)
         delegate.store.reduceMotion = false
 
@@ -47,10 +52,19 @@ import AppKit
                "Reduced opening: visible=\(panel.isVisible), alpha=\(panel.alphaValue), x=\(reducedStart.minX)→\(panel.frame.minX), reduced=\(delegate.store.reduceMotion)")
         assert(Motion.cardShow + 3 * Motion.cardStep < 0.3)
 
+        // 不启动网络浏览器或要求前台焦点，模拟等待中的系统授权窗口。
+        permissionVisible = true
+        assert(delegate.store.permissionPromptActive)
+        delegate.handlePanelMouseDown(at: CGPoint(x: -10000, y: -10000))
+        try await Task.sleep(for: .milliseconds(300))
+        assert(delegate.store.panelVisible, "Local-network permission must preserve the panel")
+        permissionVisible = false
+        assert(!delegate.store.permissionPromptActive)
+
         panel.orderOut(nil)
         delegate.store.stop()
         NSStatusBar.system.removeStatusItem(delegate.status)
-        print("Panel motion: measured height, rapid reversal and reduced-motion fades passed")
+        print("Panel motion: measured height, rapid reversal, reduced-motion fades and local-network permission focus guard passed")
     }
 
     private static func require<T>(_ value: T?) throws -> T {

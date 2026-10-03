@@ -102,7 +102,11 @@ struct Snapshot {
     var muted = false
     var silenced: Bool { muted || volume == 0 }
     var output: LocalizedText = "正在读取"
-    var outputIsAirPods = false
+    /// 当前默认输出设备的类别。`outputIsAirPods` 与中央字形都由它派生，
+    /// 这样中央图标与输出列表不会各判一套。
+    var deviceKind: OutputDeviceKind = .other
+    var outputIsAirPods: Bool { deviceKind.isAirPods }
+    var deviceGlyph: DeviceGlyph? { deviceKind.showsDeviceGlyph ? OutputDeviceClassifier.glyph(for: deviceKind) : nil }
     var playing = false
     var adjusting = false
     var reducedMotion = false
@@ -136,7 +140,7 @@ struct Snapshot {
         }
         if [.airpods, .adjusting].contains(scene) {
             s.output = "AirPods Pro（示例）"
-            s.outputIsAirPods = true
+            s.deviceKind = .bluetooth(.airPodsPro)
         }
         if scene == .airpods { s.playing = true }
         if scene == .connecting { s.wifiConnecting = true; s.network = "Wi-Fi 正在连接" }
@@ -184,16 +188,16 @@ func calloutOrigin(anchor: CGRect, size: CGSize, visible: CGRect) -> CGPoint {
                    y: anchor.minY - size.height - 6)
 }
 
-/// 面板失焦后要不要收起：只有"点了面板外面"才收。详情窗算面板的一部分，
-/// 刚请求过权限时那次失焦是系统弹窗造成的，都不能收。
-func shouldDismissPanel(panelVisible: Bool, permissionPrompt: Bool, comboWindowKey: Bool) -> Bool {
-    panelVisible && !permissionPrompt && !comboWindowKey
+/// 自动收起只处理面板外的交互；权限保护不影响用户主动点击菜单栏图标收起。
+func shouldDismissPanel(panelVisible: Bool, permissionPrompt: Bool, interactionInside: Bool) -> Bool {
+    panelVisible && !permissionPrompt && !interactionInside
 }
 
-/// 系统权限弹窗在请求后约 1 秒内抢走焦点；只吞掉那一次失焦，所以窗口给 5 秒。
-func permissionAskedRecently(_ askedAt: TimeInterval?, now: TimeInterval) -> Bool {
+/// 本地网络没有授权完成回调，仅给系统窗口出现前的一秒交接期。
+/// 弹窗出现后的保护由窗口可见性决定，不以此时间限制用户作答。
+func permissionRequestStarting(_ askedAt: TimeInterval?, now: TimeInterval) -> Bool {
     guard let askedAt else { return false }
-    return now >= askedAt && now - askedAt < 5
+    return now >= askedAt && now - askedAt < 1
 }
 
 enum ChargeLimit: Equatable {

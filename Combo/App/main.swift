@@ -7,14 +7,23 @@ final class ComboPanel: NSPanel {
 }
 
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
-    let store = Store()
+    let store: Store
+
+    init(store: Store? = nil) {
+        self.store = store ?? Store()
+        super.init()
+    }
     var status: NSStatusItem!
     var panel: ComboPanel?
     private var overviewHeight: CGFloat = 0
     /// 开合进行中冻结 frame 更新，避免内容测量打断运动。
     private var revealing = false
     private var detailWindow: ComboPanel?
-    private var panelKeyObserver: NSObjectProtocol?
+    private var panelLocalMonitor: Any?
+    private var panelGlobalMonitor: Any?
+    private var dismissalObservers: [NSObjectProtocol] = []
+    private var normalApplicationPID: pid_t?
+    private var permissionReturnPID: pid_t?
     private var pointerWindow: NSPanel?
     private var pointerChange: AnyCancellable?
     private var detailChange: AnyCancellable?
@@ -141,6 +150,7 @@ final class ComboPanel: NSPanel {
             // Reverse a closing panel in place, preserving its live frame, alpha and card state.
             if let window = panel, window.isVisible {
                 store.panelVisible = true
+                startPanelDismissalMonitoring()
                 store.panelRevealed = true
                 revealTask = Task { @MainActor [weak self, weak window] in
                     guard let self, let window else { return }
@@ -167,15 +177,10 @@ final class ComboPanel: NSPanel {
             window.level = .floating
             window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             panel = window
-            if panelKeyObserver == nil {
-                // 面板丢 key 就说明用户点了别处。
-                panelKeyObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: window, queue: .main) { [weak self] _ in
-                    Task { @MainActor in await self?.dismissPanelIfFocusLeft() }
-                }
-            }
             window.alphaValue = 0
             window.makeKeyAndOrderFront(nil)
             store.panelVisible = true
+            startPanelDismissalMonitoring()
             revealTask = Task { @MainActor [weak self, weak window] in
                 try? await Task.sleep(for: .milliseconds(20))
                 guard !Task.isCancelled, let self, let window, self.panel === window, window.isVisible else { return }
@@ -222,15 +227,22 @@ final class ComboPanel: NSPanel {
     // The section detail lives in its own window beside the panel, as in the reference. Measured off
     // that recording: the window lands on its final frame and fades in — no scale, no slide — over
     // ~200ms ease-out, swaps pages with a cross-fade, and leaves by fading back out.
-    private static let detailHeight: CGFloat = 570
+    private var detailHeight: CGFloat = 500
     private static let detailGap: CGFloat = 12
     /// Reduce Motion keeps fades and drops movement, so these replace the old instant cuts.
 
     private func detailFrame() -> NSRect {
         let visible = (panel?.screen ?? NSScreen.main)?.visibleFrame ?? .zero
-        let height = min(Self.detailHeight, visible.height - 16)
+        let height = min(detailHeight, max(1, visible.height - 16))
         let x = (panel?.frame.minX ?? visible.maxX) - PanelView.width - Self.detailGap
         return NSRect(x: max(visible.minX + 8, x), y: visible.maxY - height - 8, width: PanelView.width, height: height)
+    }
+
+    private func updateDetailHeight(_ value: CGFloat) {
+        guard value.isFinite, value > 0, store.detailSection != nil else { return }
+        detailHeight = ceil(value)
+        guard let window = detailWindow else { return }
+        window.setFrame(detailFrame(), display: window.isVisible)
     }
 
     /// 引导第 1 步的贴边浮层：落在真实状态栏图标正下方，忽略鼠标事件、不抢焦点，只负责指路。
@@ -271,7 +283,7 @@ final class ComboPanel: NSPanel {
         pointer.orderFront(nil)
     }
 
-    private func updateDetailWindow(_ section: PanelSection?) {
+    func updateDetailWindow(_ section: PanelSection?) {
         detailTask?.cancel()
         guard let section else {
             if let escapeMonitor { NSEvent.removeMonitor(escapeMonitor); self.escapeMonitor = nil }
@@ -296,8 +308,10 @@ final class ComboPanel: NSPanel {
             window = existing
         } else {
             let showSettings = { [weak self] in _ = self?.openSettings() }
+            let maxHeight = max(1, ((panel?.screen ?? NSScreen.main)?.visibleFrame.height ?? 0) - 16)
             let view = PanelView(store: store, battery: store.battery, audio: store.audio, bluetoothPermission: store.audio.bluetoothPermission,
-                                 mode: .detail, showSettings: showSettings, maxHeight: frame.height, reportHeight: { _ in })
+                                 mode: .detail, showSettings: showSettings, maxHeight: maxHeight,
+                                 reportHeight: { [weak self] value in self?.updateDetailHeight(value) })
             window = ComboPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
             window.appearance = selectedAppearance
             let hosting = NSHostingView(rootView: view)
@@ -346,20 +360,77 @@ final class ComboPanel: NSPanel {
         updatePanelFrame(animated: true)
     }
 
-    /// 面板丢了 key：等一拍再判断，因为 key 在窗口间交接时，旧窗口先失焦、新窗口才拿到 key。
-    /// 详情窗属于面板；刚请求权限时那次失焦是系统弹窗造成的。两种情况都不收。
-    private func dismissPanelIfFocusLeft() async {
-        try? await Task.sleep(for: .milliseconds(80))
-        // key 为 nil（切到别的 App）时不能拿它和 nil 的详情窗比：nil === nil 会是 true。
-        let key = NSApp.keyWindow
+    private func startPanelDismissalMonitoring() {
+        guard panelLocalMonitor == nil else { return }
+        normalApplicationPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
+        permissionReturnPID = nil
+        let clicks: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        panelLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: clicks) { [weak self] event in
+            let point = event.window?.convertPoint(toScreen: event.locationInWindow) ?? NSEvent.mouseLocation
+            self?.handlePanelMouseDown(at: point, in: event.window)
+            return event
+        }
+        panelGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: clicks) { [weak self] _ in
+            MainActor.assumeIsolated { self?.handlePanelMouseDown(at: NSEvent.mouseLocation) }
+        }
+        dismissalObservers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
+            guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
+            MainActor.assumeIsolated { self?.handlePanelApplicationSwitch(to: app.processIdentifier, bundleIdentifier: app.bundleIdentifier) }
+        })
+        dismissalObservers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.dismissPanelAutomatically(interactionInside: false) }
+        })
+    }
+
+    private func stopPanelDismissalMonitoring() {
+        if let panelLocalMonitor { NSEvent.removeMonitor(panelLocalMonitor); self.panelLocalMonitor = nil }
+        if let panelGlobalMonitor { NSEvent.removeMonitor(panelGlobalMonitor); self.panelGlobalMonitor = nil }
+        dismissalObservers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
+        dismissalObservers.removeAll()
+        permissionReturnPID = nil
+    }
+
+    /// 主面板、详情和菜单栏图标组成同一次交互；不依赖窗口是否取得 key。
+    func handlePanelMouseDown(at point: CGPoint, in window: NSWindow? = nil) {
+        guard store.panelVisible else { return }
+        let inside = [panel, detailWindow].compactMap { $0 }.contains { candidate in
+            candidate.isVisible && (candidate === window || candidate.frame.contains(point)
+                || window?.parent === candidate || window?.sheetParent === candidate)
+        }
+        if inside { return }
+        if let button = status?.button, let anchor = button.window,
+           anchor.convertToScreen(button.convert(button.bounds, to: nil)).contains(point) { return }
+        dismissPanelAutomatically(interactionInside: false)
+    }
+
+    func handlePanelApplicationSwitch(to processIdentifier: pid_t, bundleIdentifier: String? = nil) {
+        guard store.panelVisible else { return }
+        if SystemPermissionAlert.isAgent(bundleIdentifier) || store.permissionPromptActive
+            || permissionRequestStarting(store.audio.discovery.askedAt, now: ProcessInfo.processInfo.systemUptime) {
+            permissionReturnPID = normalApplicationPID
+            return
+        }
+        if permissionReturnPID == processIdentifier {
+            permissionReturnPID = nil
+            normalApplicationPID = processIdentifier
+            return
+        }
+        permissionReturnPID = nil
+        normalApplicationPID = processIdentifier
+        guard processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
+        dismissPanelAutomatically(interactionInside: false)
+    }
+
+    private func dismissPanelAutomatically(interactionInside: Bool) {
         guard shouldDismissPanel(panelVisible: store.panelVisible,
-                                 permissionPrompt: store.permissionPromptActive,
-                                 comboWindowKey: key.map { $0 === panel || $0 === detailWindow } ?? false) else { return }
+                                 permissionPrompt: store.permissionPromptActive || NSApp.modalWindow != nil,
+                                 interactionInside: interactionInside) else { return }
         closePanel()
     }
 
     // Reduce Motion retains only the fade.
     private func closePanel() {
+        stopPanelDismissalMonitoring()
         revealTask?.cancel()
         let detail = store.detailSection != nil ? detailWindow : nil
         store.detailSection = nil
@@ -382,9 +453,11 @@ final class ComboPanel: NSPanel {
                 }
             }
         } completionHandler: { [weak self] in
-            guard let self, !self.store.panelVisible else { return }
-            self.revealing = false
-            panel.orderOut(nil)
+            Task { @MainActor in
+                guard let self, !self.store.panelVisible else { return }
+                self.revealing = false
+                panel.orderOut(nil)
+            }
         }
     }
     @objc func openSettings() {
@@ -430,7 +503,7 @@ final class ComboPanel: NSPanel {
         }
         return .terminateLater
     }
-    func applicationWillTerminate(_ notification: Notification) { animator?.invalidate(); store.stop() }
+    func applicationWillTerminate(_ notification: Notification) { stopPanelDismissalMonitoring(); animator?.invalidate(); store.stop() }
 }
 MainActor.assumeIsolated {
     let app = NSApplication.shared

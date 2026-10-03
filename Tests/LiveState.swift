@@ -41,7 +41,7 @@ import Combine
         }
         // Change only the in-memory snapshot; never play audio or write system volume.
         let originalAudio = store.live
-        store.live = Snapshot(symbol: "wifi", volume: 0.5, outputIsAirPods: true, playing: true)
+        store.live = Snapshot(symbol: "wifi", volume: 0.5, deviceKind: .bluetooth(.airPodsPro), playing: true)
         store.showVolumeHint()
         assert(store.snapshot.centerEvent == .volume && IconContent(store.snapshot).priority == 4)
         store.live.muted = true
@@ -61,7 +61,7 @@ import Combine
         store.showVolumeHint()
         try? await Task.sleep(for: .milliseconds(1100))
         assert(store.live.adjusting && store.snapshot.centerEvent == .volume, "second change must extend hint")
-        store.live.outputIsAirPods = false
+        store.live.deviceKind = .other
         try? await Task.sleep(for: .milliseconds(1100))
         assert(!store.live.adjusting && store.snapshot.centerEvent == nil, "hint must expire")
         assert(IconContent(store.snapshot).kind == .wifi, "Expiry must restore the latest resident state")

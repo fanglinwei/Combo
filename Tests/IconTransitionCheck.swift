@@ -42,7 +42,7 @@ import SwiftUI
         assert(IconContent(Snapshot(symbol: "", volume: 0, playing: true)).kind == .battery)
         let adjusting = IconContent(Snapshot(symbol: "wifi", volume: 0.75, playing: true, adjusting: true, centerEvent: .volume))
         assert(adjusting.kind == .volume, "Playback volume adjustment must override normal Wi-Fi")
-        assert(adjusting.text == "75" && adjusting.symbol == nil, "Volume hints must show digits instead of a speaker")
+        assert(adjusting.text == "75" && adjusting.glyph == nil, "Volume hints must show digits instead of a speaker")
         // The same resolver serves the real menu bar and the settings preview.
         func content(_ scene: Scene) -> IconContent {
             IconContent(Snapshot.demo(scene).preferringBattery(threshold: 50))
@@ -137,7 +137,7 @@ import SwiftUI
         var switched = Snapshot.demo(.airpods)
         let beforeSwitch = IconContent(switched)
         switched.output = "MacBook 扬声器"
-        switched.outputIsAirPods = false
+        switched.deviceKind = .other
         assert(beforeSwitch.kind == .headphones && IconContent(switched).kind == .wifi,
                "Switching the active output away from AirPods must restore Wi-Fi")
         for reduced in [false, true] {
@@ -235,10 +235,75 @@ import SwiftUI
         assert(events.active(at: 8.3) == .volume && events.active(at: 9.2) == nil, "Replaced power event must never return")
         events.show(.volume, at: 10, duration: 0.1, entrance: 0.6)
         assert(events.active(at: 10.59) == .volume && events.active(at: 10.6) == nil, "Do not cut entry short")
-        assert(IconContent(kind: .warning).isWiFiGlyph && IconContent(kind: .warning).symbol == nil,
+        assert(IconContent(kind: .warning).isWiFiGlyph && IconContent(kind: .warning).glyph == nil,
                "Network warnings must use the shared Wi-Fi silhouette")
-        for name in ["airpodspro", "speaker.fill", "speaker.wave.1.fill", "speaker.wave.2.fill", "speaker.wave.3.fill", "questionmark"] {
+        for name in ["airpods.pro", "airplay.audio", "appletv", "homepod", "homepod.mini", "hifispeaker", "car", "earbuds", "speaker.fill", "speaker.wave.1.fill", "speaker.wave.2.fill", "speaker.wave.3.fill", "questionmark"] {
             assert(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil, "Missing symbol: \(name)")
+        }
+        assert(DeviceGlyphImage.symbolName("definitely-not-a-symbol") == DeviceGlyphImage.fallbackName,
+               "An unresolvable SF Symbol must fall back instead of leaving a blank center")
+        assert(DeviceGlyphImage.fallbackName == "headphones", "The shared fallback is the generic headphones symbol")
+        let resolvedFallback = DeviceGlyphImage.resolve("definitely-not-a-symbol")
+        assert(resolvedFallback.name == DeviceGlyphImage.fallbackName && resolvedFallback.image != nil,
+               "The resolved image and SwiftUI name must use the same visible fallback")
+        func glyphImage(_ glyph: DeviceGlyph, dark: Bool = true) -> NSImage {
+            var content = IconContent(kind: .headphones)
+            content.glyph = glyph
+            let frame = IconTransition.Frame(layers: [.init(content: content)], peripheral: 0, ringOpacity: 0)
+            return IconRenderer.image(Snapshot(), animate: false, size: 100, dark: dark, transition: frame)
+        }
+        // A menu-bar image must redraw for its destination, including moving between 1x and 2x screens.
+        func bitmap(_ image: NSImage, pixels: Int) -> NSBitmapImageRep {
+            guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels,
+                bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
+                let context = NSGraphicsContext(bitmapImageRep: bitmap) else { fatalError("Bitmap context unavailable") }
+            NSGraphicsContext.saveGraphicsState()
+            defer { NSGraphicsContext.restoreGraphicsState() }
+            NSGraphicsContext.current = context
+            context.cgContext.scaleBy(x: CGFloat(pixels) / image.size.width, y: CGFloat(pixels) / image.size.height)
+            image.draw(in: NSRect(origin: .zero, size: image.size))
+            return bitmap
+        }
+        let deviceKinds = BluetoothFamily.allCases.map { OutputDeviceKind.bluetooth($0) } + [
+            .airPlay(.appleTV), .airPlay(.homePod), .airPlay(.homePodMini), .airPlay(.other)
+        ]
+        for kind in deviceKinds {
+            for dark in [true, false] {
+                let snapshot = Snapshot(battery: 0.82, volume: 0.5, deviceKind: kind)
+                let menuBar = IconRenderer.image(snapshot, animate: false, size: 22, dark: dark)
+                for scale in [1, 2] {
+                    let pixels = 22 * scale
+                    let actual = bitmap(menuBar, pixels: pixels)
+                    let reference = bitmap(IconRenderer.image(snapshot, animate: false, size: CGFloat(pixels), dark: dark), pixels: pixels)
+                    var error = 0.0
+                    for y in 0..<pixels {
+                        for x in 0..<pixels {
+                            error += abs(actual.colorAt(x: x, y: y)!.alphaComponent - reference.colorAt(x: x, y: y)!.alphaComponent)
+                        }
+                    }
+                    assert(error / Double(pixels * pixels) < 0.5 / 255,
+                           "Menu-bar artwork must render directly at the destination density: \(kind), \(scale)x, dark=\(dark)")
+                }
+            }
+        }
+        let fallbackPixels = glyphImage(.fallback).tiffRepresentation!
+        for glyph in [DeviceGlyph.symbol("definitely-not-a-symbol"), .asset("definitely-not-an-asset")] {
+            assert(glyphImage(glyph).tiffRepresentation! == fallbackPixels,
+                   "Missing symbols and assets must render exactly the shared fallback")
+        }
+        for dark in [true, false, true] {
+            let pixels = NSBitmapImageRep(data: glyphImage(.symbol("airpods.pro"), dark: dark).tiffRepresentation!)!
+            var brightness = 0.0, ink = 0.0
+            for y in 0..<pixels.pixelsHigh {
+                for x in 0..<pixels.pixelsWide {
+                    let color = pixels.colorAt(x: x, y: y)!.usingColorSpace(.sRGB)!
+                    brightness += color.redComponent * color.alphaComponent
+                    ink += color.alphaComponent
+                }
+            }
+            assert(ink > 0 && (dark ? brightness / ink > 0.8 : brightness / ink < 0.3),
+                   "Reusing a symbol must still apply the current appearance's foreground color")
         }
         // At a charging limit, plugging in changes the power source but not isCharging.
         var detector = PowerChange()
@@ -306,14 +371,34 @@ import SwiftUI
         let wiredBattery = IconContent(Snapshot(battery: 0.82, symbol: ""))
         assert(wiredBattery.sameState(as: battery) && wiredBattery.text == battery.text)
         assert(IconContent(Snapshot(symbol: "", output: "AirPods")).kind == .battery, "A name alone must not identify an AirPods output")
-        assert(IconContent(Snapshot(symbol: "", output: "AirPods", outputIsAirPods: true)).kind == .headphones)
+        assert(IconContent(Snapshot(symbol: "", output: "AirPods", deviceKind: .bluetooth(.airPodsPro))).kind == .headphones)
+        let bluetoothSpeaker = IconContent(Snapshot(symbol: "", output: "JBL Flip 5", deviceKind: .bluetooth(.speaker)))
+        assert(bluetoothSpeaker.kind == .headphones && bluetoothSpeaker.glyph == .symbol("hifispeaker"),
+               "A Bluetooth speaker must keep the resident device glyph, with its own symbol")
+        let airPlay = IconContent(Snapshot(symbol: "wifi", output: "客厅", deviceKind: .airPlay(.appleTV)))
+        assert(airPlay.kind == .headphones && airPlay.glyph == .symbol("appletv"))
+        assert(IconContent(Snapshot(symbol: "wifi", output: "客厅", deviceKind: .airPlay(.homePod))).glyph == .symbol("homepod"))
+        assert(IconContent(Snapshot(symbol: "wifi", output: "厨房", deviceKind: .airPlay(.homePodMini))).glyph == .symbol("homepod.mini"))
+        assert(IconContent(Snapshot(symbol: "wifi", output: "Sonos", deviceKind: .airPlay(.other))).glyph == .symbol("airplay.audio"))
+        assert(IconContent(Snapshot(symbol: "wifi", output: "MacBook Air扬声器", deviceKind: .builtIn)).glyph == nil,
+               "Built-in output must not take over the center")
+        assert(Snapshot(deviceKind: .bluetooth(.speaker)).deviceGlyph == .symbol("hifispeaker"))
+        assert(Snapshot(deviceKind: .airPlay(.other)).deviceGlyph == .symbol("airplay.audio"))
+        assert(Snapshot(deviceKind: .builtIn).deviceGlyph == nil && Snapshot(deviceKind: .other).deviceGlyph == nil,
+               "Only Bluetooth and AirPlay expose a center device glyph")
+        assert(Snapshot(deviceKind: .bluetooth(.airPodsPro)).outputIsAirPods && !Snapshot(deviceKind: .bluetooth(.beats)).outputIsAirPods,
+               "AirPods-only controls must stay tied to the AirPods family")
+        var deviceSwitch = IconTransition()
+        deviceSwitch.update(IconContent(Snapshot(symbol: "wifi", deviceKind: .bluetooth(.airPodsPro))), at: 0, reducedMotion: false)
+        deviceSwitch.update(IconContent(Snapshot(symbol: "wifi", deviceKind: .bluetooth(.beats))), at: 1, reducedMotion: false)
+        assert(deviceSwitch.isAnimating(at: 1.1), "Switching between two Bluetooth families must crossfade like any same-level change")
 
         let volumeReview = NSImage(size: NSSize(width: 360, height: 200))
         for (row, dark) in [true, false].enumerated() {
             for (column, value) in [0.0, 0.35, 1.0].enumerated() {
                 let snapshot = Snapshot(battery: 0.82, symbol: "wifi", volume: value, centerEvent: .volume)
                 let digits = IconContent(snapshot)
-                assert(digits.text == ["0", "35", "100"][column] && digits.symbol == nil)
+                assert(digits.text == ["0", "35", "100"][column] && digits.glyph == nil)
                 volumeReview.lockFocus()
                 (dark ? NSColor.darkGray : NSColor.white).setFill()
                 NSRect(x: column * 120, y: row * 100, width: 120, height: 100).fill()

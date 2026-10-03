@@ -1,6 +1,6 @@
 # Combo 后续版本规划
 
-更新：2026-09-22。本文记录首版之后的功能方向，不指定发布日期或产品版本号，不作为首版实施清单。
+更新：2026-10-03（同步蓝牙分类与 AirPlay 路由/附近发现的当前实现及待验证范围）。本文记录首版之后的功能方向，不指定发布日期或产品版本号，不作为首版实施清单。
 
 ## 首版基线
 
@@ -54,11 +54,31 @@
 - [iPhone 电量可行性报告](iphone-battery-research.md)
 - [iPhone API 与调用证据](iphone-api-evidence.md)
 
+### 蓝牙输出设备类型与中央图标
+
+已实现 CoreAudio transport 入口与共享分类：AirPods/Beats 品牌名 → 非 0 CoD → 通用名称或 unknown。CoD 由现有 helper 的 status 返回对应已连接默认输出设备的公开 getter，复用设备 ID 与 UID token 复核；需蓝牙已授权、真实 live 面板活动。普通蓝牙读取一次，当前 AirPods 复用每 3 秒状态更新，共享生命周期避免两个面板争抢取消任务。
+
+本轮未采用 `system_profiler` 产品 ID 表或轮询；改名 AirPods 无型号信号仍可能显示通用耳机。CoD 自报弱信号，音箱、车载、助听器与连接态身份仍待实机回归。下一步先验证实际硬件和权限回流，取得具体型号证据后再考虑增加映射。
+- [蓝牙输出设备类型与中央图标可行性](bluetooth-audio-device-icon-research.md)
+- [蓝牙音频输出设备识别：API 与信号证据](bluetooth-audio-device-api-evidence.md)
+
+### AirPlay / HomePod 设备识别与中央图标
+
+已实现当前默认输出 `'airp'` 的名称/机型探测：既有 helper `--route <deviceID> <UID SHA256>`，短进程 2 秒超时，校验 deviceID/UID/context/endpointID；缓存 Request 带 UUID 序号，新请求取消旧进程，离开 AirPlay 清缓存、唤醒失效重读。失败显示 CoreAudio 名及通用符号，可手动重试；接收端 `canSetVolume` 为可空能力，Mac 软件输出音量与电视音量分开。
+
+附近发现已采用 `NWBrowser` 浏览 `_airplay._tcp`，替换此前“mDNS 只作备选”的规划。首次按“查找”启用并保存 opt-in，随后仅活动真实面板自动恢复；关闭/演示/睡眠停止，旧回调失效，列表随当前路由动态过滤。权限拒绝与普通网络故障分别处理，提供设置/重试；系统弹窗出现前仅为应用切换提供一秒交接保护，弹窗可见期间按系统授权窗口保护，不以固定时长限制用户作答。允许或拒绝后保留面板，下一次外部交互正常收起；实际弹窗与 ad-hoc 授权稳定性未实机验证。
+
+历史 Apple TV 已采到通用 CoreAudio 名 `AirPlay` 与 SPI 房间名/机型 `客厅` / `AppleTV14,1`；本轮新异步及权限流程尚未实机验收。HomePod 全尺寸/mini、多设备、AirPlay 1（`_raop._tcp` 未覆盖）与 macOS 26 待验证。不承诺一键建立全系统路由，继续转交系统声音设置；HomePod 播放控制与投送仍延后。
+- [AirPlay / HomePod 中央图标可行性](airplay-homepod-icon-research.md)
+- [AirPlay / HomePod API 与信号证据](airplay-homepod-api-evidence.md)
+
 ## 建议推进顺序
 
 1. 完成并验证 MacBook 首版，不依赖任何关联设备电量功能。
 2. 在后续版本启动时，分别做耳机和手机电量的最小实机验证。
 3. 根据真实数据能力定稿台式机外圈来源、空态及来源选择设置，再安排后续版本开发。
+4. 对已实现的蓝牙/AirPlay 共享分类与生命周期做实机回归：身份匹配、快速切换、权限拒绝/重试、面板失焦、睡眠唤醒与 macOS 26；自动化检查不能替代硬件验收。
+5. 非 Apple 蓝牙设备精确型号、HomePod 控制与全系统路由建立保持延后；附近发现已实现，下一步先验证权限与实际设备覆盖，再决定是否加入 `_raop._tcp`。
 
 此顺序是规划建议，不表示已授权实现、安装依赖、配对设备或改变系统设置。
 

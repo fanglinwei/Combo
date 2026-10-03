@@ -2,12 +2,54 @@ import SwiftUI
 import AppKit
 import CoreText
 
+/// 字形解析的唯一实现：菜单栏与面板共用，符号被系统改名时统一退到 `DeviceGlyph.fallback`。
+@MainActor enum DeviceGlyphImage {
+    // 只保留应用在用的有限符号原图；颜色仍由每次绘制配置，未知名称不进入缓存。
+    private static let symbols: [String: NSImage] = Dictionary(uniqueKeysWithValues:
+        ["airpods.pro", "airpods", "airpods.max", "beats.headphones", "headphones", "earbuds",
+         "hifispeaker", "car", "hearingdevice.ear", "airplay.audio", "appletv", "homepod",
+         "homepod.mini", "laptopcomputer", "display", "speaker.wave.2"].compactMap { name in
+            symbolImage(name).map { (name, $0) }
+        })
+
+    private static func symbolImage(_ name: String) -> NSImage? {
+        NSImage(systemSymbolName: name, accessibilityDescription: nil)
+    }
+
+    /// 一次解析名称与原图，绘制路径不必为验证后的同名符号再创建图像。
+    static func resolve(_ name: String) -> (name: String, image: NSImage?) {
+        if let image = symbols[name] ?? symbolImage(name) { return (name, image) }
+        let fallback = fallbackName
+        return (fallback, symbols[fallback] ?? symbolImage(fallback))
+    }
+
+    /// 可解析的 SF Symbol 名；`name` 不可用时返回兜底名。
+    static func symbolName(_ name: String) -> String {
+        resolve(name).name
+    }
+
+    /// 兜底符号名（`DeviceGlyph.fallback`）。
+    static var fallbackName: String {
+        guard let name = DeviceGlyph.fallback.symbolName, symbols[name] != nil || symbolImage(name) != nil else { return "headphones" }
+        return name
+    }
+}
+
 enum IconRenderer {
     @MainActor static func image(_ s: Snapshot, animate: Bool, size: CGFloat, phase: Double = 0, dark: Bool = true,
                                  transition: IconTransition.Frame? = nil, bottomProgress: Double? = nil) -> NSImage {
-        let image = NSImage(size: NSSize(width: size, height: size))
-        image.lockFocus()
-        defer { image.unlockFocus() }
+        // Draw at the destination's pixel density instead of rescaling a lockFocus bitmap.
+        NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
+            draw(s, animate: animate, size: size, phase: phase, dark: dark,
+                 transition: transition, bottomProgress: bottomProgress)
+            return true
+        }
+    }
+
+    @MainActor private static func draw(_ s: Snapshot, animate: Bool, size: CGFloat, phase: Double, dark: Bool,
+                                       transition: IconTransition.Frame?, bottomProgress: Double?) {
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
         let transform = NSAffineTransform(); transform.scale(by: size / 100); transform.concat()
         // Keep the menu bar and every preview on the same centered canvas.
         let placement = NSAffineTransform()
@@ -107,6 +149,52 @@ enum IconRenderer {
                 fg.setFill(); NSBezierPath(ovalIn: rect(63.4,54,3.2,3.2)).fill()
             }
         }
+        // 设备字形：SF Symbol 或资源目录里的单色矢量图（第三方厂商 SVG）。系统给符号改名时
+        // 退到 headphones，中央不允许静默空白。
+        //
+        // 逐符号的静止缩放：这些符号的墨迹面积差很多，同一个系数会让 airplay.audio 顶到
+        // 电量环上、airpods.pro 又显得太小。数值按“环内墨迹量 ≈ 原 airpodspro 的重量（约 1800px @100pt）”
+        // 标定；新加厂商资源图默认 1.35。改动这些数值后请重跑渲染对照。
+        func restingScale(_ glyph: DeviceGlyph?) -> Double {
+            switch glyph?.symbolName {
+            case "airpods.pro", "airpods.max", "headphones", "car": return 1.35
+            case "airpods": return 1.3
+            case "beats.headphones", "earbuds", "hearingdevice.ear": return 1.4
+            case "hifispeaker": return 1.25
+            case "airplay.audio": return 1.15
+            case "appletv": return 1.3
+            case "homepod": return 1.45
+            case "homepod.mini": return 1.5
+            default: return 1.35
+            }
+        }
+        func deviceImage(_ glyph: DeviceGlyph?) -> NSImage? {
+            func resolve(_ value: DeviceGlyph) -> NSImage? {
+                switch value {
+                case .symbol(let name):
+                    guard let image = DeviceGlyphImage.resolve(name).image else { return nil }
+                    // The resident glyph is only about 10pt tall; medium keeps its thin details visible.
+                    let configuration = NSImage.SymbolConfiguration(pointSize: 64, weight: .medium)
+                        .applying(NSImage.SymbolConfiguration(paletteColors: [fg]))
+                    return image.withSymbolConfiguration(configuration) ?? image
+                case .asset(let name):
+                    guard let image = NSImage(named: name) else { return nil }
+                    return tinted(image)
+                }
+            }
+            guard let glyph else { return nil }
+            return resolve(glyph) ?? resolve(.fallback)
+        }
+        // 资源图合成到独立画布再绘制：既能把厂商 SVG 变成单色，也不会把填色
+        // 渗到同一区域正在淡出的上一层（中央交叉淡变时尤其重要）。
+        func tinted(_ image: NSImage) -> NSImage {
+            NSImage(size: image.size, flipped: false) { rect in
+                image.draw(in: rect)
+                fg.set()
+                rect.fill(using: .sourceAtop)
+                return true
+            }
+        }
         let frame = transition ?? IconTransition.Frame(layers: [.init(content: IconContent(s))])
         func beginLayer(scale: Double, opacity: Double) {
             NSGraphicsContext.saveGraphicsState()
@@ -142,19 +230,16 @@ enum IconRenderer {
             // Reserve top clearance for the upward shift, including plug stroke caps.
             let expanded = numeric ? min(86 / max(1, bounds.width), 72 / max(1, bounds.height))
                 : (content.kind == .plugged || content.kind == .unplugged ? 2.1 : 2.3)
-            let resting = content.kind == .headphones ? 1.35 : 1.05
+            let resting = content.kind == .headphones ? restingScale(content.glyph) : 1.05
             beginLayer(scale: (resting + (expanded-resting) * layer.emphasis) * layer.scale, opacity: layer.opacity)
             if content.kind == .plugged || content.kind == .unplugged {
                 drawPower(connected: content.kind == .plugged)
             } else if content.isWiFiGlyph {
                 drawWiFi(layer)
-            } else if let symbol = content.symbol, let image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) {
-                let configuration = NSImage.SymbolConfiguration(pointSize: 64, weight: .regular)
-                    .applying(NSImage.SymbolConfiguration(paletteColors: [fg]))
-                let configured = image.withSymbolConfiguration(configuration) ?? image
-                let ratio = min(32 / max(1, configured.size.width), 32 / max(1, configured.size.height))
-                let width = configured.size.width * ratio, height = configured.size.height * ratio
-                configured.draw(in: rect(50-width/2,46-height/2,width,height))
+            } else if let drawn = deviceImage(content.glyph) {
+                let ratio = min(32 / max(1, drawn.size.width), 32 / max(1, drawn.size.height))
+                let width = drawn.size.width * ratio, height = drawn.size.height * ratio
+                drawn.draw(in: rect(50-width/2,46-height/2,width,height))
             } else if content.kind == .unavailable { stroke([point(43,46),point(57,46)],3,fg) }
             else {
                 if let context = NSGraphicsContext.current?.cgContext {
@@ -187,7 +272,6 @@ enum IconRenderer {
             }
         }
         NSGraphicsContext.restoreGraphicsState()
-        return image
     }
 
 }

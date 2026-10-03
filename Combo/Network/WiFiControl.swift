@@ -79,6 +79,7 @@ enum WiFiPasswordLookup: Equatable {
     @Published var networks: [WiFiChoice] = []
     @Published var busy = false
     @Published private(set) var connecting = false
+    @Published private(set) var isRequestingSystemPassword = false
     @Published var message: LocalizedText = ""
     @Published var currentSSID: String?
     @Published var currentBSSID: String?
@@ -133,6 +134,7 @@ enum WiFiPasswordLookup: Equatable {
             return
         }
         busy = true; message = "正在获取所选网络的密码；macOS 可能请求钥匙串授权…"
+        isRequestingSystemPassword = true
         let generation = passwordRequestGeneration, lookup = systemPassword
         Task.detached { [weak self] in
             let result = lookup(ssid)
@@ -141,6 +143,7 @@ enum WiFiPasswordLookup: Equatable {
     }
 
     private func finishPasswordLookup(_ result: WiFiPasswordLookup, choice: WiFiChoice, generation: Int) {
+        isRequestingSystemPassword = false
         busy = false
         guard generation == passwordRequestGeneration, useSystemPasswords, powerOn == true else {
             passwordRequest = choice; message = "授权设置或 Wi‑Fi 状态已改变，未继续连接。"
@@ -158,8 +161,9 @@ enum WiFiPasswordLookup: Equatable {
         }
     }
     var nameAccess: Bool { locationAuthorizationStatus == .authorizedAlways }
-    /// 请求时刻：面板据此认出"这次失焦是定位弹窗造成的"，不当成点了面板外面。
+    /// 只有本次主动请求且尚未作答时保护面板；未请求的 notDetermined 不算。
     var locationAskedAt: TimeInterval?
+    var isRequestingLocation: Bool { locationAskedAt != nil && location.authorizationStatus == .notDetermined }
     func requestLocationAccess() {
         guard locationAuthorizationStatus == .notDetermined else { return }
         locationAskedAt = ProcessInfo.processInfo.systemUptime

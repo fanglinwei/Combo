@@ -175,7 +175,7 @@ struct OnboardingView: View {
                 Spacer()
                 Tag(text: L("可以跳过"))
             }
-            Text(L("隐藏系统原图标不是必须的：保留它们不影响 Combo 使用，隐藏也不会关闭 Wi‑Fi、声音或控制中心的功能。"))
+            Text(L("建议隐藏系统原图标，让菜单栏更简洁。Combo 可替代这些图标的功能，隐藏后仍可照常使用。"))
                 .font(.system(size: 13)).foregroundStyle(.secondary)
             HStack {
                 Label(L("系统设置 → 菜单栏"), systemImage: "gearshape")

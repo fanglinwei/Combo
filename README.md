@@ -19,7 +19,7 @@
 
 - 电池电量、电源来源、充电状态、当前充电上限、低电量模式及系统提供的粗略健康状态；主面板可经系统授权切换当前电源类型的能耗模式，保留另一电源类型的设置；确认手动上限暂停充电时可“立即充满电”，临时恢复由 macOS 管理；电池设置和活动监视器入口。
 - Wi‑Fi 电源开关、当前 SSID、已知网络与可展开的其他网络、RSSI 信号等级和基础安全提示；按需定位授权后扫描与连接。个人热点显示手机名称、电量和蜂窝信号等级，点击后转交系统 Wi‑Fi 设置连接；企业认证也使用系统设置。点击已知网络时可按需使用系统钥匙串密码；设置中提供请求开关与授权说明。手动输入的密码默认在连接成功后存入本机 Combo 钥匙串，可取消记住或删除，不上传服务器。
-- 系统默认输出设备选择、主通道/左右声道音量与静音控制；AirPods 左右耳电量、通透/自适应/降噪、对话感知已接入。设备列表支持展开/收起耳机选项；不监控空间音频，完整设置及 AirPlay 保留系统入口。实机范围与验证命令见 [声音与 AirPods](docs/airpods-audio-feasibility.md)。
+- 系统默认输出设备选择、主通道/左右声道音量与静音控制；AirPods 左右耳电量、通透/自适应/降噪、对话感知已接入。蓝牙类别复用已授权 helper 的 CoD 与名称，AirPlay 已建立路由可读取名称/机型；附近 AirPlay 设备首次点击“查找”后浏览，选择转交系统声音设置。设备列表支持展开/收起耳机选项；不监控空间音频，完整设置保留系统入口。实机范围与验证命令见 [声音与 AirPods](docs/airpods-audio-feasibility.md)。
 - 「通用」页的手动隐藏区域直达 macOS“菜单栏”设置，读取三项勾选状态；无法读取时明确显示“无法判断”。用户自行关闭系统图标。
 - 设置窗口包含通用、外观与动效、系统菜单整合、媒体来源、实验性项目、关于与帮助六组导航；外观页可独立选择蓝色、紫色或暖金色主题及跟随系统、浅色或深色模式，并预览示例场景，媒体页显示播放检测状态并可演示音柱。
 - 记录首次读到的三项状态，正常退出时尝试恢复；失败会提示手动检查，异常退出后下次启动提示恢复。
@@ -35,7 +35,9 @@
 - 媒体检查：`Tests/MediaPlaybackHelperCheck.m` 覆盖多客户端聚合、暂停/停止/中断、通讯来源排除与 JSON 布尔类型；`Tests/MediaPlaybackCheck.swift` 覆盖解码和缺失 helper，使用 `./verify.sh` 运行。
 - 日期折叠未实现；不修改系统时钟设置。
 - 菜单栏组合图标的 Wi-Fi 图形仅代表连接介质；面板内网络列表另用 RSSI 显示信号等级。默认路径使用 NWPath 可用性及 SystemConfiguration IPv4/IPv6 接口；介质冲突、未映射接口和隧道返回不确定。没有互联网探测，也不宣称代表全机所有流量。
-- 中央内容自动显示网络、电量或静音状态，不提供手动选择，也不显示日期或输出设备；设备切换不触发中央提示。
+- 中央内容自动显示网络、电量、静音状态与当前默认输出设备类型：以 CoreAudio transport 为入口，蓝牙按品牌名、非 0 CoD、通用名称顺序分类，未知回退通用耳机；AirPlay 按机型显示 Apple TV / HomePod / HomePod mini / 通用符号。中央与输出列表共用分类，内置扬声器、显示器等不显示中央设备符号。不提供手动选择或日期，设备切换不触发 P4 提示。
+- AirPlay 路由读取为含设备 ID 与 UID SHA-256 的 helper 短进程，2 秒超时并核对 context/endpoint 身份；新请求取消旧进程，离开 AirPlay 清缓存，唤醒先失效重读。异常回退 CoreAudio 名与通用 AirPlay 符号，可手动重新读取；`canSetVolume` 缺失表示未知。Mac 软件输出滑块不等同接收端音量，Apple TV 返回不可控时提示“电视音量请用遥控器”。
+- 附近 AirPlay 发现首次由用户按“查找”启用并保存意愿；随后只在真实 live 面板可见、屏幕活动时浏览 `_airplay._tcp`，关闭/演示/睡眠停止。结果与当前路由动态过滤，切离 AirPlay 后恢复附近项；权限期间保护面板，允许/拒绝后保留，下一次外部点击或应用切换才收起；真实系统弹窗仍需实机验证。权限拒绝与普通网络故障分开显示，分别提供本地网络设置或重试。当前未覆盖仅广播 `_raop._tcp` 的 AirPlay 1 设备，不承诺一键建立全系统路由。见 [AirPlay 实现与边界](docs/airplay-homepod-icon-research.md) 与 [蓝牙分类](docs/bluetooth-audio-device-icon-research.md)。
 - 电池与默认音频输出/音量/静音使用系统事件监听；电源和播放中音量提示缩小完成后保持 5 秒，连续音量变化续期；已移除日期刷新计时器。
 - 图标遵循状态总览的几何与颜色；菜单栏、面板和设置共用绘图，低电量保留红色短弧。
 - 仅构建当前机器架构（本次 arm64），本地 ad-hoc 签名，无 Developer ID 公证；不作为公开分发包。
@@ -47,13 +49,13 @@
 ./verify.sh
 ```
 
-`build.sh` 调用 Xcode 27 构建 Debug 应用；`COMBO_CONFIGURATION=Release ./build.sh` 构建 Release。目标系统仍为 macOS 26.0。`verify.sh` 单独运行原有状态、Helper、图标与签名检查。Xcode 从 GitHub 获取 InjectionNext 2.0.1 和 Inject 1.6.0；`Combo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` 固定版本。首次构建需要访问 GitHub，包括 InjectionNext 的 Git 子模块。
+`build.sh` 调用 Xcode 27 构建 Debug 应用；`COMBO_CONFIGURATION=Release ./build.sh` 构建 Release。目标系统仍为 macOS 26.0。`verify.sh` 运行状态、Helper、图标与签名检查，并纳入 `AirPlayRouteCheck` / `AirPlayDiscoveryCheck`，覆盖取消、过期回复、切换、超时、权限/网络错误及模拟面板失焦。Xcode 从 GitHub 获取 InjectionNext 2.0.1 和 Inject 1.6.0；`Combo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` 固定版本。首次构建需要访问 GitHub，包括 InjectionNext 的 Git 子模块。
 
 ### SwiftUI 热重载
 
 安装 [InjectionNext 2.0.1](https://github.com/johnno1962/InjectionNext/releases/tag/2.0.1) 到 `/Applications`，退出 Xcode，然后从 InjectionNext 菜单栏图标选择 **Launch Xcode**。在 Xcode 里运行 Combo 的 Debug scheme；InjectionNext 图标变橙色表示应用已连接。若保存文件后没有检测到改动，在 InjectionNext 中选择 **...or Watch Project** 并指定仓库根目录。保存 `Combo/Views/` 或 `Combo/Rendering/` 中的 SwiftUI 视图实现后，InjectionNext 会编译改动并注入运行中的应用。属性布局、函数签名等结构性修改仍需重新构建运行。Debug 配置含 `-interposable`，并关闭沙盒与强化运行时以允许代码注入；Release 不设置注入链接参数。
 
-构建、状态测试与代码签名校验通过；在 macOS 27.0 开发机检查三合一面板与 Wi‑Fi、声音、电池系统设置跳转。Wi‑Fi 实际连接、输出设备切换、钥匙串写入、辅助功能读取及退出恢复尚未完成实机验证。
+历史构建、状态测试与代码签名校验通过；本轮音频异步与发现修改的结果以实际 `./verify.sh` 输出为准，HomePod、多设备、AirPlay 1、macOS 26、蓝牙 CoD 及真实本地网络弹窗尚未完成实机回归。在 macOS 27.0 开发机此前检查三合一面板与 Wi‑Fi、声音、电池系统设置跳转。Wi‑Fi 实际连接、输出设备切换、钥匙串写入、辅助功能读取及退出恢复尚未完成实机验证。
 
 2026-09-24 Wi‑Fi 面板：普通网络留在 Combo，个人热点现通过只读发现展示手机名称、电量和蜂窝信号等级，点击直达系统 Wi‑Fi 设置（本机 AX 点击系统菜单项未能确认展开，因此不启用这条路径）。系统设置中已确认个人热点列表可见；示例数据检查了列表展开、密码表单与企业认证提示。`Tests/WiFiControlCheck.swift` 覆盖同名不同安全类型隔离、保留当前 BSSID、RSSI 未知值与基础安全分类，已接入构建。扫描仅在打开面板或手动刷新时进行，面板活跃期间每 10 秒刷新连接状态。已知网络来自 CoreWLAN 配置；点击已知的普通加密网络时，可用 `CWKeychainFindWiFiPassword` 按所选 SSID 获取系统密码，仅用于此次连接，不复制到 Combo 存储；旧版 Combo 仅按名称存储的密码不会自动复用，新条目按安全类型和名称保存，旧条目保留。低安全性提示仅基于协议类型，不承诺与系统全部规则一致；本轮没有切换真实网络或写入真实 Wi‑Fi 密码。
 
@@ -76,7 +78,7 @@
 当前绘图输出：[原生 16 状态对照图](docs/assets/combo-native-icon-review.png)。APP 图标保留原版；Wi-Fi 在菜单栏、设置、网络列表和透明 Logo 中统一为两条加粗圆头弧线加圆润倒三角，弧线间隙收紧，保留信号强弱及关闭、异常、连接中状态。下列命令将当前 16 状态对照图输出到 `build/combo-priority-review.png`：
 
 ```sh
-xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -swift-version 5 -parse-as-library Combo/App/State.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift Tests/RenderIcons.swift -o build/render-icons
+xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -swift-version 5 -parse-as-library Combo/App/Localization.swift Combo/App/State.swift Combo/Audio/OutputDevice.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift Tests/RenderIcons.swift -o build/render-icons
 ./build/render-icons
 ```
 
@@ -93,9 +95,11 @@ xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -swift-version 5 -pars
 复现只读运行检查：
 
 ```sh
-xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -swift-version 5 -parse-as-library Combo/App/State.swift Combo/Rendering/IconTransition.swift Combo/Network/NetworkStatus.swift Combo/Network/WiFiControl.swift Combo/Network/HotspotControl.swift Combo/MenuBar/MenuBarSetup.swift Combo/MenuBar/MenuDiagnostics.swift Combo/MenuBar/MenuFoldExperiment.swift Combo/Battery/PowerModeControl.swift Combo/Battery/ChargeControl.swift Combo/Battery/EnergyApps.swift Combo/Audio/AudioVolume.swift Combo/Audio/AirPodsControl.swift Combo/Audio/MediaPlayback.swift Combo/Stores/BatteryStore.swift Combo/Stores/AudioStore.swift Combo/Stores/Store.swift Tests/LiveState.swift -o build/live-state-check
+xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -swift-version 5 -parse-as-library Combo/App/Localization.swift Combo/App/State.swift Combo/Rendering/IconTransition.swift Combo/Network/NetworkStatus.swift Combo/Network/WiFiControl.swift Combo/Network/HotspotControl.swift Combo/MenuBar/MenuBarSetup.swift Combo/MenuBar/MenuDiagnostics.swift Combo/MenuBar/MenuFoldExperiment.swift Combo/Battery/PowerModeControl.swift Combo/Battery/ChargeControl.swift Combo/Battery/EnergyApps.swift Combo/Audio/OutputDevice.swift Combo/Audio/AirPlayRoute.swift Combo/Audio/AudioVolume.swift Combo/Audio/AirPodsControl.swift Combo/Audio/MediaPlayback.swift Combo/Stores/BatteryStore.swift Combo/Stores/AudioStore.swift Combo/Stores/Store.swift Tests/LiveState.swift -o build/live-state-check
 ./build/live-state-check
 ```
+
+⚠️ 上面这条 `live-state-check` 在视图拆分之后**已不可直接运行**：`Store` 依赖 `PanelView` 的 `PanelSection`，而视图源码需要 `Inject` 模块——正确做法是像 `verify.sh` 里的面板检查那样链接已构建的 `Combo.debug.dylib`。日常验证请以 `./verify.sh` 为准。
 
 菜单继续验证的操作入口：Combo 设置 → 实验性项目 → 授权辅助功能。用户在系统设置完成授权后返回点击“检查菜单访问”。授权并不自动启用折叠；只读检测也不能代替菜单打开、关闭和归位验证。
 

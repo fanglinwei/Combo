@@ -9,12 +9,13 @@ struct SoundOutputs: View {
     @ObservedObject var audio: AudioStore
     @ObservedObject var control: AirPodsControl
     @ObservedObject var bluetooth: BluetoothPermission
+    @ObservedObject var discovery: AirPlayDiscovery
     @State private var expanded = true
     @State private var hoveredOutput: UInt32?
-    init(store: Store) { self.store = store; self.audio = store.audio; self.control = store.audio.airpods; self.bluetooth = store.audio.bluetoothPermission }
+    init(store: Store) { self.store = store; self.audio = store.audio; self.control = store.audio.airpods; self.bluetooth = store.audio.bluetoothPermission; self.discovery = store.audio.discovery }
     private var active: Bool { store.scene == .live && store.panelVisible && store.screenActive }
     private var state: AirPodsReply? {
-        guard store.scene == .live, bluetooth.authorization == .allowedAlways, let state = control.snapshot,
+        guard store.scene == .live, audio.outputIsAirPods, bluetooth.authorization == .allowedAlways, let state = control.snapshot,
               state.available, state.deviceID == audio.selectedOutputID else { return nil }
         return state
     }
@@ -28,13 +29,16 @@ struct SoundOutputs: View {
                 HStack(spacing: 0) {
                     Button { audio.setOutput(output.id) } label: {
                         HStack(spacing: 8) {
-                            Image(systemName: output.symbol).font(.system(size: 16))
+                            DeviceGlyphIcon(glyph: output.glyph).font(.system(size: 16))
                                 .foregroundStyle(selected ? Color.white : Color.secondary)
                                 .frame(width: 26, height: 26)
                                 .background(selected ? Color.blue : Color.primary.opacity(0.10), in: Circle())
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(output.name).font(.system(size: 13, weight: .medium)).lineLimit(1)
                                 if selected, let state { battery(state) }
+                                if selected, let caption = routeCaption {
+                                    Text(caption).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                                }
                             }
                             Spacer(minLength: 0)
                         }.frame(minHeight: 32).contentShape(Rectangle())
@@ -42,7 +46,8 @@ struct SoundOutputs: View {
                     .buttonStyle(.plain)
                     .disabled(store.scene != .live)
                     .accessibilityLabel(output.name)
-                    .accessibilityValue(selected ? L("当前输出") + (state.map { L("，") + $0.batteryText } ?? "") : "")
+                    .accessibilityValue(selected ? L("当前输出") + (state.map { L("，") + $0.batteryText } ?? "")
+                                        + (audio.isRouteInfoUnavailable ? L("，") + L("设备信息暂不可用") : "") : "")
                     .accessibilityAddTraits(selected ? .isSelected : [])
                     if selected, let state, !state.modes.isEmpty || state.conversation != nil {
                         Button { expanded.toggle() } label: {
@@ -68,8 +73,12 @@ struct SoundOutputs: View {
                         .padding(.horizontal, -14).padding(.top, 5).padding(.bottom, 4)
                 }
             }
-            if active && audio.outputIsAirPods && bluetooth.authorization != .allowedAlways {
-                Text(L("允许蓝牙后可查看耳机电量与聆听模式；音量控制仍可使用。"))
+            if active, audio.isRouteInfoUnavailable {
+                Button(L("重新读取 AirPlay 信息")) { audio.retryRoute() }.font(.caption).padding(.top, 6)
+            }
+            nearbyAirPlaySection
+            if active && audio.deviceKind.isBluetooth && bluetooth.authorization != .allowedAlways {
+                Text(L("允许蓝牙后可读取设备类别；支持的耳机还可显示电量与聆听模式。"))
                     .font(.caption).foregroundStyle(.secondary).padding(.top, 6)
                 if bluetooth.authorization == .notDetermined {
                     Button(L("请求蓝牙权限")) { bluetooth.request() }.font(.caption)
@@ -81,19 +90,75 @@ struct SoundOutputs: View {
                     }.font(.caption)
                 }
             }
-            if active && bluetooth.authorization == .allowedAlways && control.snapshot == nil {
+            if active && audio.outputIsAirPods && bluetooth.authorization == .allowedAlways && control.snapshot == nil {
                 Text(control.unavailable ? L("耳机控制暂不可用") : L("正在读取耳机状态…"))
                     .font(.caption).foregroundStyle(.secondary).padding(.top, 6)
             }
-            if !control.message.isEmpty {
+            if audio.outputIsAirPods && !control.message.isEmpty {
                 Text(control.message.string).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true).padding(.top, 6)
             }
-            if bluetooth.authorization == .allowedAlways && control.unavailable {
+            if audio.outputIsAirPods && bluetooth.authorization == .allowedAlways && control.unavailable {
                 Button(L("重新读取耳机状态")) { control.refresh(deviceID: audio.selectedOutputID) }
                     .font(.caption).disabled(control.busy).padding(.top, 6)
             }
         }
         .onChange(of: audio.selectedOutputID) { _, _ in expanded = true }
+    }
+    private var nearbyAirPlaySection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Divider().padding(.top, 8)
+            Text(L("附近 AirPlay")).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+            switch discovery.state {
+            case .idle:
+                Text(L("查找附近设备需要本地网络权限，连接将在系统声音设置中完成。"))
+                    .font(.caption).foregroundStyle(.secondary)
+                Button(L("查找附近 AirPlay 设备")) { discovery.request() }.font(.caption).disabled(!active)
+            case .searching:
+                HStack {
+                    ProgressView().controlSize(.small)
+                    Text(L("正在查找附近 AirPlay 设备…")).font(.caption).foregroundStyle(.secondary)
+                }
+            case .denied:
+                Text(L("需要本地网络权限才能显示附近设备"))
+                    .font(.caption).foregroundStyle(.secondary)
+                Text(L("系统设置 → 隐私与安全性 → 本地网络 → Combo"))
+                    .font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Button(L("打开本地网络设置")) { store.openSystemSettings("local-network") }
+                    Button(L("重新查找")) { discovery.request() }.disabled(!active)
+                }.font(.caption)
+            case .failed:
+                Text(L("附近设备发现暂不可用，请检查网络后重试。"))
+                    .font(.caption).foregroundStyle(.secondary)
+                Button(L("重新查找")) { discovery.request() }.font(.caption).disabled(!active)
+            case .ready:
+                if audio.nearbyAirPlay.isEmpty {
+                    Text(L("未发现附近的 AirPlay 设备"))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                ForEach(audio.nearbyAirPlay) { device in
+                    Button { store.openSystemSettings("sound") } label: {
+                        HStack(spacing: 8) {
+                            DeviceGlyphIcon(glyph: OutputDeviceClassifier.glyph(for: .airPlay(device.family)))
+                                .font(.system(size: 16)).foregroundStyle(.secondary)
+                                .frame(width: 26, height: 26)
+                                .background(Color.primary.opacity(0.06), in: Circle())
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("\(device.name)\(L("（AirPlay）"))").font(.system(size: 13, weight: .medium)).lineLimit(1)
+                                Text(audio.nearbyAirPlayCaption).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "arrow.up.forward.app").font(.system(size: 12)).foregroundStyle(.secondary)
+                        }.frame(minHeight: 32).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain).disabled(!active)
+                    .accessibilityLabel("\(device.name)\(L("（AirPlay）"))")
+                    .accessibilityValue(audio.nearbyAirPlayCaption)
+                    .padding(.vertical, 1)
+                }
+                Button(L("重新查找")) { discovery.request() }.font(.caption).disabled(!active)
+            }
+        }
     }
     private func battery(_ state: AirPodsReply) -> some View {
         HStack(spacing: 8) {
@@ -226,5 +291,38 @@ struct AirPodsSegmentTrack<Content: View>: View {
                     },
                 including: enabled ? .all : .none
             )
+    }
+}
+
+/// 当前 AirPlay 路由的副标题：设备类别 + 设备音量是否可调（Apple TV 实测不可调，由电视遥控）。
+extension SoundOutputs {
+    var routeCaption: String? {
+        if audio.isRouteInfoUnavailable { return L("设备信息暂不可用") }
+        guard let info = audio.currentRouteInfo else { return nil }
+        var parts: [String] = []
+        if let label = info.family.label { parts.append(label) }
+        if info.canSetVolume == false {
+            parts.append(L(info.family == .appleTV ? "电视音量请用遥控器" : "设备音量请在设备上调节"))
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+}
+
+/// 设备字形在 SwiftUI 里的呈现：SF Symbol 走 `systemName`，第三方厂商矢量图走资源目录
+/// （`Media.xcassets` 里的 SVG/PDF imageset）。解析失败统一退到兜底符号，不留空白。
+struct DeviceGlyphIcon: View {
+    let glyph: DeviceGlyph
+
+    var body: some View {
+        switch glyph {
+        case .symbol(let name):
+            Image(systemName: DeviceGlyphImage.symbolName(name))
+        case .asset(let name):
+            if let image = NSImage(named: name) {
+                Image(nsImage: image).renderingMode(.template).resizable().scaledToFit().frame(width: 25, height: 25)
+            } else {
+                Image(systemName: DeviceGlyphImage.fallbackName)
+            }
+        }
     }
 }

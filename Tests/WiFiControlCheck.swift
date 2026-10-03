@@ -70,7 +70,9 @@ final class ScannedNetwork: CWNetwork {
         }
         control.powerOn = true; control.knownNames = [suite]
         control.join(choice); control.join(choice)
+        assert(control.isRequestingSystemPassword, "Keychain authorization must protect the panel while lookup is pending")
         try await settle(control)
+        assert(!control.isRequestingSystemPassword, "Network association is not a permission prompt")
         assert(reads == 1 && joins == 1 && !control.connecting, "Single click workflow must reject duplicate actions")
         assert(control.passwordRequest == nil && !control.hasSavedPassword(for: choice), "System password must not be copied into Combo storage")
 
@@ -78,6 +80,7 @@ final class ScannedNetwork: CWNetwork {
         let cancelled = WiFiControl(defaults: defaults, systemPassword: { _ in cancelledReads += 1; return .cancelled }, associate: { _, _ in fatalError("Cancelled authorization must not connect") })
         cancelled.powerOn = true; cancelled.knownNames = [suite]
         cancelled.join(choice); try await settle(cancelled)
+        assert(!cancelled.isRequestingSystemPassword, "Cancellation must release panel protection")
         assert(cancelled.passwordRequest?.id == choice.id && cancelled.systemAccessDeclined)
         assert(!cancelled.busy && !cancelled.connecting)
         cancelled.join(choice); try await settle(cancelled)

@@ -59,6 +59,11 @@ import Combine
         let chinese = try strings("zh-Hans", table: "Localizable")
         let english = try strings("en", table: "Localizable")
         assert(chinese.count > 450 && Set(chinese.keys) == Set(english.keys))
+        // 中文表的值约定就是 key 本身。漏写中文、把英文值抄进来，都会在这里失败——
+        // 只校验英文那一侧是抓不到这种错的（key 集合仍然是齐的）。
+        for (key, value) in chinese where key.contains(where: { "\u{3400}"..."\u{9fff}" ~= String($0) }) {
+            assert(value.contains(where: { "\u{3400}"..."\u{9fff}" ~= String($0) }), "Untranslated Chinese entry: \(key) → \(value)")
+        }
         let placeholders = try NSRegularExpression(pattern: "%(@|lld|d|%)")
         func formats(_ text: String) -> [String] {
             placeholders.matches(in: text, range: NSRange(text.startIndex..., in: text))
@@ -72,7 +77,7 @@ import Combine
         }
         for language in ["en", "zh-Hans"] {
             let info = try strings(language, table: "InfoPlist")
-            assert(Set(info.keys) == ["NSLocationUsageDescription", "NSLocationWhenInUseUsageDescription", "NSBluetoothAlwaysUsageDescription"])
+            assert(Set(info.keys) == ["NSLocationUsageDescription", "NSLocationWhenInUseUsageDescription", "NSBluetoothAlwaysUsageDescription", "NSLocalNetworkUsageDescription"])
         }
         print("PASS: language matching, persistence, invalid preference fallback, live messages, verbatim names, interpolation, unchanged region, \(english.count) bilingual entries and permission descriptions")
     }

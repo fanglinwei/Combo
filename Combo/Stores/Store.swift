@@ -3,6 +3,24 @@ import Combine
 import ApplicationServices
 import ServiceManagement
 
+/// 只读取屏幕上系统窗口的 PID 与透明度，不读取标题或截图，也不请求录屏/辅助功能权限。
+enum SystemPermissionAlert {
+    static func isAgent(_ bundleIdentifier: String?) -> Bool {
+        ["com.apple.UserNotificationCenter", "com.apple.SecurityAgent", "com.apple.coreservices.uiagent"].contains(bundleIdentifier ?? "")
+    }
+
+    static func isVisible() -> Bool {
+        guard let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return false }
+        return windows.contains { window in
+            guard let pid = window[kCGWindowOwnerPID as String] as? Int32,
+                  let alpha = window[kCGWindowAlpha as String] as? Double,
+                  alpha > 0 else { return false }
+            // ponytail: 系统代理窗口只能作为保守保护信号；新增权限宿主时扩展已核实的 bundle ID。
+            return isAgent(NSRunningApplication(processIdentifier: pid)?.bundleIdentifier)
+        }
+    }
+}
+
 @MainActor final class Store: ObservableObject {
     @Published var live = Snapshot()
     @Published var scene: Scene = .live {
@@ -21,7 +39,7 @@ import ServiceManagement
     private var sceneExpiry: Task<Void, Never>?
     @Published var animate: Bool { didSet { UserDefaults.standard.set(animate, forKey: "animate") } }
     let battery = BatteryStore()
-    let audio = AudioStore()
+    let audio: AudioStore
     let hotspots = HotspotControl()
     private let mediaPlayback = MediaPlayback()
     @Published var mediaTrack: MediaTrack?
@@ -32,12 +50,13 @@ import ServiceManagement
         return mediaTrack.title.isEmpty ? L("正在获取媒体信息") : mediaTrack.title
     }
     @Published var panelVisible = false
-    /// 刚在面板里点过「请求权限」：系统弹窗会抢走焦点，那一次失焦不该把面板收起来。
+    /// 权限请求覆盖整个等待过程；本地网络额外检查系统授权窗口，不能把 waiting 当成用户已拒绝。
     var permissionPromptActive: Bool {
-        let now = ProcessInfo.processInfo.systemUptime
-        return permissionAskedRecently(wifi.locationAskedAt, now: now)
-            || permissionAskedRecently(audio.bluetoothPermission.askedAt, now: now)
+        wifi.isRequestingLocation || wifi.isRequestingSystemPassword
+            || audio.bluetoothPermission.isRequestingPermission
+            || isSystemPermissionAlertVisible()
     }
+    private let isSystemPermissionAlertVisible: () -> Bool
     /// 引导第 1 步把浮层指向真实菜单栏图标；面板打开或离开该步即收起。
     @Published var menuBarPointer = false
     /// 面板窗口真正上屏后才置真。内容入场必须等它，不能用 panelVisible：
@@ -46,6 +65,8 @@ import ServiceManagement
     /// Which section's detail window is open, if any. The panel and the detail window both read it.
     @Published var detailSection: PanelSection?
     private var hotspotActivity: AnyCancellable?
+    private var nearbyAirPlayActivity: AnyCancellable?
+    private var bluetoothActivity: AnyCancellable?
     @Published var login = false
     @Published var message: LocalizedText = ""
     @Published var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
@@ -85,7 +106,9 @@ import ServiceManagement
         }
         return result
     }
-    init() {
+    init(audio audioStore: AudioStore? = nil, isSystemPermissionAlertVisible: (() -> Bool)? = nil) {
+        self.audio = audioStore ?? AudioStore()
+        self.isSystemPermissionAlertVisible = isSystemPermissionAlertVisible ?? SystemPermissionAlert.isVisible
         animate = UserDefaults.standard.object(forKey: "animate") as? Bool ?? true
         battery.onUpdate = { [weak self] in
             guard let self else { return }
@@ -101,7 +124,7 @@ import ServiceManagement
             self.live.volume = self.audio.volume
             self.live.muted = self.audio.muted
             self.live.output = self.audio.output
-            self.live.outputIsAirPods = self.audio.outputIsAirPods
+            self.live.deviceKind = self.audio.deviceKind
             self.updateObservation()
         }
         audio.onVolumeChange = { [weak self] in self?.showVolumeHint() }
@@ -128,6 +151,16 @@ import ServiceManagement
             .sink { [weak self] enabled in
                 if enabled { self?.hotspots.start() } else { self?.hotspots.stop() }
             }
+        nearbyAirPlayActivity = Publishers.CombineLatest3($panelVisible, $screenActive, $scene)
+            .map { visible, active, scene in visible && active && scene == .live }
+            .removeDuplicates()
+            .sink { [weak self] enabled in self?.audio.setNearbyDiscoveryActive(enabled) }
+        bluetoothActivity = Publishers.CombineLatest4($panelVisible, $screenActive, $scene, self.audio.bluetoothPermission.$authorization)
+            .map { visible, active, scene, authorization in visible && active && scene == .live && authorization == .allowedAlways }
+            .removeDuplicates()
+            // @Published 在赋值前发出事件，等授权值落地后再读取。
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] enabled in self?.audio.setBluetoothReadingActive(enabled) }
         network.refresh()
         battery.start()
         refresh()
@@ -140,7 +173,7 @@ import ServiceManagement
                 Task { @MainActor in
                     self?.screenActive = active
                     self?.mediaPlayback.setEnabled(active)
-                    if active { self?.refresh() } else { self?.foldExperiment.release() }
+                    if active { self?.audio.invalidateRoute(); self?.refresh() } else { self?.foldExperiment.release() }
                 }
             })
         }
@@ -165,6 +198,7 @@ import ServiceManagement
         switch section {
         case "wifi": extensionID = "com.apple.wifi-settings-extension"
         case "battery": extensionID = "com.apple.Battery-Settings.extension"
+        case "local-network": extensionID = "com.apple.preference.security?Privacy_LocalNetwork"
         default: extensionID = "com.apple.Sound-Settings.extension"
         }
         guard let url = URL(string: "x-apple.systempreferences:\(extensionID)"), NSWorkspace.shared.open(url) else {
@@ -217,6 +251,8 @@ import ServiceManagement
         battery.stop()
         audio.stop()
         hotspotActivity?.cancel(); hotspots.stop()
+        nearbyAirPlayActivity?.cancel(); audio.setNearbyDiscoveryActive(false)
+        bluetoothActivity?.cancel()
         foldExperiment.release()
         clearVolumeHint(); network.stop()
         observers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }

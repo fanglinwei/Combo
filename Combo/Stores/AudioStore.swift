@@ -5,14 +5,16 @@ import CoreAudio
 struct OutputChoice: Identifiable {
     let id: AudioDeviceID
     let name: String
-    var symbol: String = "speaker.wave.2"
+    let glyph: DeviceGlyph
 }
 
 @MainActor final class AudioStore: ObservableObject {
     @Published var volume: Double?
     @Published var muted = false
     @Published var output: LocalizedText = ""
-    @Published var outputIsAirPods = false
+    /// 当前默认输出设备的类别，是中央图标与输出列表共用的唯一分类结果。
+    @Published var deviceKind: OutputDeviceKind = .other
+    var outputIsAirPods: Bool { deviceKind.isAirPods }
     @Published var outputDevices: [OutputChoice] = []
     @Published var canVolume = false
     @Published var canMute = false
@@ -23,10 +25,73 @@ struct OutputChoice: Identifiable {
     var onVolumeChange: (() -> Void)?
     var onAudioReset: ((Bool) -> Void)?
     var onMessage: ((LocalizedText) -> Void)?
+    /// AirPlay 路由读取失败时自动重试，面板活动时持续确认接收端。
+    private let routeProbe: AirPlayRouteProbe
+    private var route = AirPlayRoute()
+    /// 附近 AirPlay 设备：只读发现，当前接收端确认后从列表排除。
+    let discovery: AirPlayDiscovery
+    var nearbyAirPlay: [DiscoveredAirPlay] {
+        AirPlayDiscovery.visible(discovery.devices, selfName: Host.current().localizedName ?? "",
+                                 routedName: currentRouteInfo?.displayName)
+    }
+    private var discoverySubscription: AnyCancellable?
+    private var bluetoothSubscription: AnyCancellable?
+    private var bluetoothReadingActive = false
+    private var routeMonitoringActive = false
+    private var bluetoothRefresh: Task<Void, Never>?
+    private var bluetoothTarget: String?
+    private var bluetoothDevice: AudioDeviceID?
+    private var bluetoothClassOfDevice: UInt32?
+    private var deviceTarget: String?
     private var device: AudioDeviceID = 0
     private var audioListeners: [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
     private(set) var listenersAvailable = false
     var selectedOutputID: AudioDeviceID { device }
+
+    var currentRouteInfo: AirPlayRoute.Info? { route.info(for: device) }
+    var isRouteInfoUnavailable: Bool {
+        guard case .airPlay = deviceKind else { return false }
+        return currentRouteInfo?.displayName == nil
+    }
+    var nearbyAirPlayCaption: String {
+        L(isRouteInfoUnavailable ? "连接状态未知 · 在系统声音设置中查看" : "在系统声音设置中选择")
+    }
+
+    init(discovery: AirPlayDiscovery? = nil, routeProbe: AirPlayRouteProbe? = nil) {
+        self.discovery = discovery ?? AirPlayDiscovery()
+        self.routeProbe = routeProbe ?? AirPlayRouteProbe()
+        self.routeProbe.update = { [weak self] request, info in
+            guard let self, self.route.request == request else { return }
+            guard AudioOutputIdentity.isCurrent(request) else {
+                self.refreshAudio(); self.refreshOutputs()
+                return
+            }
+            self.route.record(info, for: request)
+            self.refreshAudio()
+            self.refreshOutputs()       // 名称与机型都回填到列表与中央
+        }
+        discoverySubscription = self.discovery.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+        bluetoothSubscription = airpods.$snapshot.sink { [weak self] reply in
+            guard let self, let reply, reply.available, reply.valid,
+                  self.bluetoothReadingActive, reply.deviceID == self.device,
+                  reply.target == self.deviceTarget,
+                  self.bluetoothClassOfDevice != reply.classOfDevice else { return }
+            self.bluetoothClassOfDevice = reply.classOfDevice
+            self.refreshAudio(); self.refreshOutputs()
+        }
+    }
+
+    /// 面板可见且屏幕活动时才做发现（与热点发现同一策略），关掉即停止浏览。
+    func setNearbyDiscoveryActive(_ active: Bool) {
+        discovery.setActive(active)
+        guard routeMonitoringActive != active else { return }
+        routeMonitoringActive = active
+        routeProbe.setMonitoring(active)
+        if active { retryRoute() }
+    }
+
     func refreshAudio() {
         let oldVolume = volume
         let oldMuted = muted
@@ -36,10 +101,19 @@ struct OutputChoice: Identifiable {
         var size = UInt32(MemoryLayout.size(ofValue: id))
         guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &a, 0, nil, &size, &id) == noErr, id != 0 else {
             volume = nil; muted = false; output = "输出设备不可用"; canVolume = false; canMute = false
-            outputIsAirPods = false
+            deviceKind = .other
+            deviceTarget = nil
+            clearRoute()
+            setBluetoothReadingActive(bluetoothReadingActive)
             device = 0; installAudioListeners(); onUpdate?(); onAudioReset?(oldDevice != 0); return
         }
         device = id
+        let target = AudioOutputIdentity.target(for: id)
+        if deviceTarget != target {
+            bluetoothClassOfDevice = nil
+            clearRoute()
+        }
+        deviceTarget = target
         if oldDevice != id || audioListeners.isEmpty { installAudioListeners(); onAudioReset?(oldDevice != id) }
         output = "未知输出设备"
         a = address(kAudioObjectPropertyName, global: true)
@@ -49,9 +123,11 @@ struct OutputChoice: Identifiable {
         var transport: UInt32 = 0
         a = address(kAudioDevicePropertyTransportType, global: true); size = UInt32(MemoryLayout<UInt32>.size)
         _ = AudioObjectGetPropertyData(id, &a, 0, nil, &size, &transport)
-        // ponytail: reuse the output list's name heuristic; use model identity for renamed AirPods.
-        outputIsAirPods = [kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE].contains(transport)
-            && output.string.localizedCaseInsensitiveContains("AirPods")
+        deviceKind = OutputDeviceClassifier.classify(OutputSignals(transport: transport, name: output.string,
+                                                                  model: route.model(for: id), classOfDevice: bluetoothClassOfDevice))
+        refreshRouteModel(deviceID: id)
+        if let routeName = route.name(for: id) { output = "\(routeName)\(L("（AirPlay）"))" }
+        setBluetoothReadingActive(bluetoothReadingActive)
         let reading = AudioVolume.read(id)
         volume = reading.value
         canVolume = reading.writable
@@ -66,6 +142,58 @@ struct OutputChoice: Identifiable {
         if oldDevice == id, volumeChanged || (muteRead && oldMuted != muted) { onVolumeChange?() }
 
     }
+    /// 同一 CoreAudio 身份共用请求；helper 自动重试并在面板活动时刷新接收端。
+    private func refreshRouteModel(deviceID: AudioDeviceID) {
+        guard case .airPlay = deviceKind else {
+            guard route.hasProbed else { return }
+            clearRoute()
+            return
+        }
+        guard let target = deviceTarget else { clearRoute(); return }
+        guard route.deviceID != deviceID || route.request?.target != target else { return }
+        let request = route.begin(deviceID: deviceID, target: target)
+        routeProbe.read(request, automaticallyRefresh: true)
+    }
+
+    private func clearRoute() {
+        routeProbe.cancel()
+        route.clear()
+        objectWillChange.send()
+    }
+
+    func invalidateRoute() { clearRoute() }
+
+    func retryRoute() {
+        guard case .airPlay = deviceKind else { return }
+        clearRoute(); refreshAudio(); refreshOutputs()
+    }
+
+    /// 只在已获蓝牙授权且面板活动时读取。普通蓝牙设备一次，AirPods 电量每三秒刷新。
+    func setBluetoothReadingActive(_ active: Bool) {
+        bluetoothReadingActive = active
+        guard active, bluetoothPermission.authorization == .allowedAlways,
+              case .bluetooth = deviceKind, let target = deviceTarget else {
+            guard bluetoothTarget != nil || bluetoothRefresh != nil else { return }
+            bluetoothRefresh?.cancel(); bluetoothRefresh = nil; bluetoothTarget = nil; bluetoothDevice = nil
+            airpods.cancel()
+            return
+        }
+        guard bluetoothTarget != target || bluetoothDevice != device else { return }
+        bluetoothRefresh?.cancel(); airpods.cancel()
+        bluetoothTarget = target
+        bluetoothDevice = device
+        let id = device
+        let repeatRead = outputIsAirPods
+        bluetoothRefresh = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self, self.device == id, self.deviceTarget == target else { return }
+                self.airpods.refresh(deviceID: id)
+                guard repeatRead else { return }
+                do { try await Task.sleep(for: .seconds(3)) } catch { return }
+            }
+        }
+    }
+
     func address(_ selector: AudioObjectPropertySelector, global: Bool = false) -> AudioObjectPropertyAddress {
         AudioObjectPropertyAddress(mSelector: selector, mScope: global ? kAudioObjectPropertyScopeGlobal : kAudioDevicePropertyScopeOutput, mElement: kAudioObjectPropertyElementMain)
     }
@@ -89,16 +217,10 @@ struct OutputChoice: Identifiable {
             var transportSize = UInt32(MemoryLayout<UInt32>.size)
             var transportAddress = address(kAudioDevicePropertyTransportType, global: true)
             _ = AudioObjectGetPropertyData(id, &transportAddress, 0, nil, &transportSize, &transport)
-            let symbol: String
-            switch transport {
-            case kAudioDeviceTransportTypeBuiltIn: symbol = "laptopcomputer"
-            case kAudioDeviceTransportTypeHDMI, kAudioDeviceTransportTypeDisplayPort: symbol = "display"
-            case kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE:
-                symbol = title.localizedCaseInsensitiveContains("AirPods") ? "airpodspro" : "headphones"
-            case kAudioDeviceTransportTypeAirPlay: symbol = "airplay.audio"
-            default: symbol = "speaker.wave.2"
-            }
-            return OutputChoice(id: id, name: title, symbol: symbol)
+            let signals = OutputSignals(transport: transport, name: title, model: route.model(for: id),
+                                        classOfDevice: id == device ? bluetoothClassOfDevice : nil)
+            let kind = OutputDeviceClassifier.classify(signals)
+            return OutputChoice(id: id, name: route.name(for: id).map { "\($0)\(L("（AirPlay）"))" } ?? title, glyph: OutputDeviceClassifier.glyph(for: kind))
         }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
     func setOutput(_ id: AudioDeviceID) {
@@ -120,7 +242,14 @@ struct OutputChoice: Identifiable {
         }
         var failed = false
         for (id, var attr) in targets where AudioObjectHasProperty(id, &attr) {
-            let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in Task { @MainActor in self?.refreshAudio(); self?.refreshOutputs() } }
+            let routeChanged = [kAudioHardwarePropertyDefaultOutputDevice, kAudioHardwarePropertyDevices,
+                                kAudioDevicePropertyStreams, kAudioObjectPropertyName].contains(attr.mSelector)
+            let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+                Task { @MainActor in
+                    if routeChanged { self?.invalidateRoute() }
+                    self?.refreshAudio(); self?.refreshOutputs()
+                }
+            }
             if AudioObjectAddPropertyListenerBlock(id, &attr, .main, block) == noErr { audioListeners.append((id,attr,block)) } else { failed = true }
         }
         listenersAvailable = !failed
@@ -150,7 +279,13 @@ struct OutputChoice: Identifiable {
         refreshAudio()
     }
     func stop() {
+        routeMonitoringActive = false
+        routeProbe.setMonitoring(false)
+        bluetoothReadingActive = false
+        bluetoothRefresh?.cancel(); bluetoothRefresh = nil; bluetoothTarget = nil; bluetoothDevice = nil
         airpods.cancel()
+        clearRoute()
+        discovery.setActive(false)
         for (object, var attr, block) in audioListeners { AudioObjectRemovePropertyListenerBlock(object, &attr, .main, block) }
         audioListeners.removeAll()
     }

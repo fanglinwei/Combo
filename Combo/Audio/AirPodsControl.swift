@@ -8,6 +8,7 @@ import CoreBluetooth
 
     /// 请求时刻：面板据此认出"这次失焦是蓝牙弹窗造成的"，不当成点了面板外面。
     var askedAt: TimeInterval?
+    var isRequestingPermission: Bool { askedAt != nil && CBManager.authorization == .notDetermined }
     func request() {
         guard authorization == .notDetermined, manager == nil else { return }
         askedAt = ProcessInfo.processInfo.systemUptime
@@ -50,6 +51,7 @@ struct AirPodsReply: Decodable, Equatable {
     let right: Int?
     let caseBattery: Int?
     let single: Int?
+    let classOfDevice: UInt32?
     let attempted: Bool
     let verified: Bool
     let error: String?
@@ -58,6 +60,7 @@ struct AirPodsReply: Decodable, Equatable {
         guard target.isEmpty || (target.count == 64 && target.allSatisfy({ $0.isHexDigit })),
               !available || (deviceID != 0 && target.count == 64), Set(modes).count == modes.count,
               [left, right, caseBattery, single].compactMap({ $0 }).allSatisfy({ (1...100).contains($0) }),
+              classOfDevice == nil || (1...0xffffff).contains(classOfDevice ?? 0),
               !canSetMode || (available && !modes.isEmpty),
               !canSetConversation || (available && conversation != nil) else { return false }
         return true

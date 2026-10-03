@@ -28,6 +28,24 @@ import Combine
         }
         assert((try! decode(payload)).valid)
         assert((try! decode(payload)).batteryText == "左 43% · 右 34%")
+        assert((try! decode(payload)).classOfDevice == nil, "Older helpers may omit Class of Device")
+        for value: UInt32 in [1, 0x240418, 0xffffff] {
+            var classified = payload; classified["classOfDevice"] = value
+            let reply = try decode(classified)
+            assert(reply.valid && reply.classOfDevice == value)
+        }
+        for value: UInt32 in [0, 0x1000000, .max] {
+            var broken = payload; broken["classOfDevice"] = value
+            let reply = try decode(broken)
+            assert(!reply.valid)
+        }
+        var unknown = payload; unknown["classOfDevice"] = NSNull()
+        let unknownReply = try decode(unknown)
+        assert(unknownReply.valid && unknownReply.classOfDevice == nil)
+        for value: Any in [-1, 0x100000000 as UInt64, true, "0x240418"] {
+            var broken = payload; broken["classOfDevice"] = value
+            assert((try? decode(broken)) == nil, "Malformed Class of Device must fail decoding")
+        }
         for invalid in [0, 101, -1] {
             var broken = payload; broken["left"] = invalid
             assert(!(try! decode(broken)).valid)
