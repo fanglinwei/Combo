@@ -1,7 +1,9 @@
 .DS_Store
 .codegraph/
 build/
-/Releases/
+/Releases/*
+!/Releases/package-dmg.sh
+!/Releases/packaging/
 xcuserdata/
 __pycache__/
 prototypes/menu-access/MenuProbe
