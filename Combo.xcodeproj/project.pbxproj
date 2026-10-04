@@ -20,9 +20,7 @@
 		0DD0C0DE0000000000000002 /* OutputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000001 /* OutputDevice.swift */; };
 		0DD0C0DE0000000000000004 /* AirPlayRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000003 /* AirPlayRoute.swift */; };
 		0DD0C0DE0000000000000006 /* AirPlayDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */; };
-		7012FCA18A931EE3D6402869 /* InjectionNext in Frameworks */ = {isa = PBXBuildFile; productRef = 0ECE20A209DF30F65F7EC3A4 /* InjectionNext */; };
 		75532254095A42BA9DC365C5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D54D08915E2455AB5B921B3 /* SettingsView.swift */; };
-		756D3DABE9C8837B37E031FE /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = 16B2FA3A515D354A30BCEC75 /* Inject */; };
 		766CEEF22B3A4665BFA9FFCE /* BatterySections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18CFAB0D2474FDBB947237D /* BatterySections.swift */; };
 		806396930CB40D61BD38E445 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45FEC6A6DB0E3328C1EB77 /* Store.swift */; };
 		82EC1A0CE1BDECA3461169B8 /* IconTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F951B1AB68E4AC17144EF10 /* IconTransition.swift */; };
@@ -105,8 +103,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				908640C6F77CB53C46879E70 /* Cocoa.framework in Frameworks */,
-				7012FCA18A931EE3D6402869 /* InjectionNext in Frameworks */,
-				756D3DABE9C8837B37E031FE /* Inject in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -293,10 +289,6 @@
 			dependencies = (
 			);
 			name = Combo;
-			packageProductDependencies = (
-				0ECE20A209DF30F65F7EC3A4 /* InjectionNext */,
-				16B2FA3A515D354A30BCEC75 /* Inject */,
-			);
 			productName = Combo;
 			productReference = 092B442EC711CC51B8749ADA /* Combo.app */;
 			productType = "com.apple.product-type.application";
@@ -320,10 +312,6 @@
 				"zh-Hans",
 			);
 			mainGroup = CD922D4D2A542514D8565DDF;
-			packageReferences = (
-				73B01430928BD8A039EA6FFF /* XCRemoteSwiftPackageReference "InjectionNext" */,
-				32D6AB6E1C9D4633969E2F3F /* XCRemoteSwiftPackageReference "Inject" */,
-			);
 			productRefGroup = 3C58C0D3217474974257123A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -453,7 +441,6 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
-				EMIT_FRONTEND_COMMAND_LINES = YES;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -464,11 +451,6 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-Xlinker",
-					"-interposable",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = local.combo.app;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -648,37 +630,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		32D6AB6E1C9D4633969E2F3F /* XCRemoteSwiftPackageReference "Inject" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/krzysztofzablocki/Inject.git";
-			requirement = {
-				kind = exactVersion;
-				version = 1.6.0;
-			};
-		};
-		73B01430928BD8A039EA6FFF /* XCRemoteSwiftPackageReference "InjectionNext" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/johnno1962/InjectionNext.git";
-			requirement = {
-				kind = exactVersion;
-				version = 2.0.1;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		0ECE20A209DF30F65F7EC3A4 /* InjectionNext */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 73B01430928BD8A039EA6FFF /* XCRemoteSwiftPackageReference "InjectionNext" */;
-			productName = InjectionNext;
-		};
-		16B2FA3A515D354A30BCEC75 /* Inject */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 32D6AB6E1C9D4633969E2F3F /* XCRemoteSwiftPackageReference "Inject" */;
-			productName = Inject;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E27AE2E768E52DF74108B4B1 /* Project object */;
 }

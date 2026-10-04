@@ -187,7 +187,7 @@ struct OutputChoice: Identifiable {
         bluetoothRefresh = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self, self.device == id, self.deviceTarget == target else { return }
-                self.airpods.refresh(deviceID: id)
+                self.airpods.refresh(deviceID: id, target: target)
                 guard repeatRead else { return }
                 do { try await Task.sleep(for: .seconds(3)) } catch { return }
             }

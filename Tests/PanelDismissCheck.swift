@@ -1,4 +1,5 @@
 import AppKit
+import CoreWLAN
 @testable import Combo
 
 @main struct PanelDismissCheck {
@@ -41,14 +42,17 @@ import AppKit
         delegate.updateDetailWindow(.sound)
         try await Task.sleep(for: .milliseconds(300))
         let soundFrame = detail.frame
+        let visible = try require(detail.screen).visibleFrame
+        assert(abs(soundFrame.maxY - panel.frame.maxY) < 1, "Detail top must align to the overview panel")
         let scroll = try require(scrollView(in: try require(detail.contentView)))
         let document = try require(scroll.documentView)
-        let maximumHeight = try require(detail.screen).visibleFrame.height - 16
+        let maximumHeight = visible.height - 16
         assert(abs(soundFrame.height - min(ceil(document.frame.height), maximumHeight)) < 1,
                "The native detail window must match its visible content, without a transparent tail")
         delegate.store.detailSection = .battery
         delegate.updateDetailWindow(.battery)
         try await Task.sleep(for: .milliseconds(300))
+        assert(abs(detail.frame.maxY - panel.frame.maxY) < 1, "Switching details must preserve top alignment")
         delegate.store.detailSection = .sound
         delegate.updateDetailWindow(.sound)
         try await Task.sleep(for: .milliseconds(300))
@@ -56,14 +60,15 @@ import AppKit
         delegate.store.message = LocalizedText { String(repeating: "Panel height regression\n", count: 120) }
         try await Task.sleep(for: .milliseconds(300))
         let expandedFrame = detail.frame
+        assert(abs(expandedFrame.maxY - panel.frame.maxY) < 1, "Long details must preserve top alignment")
         let expandedScroll = try require(scrollView(in: try require(detail.contentView)))
         let expandedDocument = try require(expandedScroll.documentView)
         assert(abs(expandedFrame.height - maximumHeight) < 1 && expandedDocument.frame.height > maximumHeight,
                "Long content must grow to the screen limit and remain scrollable: window=\(expandedFrame.height), content=\(expandedDocument.frame.height), limit=\(maximumHeight)")
         delegate.store.message = ""
         try await Task.sleep(for: .milliseconds(300))
-        assert(abs(detail.frame.height - soundFrame.height) < 1 && abs(detail.frame.maxY - expandedFrame.maxY) < 1,
-               "Removing content must shrink the native window while keeping its top anchored")
+        assert(abs(detail.frame.height - soundFrame.height) < 1 && abs(detail.frame.maxY - soundFrame.maxY) < 1,
+               "Removing content must shrink the native window and preserve alignment with the overview panel")
         let formerTail = CGPoint(x: detail.frame.midX, y: detail.frame.minY - 10)
         assert(expandedFrame.contains(formerTail) && !detail.frame.contains(formerTail))
         delegate.handlePanelMouseDown(at: formerTail)
@@ -139,9 +144,22 @@ import AppKit
         assert(!delegate.store.panelVisible, "The actual Space observer must close when there is no permission prompt")
 
         delegate.panel?.orderOut(nil)
+        // Inline cancellation takes priority over dismissing the detail surface.
+        delegate.store.detailSection = .wifi
+        delegate.store.wifi.passwordRequest = WiFiChoice(network: CWNetwork(), name: "Inline form")
+        delegate.store.wifi.busy = true
+        delegate.handleDetailEscape()
+        assert(delegate.store.wifi.passwordRequest != nil && delegate.store.detailSection == .wifi,
+               "A busy form cannot be cancelled or dismissed by Esc")
+        delegate.store.wifi.busy = false
+        delegate.handleDetailEscape()
+        assert(delegate.store.wifi.passwordRequest == nil && delegate.store.detailSection == .wifi,
+               "First Esc must cancel the inline form and keep the detail window")
+        delegate.handleDetailEscape()
+        assert(delegate.store.detailSection == nil, "Next Esc must close the detail window")
         delegate.store.stop()
         NSStatusBar.system.removeStatusItem(delegate.status)
-        print("PASS: non-key outside click, internal/detail/icon clicks, long permission protection, resolution, application switching, explicit close and group animation")
+        print("PASS: non-key outside click, internal/detail/icon clicks, long permission protection, resolution, application switching, explicit close, inline Escape priority and group animation")
     }
 
     private static func require<T>(_ value: T?) throws -> T {

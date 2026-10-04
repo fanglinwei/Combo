@@ -1,13 +1,7 @@
 import SwiftUI
-#if canImport(Inject)
-import Inject
-#endif
 
 struct ComboIcon: View {
-#if canImport(Inject)
-    @ObserveInjection var inject
     @ObservedObject private var localization = Localization.shared
-#endif
     let snapshot: Snapshot
     let animate: Bool
     var size: CGFloat = 100

@@ -38,9 +38,22 @@ import Combine
         assert(message.string == "正在连接 电池 %@ 100%…")
         assert(battery.string == "电量 80%")
         assert(L("设置…") == "设置…")
+        // Existing settings feedback must resolve again after a language change.
+        let loginFeedback: LocalizedText = "请在系统设置的登录项中允许 Combo。"
+        let settingsErrors: [String: LocalizedText] = [
+            "wifi": "无法打开系统设置，请手动进入对应页面。",
+            "menu": "无法打开菜单栏设置，请手动进入系统设置。",
+            "sound": "无法打开系统声音设置，请手动进入系统设置。"
+        ]
+        assert(loginFeedback.string == "请在系统设置的登录项中允许 Combo。")
+        assert(settingsErrors["wifi"]?.string == "无法打开系统设置，请手动进入对应页面。")
         let region = Locale.autoupdatingCurrent.identifier
         shared.selection = .english
         assert(L("设置…") == "Settings…")
+        assert(loginFeedback.string == "Allow Combo in Login Items in System Settings.")
+        assert(settingsErrors["wifi"]?.string == "Could not open System Settings. Navigate to the relevant page manually.")
+        assert(settingsErrors["menu"]?.string == "Could not open Menu Bar Settings. Open System Settings manually.")
+        assert(settingsErrors["sound"]?.string == "Could not open System Sound Settings. Open System Settings manually.")
         assert(message.string == "Connecting to 电池 %@ 100%…")
         assert(battery.string == "Battery 80%")
         assert(device.string == name, "External names must stay verbatim even when they match a translation key")
@@ -49,6 +62,9 @@ import Combine
         assert(combined.string == "Connecting to 电池 %@ 100%…\nBattery 80%")
         shared.selection = .simplifiedChinese
         assert(combined.string == "正在连接 电池 %@ 100%…\n电量 80%")
+        assert(loginFeedback.string == "请在系统设置的登录项中允许 Combo。")
+        assert(settingsErrors["menu"]?.string == "无法打开菜单栏设置，请手动进入系统设置。")
+        assert(settingsErrors["sound"]?.string == "无法打开系统声音设置，请手动进入系统设置。")
         assert(Locale.autoupdatingCurrent.identifier == region, "Language changes must preserve the system region")
 
         func strings(_ language: String, table: String) throws -> [String: String] {
@@ -79,6 +95,6 @@ import Combine
             let info = try strings(language, table: "InfoPlist")
             assert(Set(info.keys) == ["NSLocationUsageDescription", "NSLocationWhenInUseUsageDescription", "NSBluetoothAlwaysUsageDescription", "NSLocalNetworkUsageDescription"])
         }
-        print("PASS: language matching, persistence, invalid preference fallback, live messages, verbatim names, interpolation, unchanged region, \(english.count) bilingual entries and permission descriptions")
+        print("PASS: language matching, persistence, invalid preference fallback, live messages and stored settings feedback, verbatim names, interpolation, unchanged region, \(english.count) bilingual entries and permission descriptions")
     }
 }

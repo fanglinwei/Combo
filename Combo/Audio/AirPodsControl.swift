@@ -94,8 +94,9 @@ struct AirPodsReply: Decodable, Equatable {
          timeoutSeconds: Double = 5) {
         self.helperURL = helperURL; self.libraryURL = libraryURL; self.timeoutSeconds = timeoutSeconds
     }
-    func refresh(deviceID: UInt32) {
-        run(["--status"], deviceID: deviceID, mutation: false)
+    func refresh(deviceID: UInt32, target: String? = nil) {
+        let arguments = target.map { ["--status", String(deviceID), $0] } ?? ["--status"]
+        run(arguments, deviceID: deviceID, target: target, mutation: false)
     }
     func setMode(_ mode: ListeningMode) {
         guard !busy, !unavailable, let snapshot, snapshot.canSetMode, snapshot.modes.contains(mode), snapshot.mode != mode else { return }
@@ -110,9 +111,9 @@ struct AirPodsReply: Decodable, Equatable {
     private func write(_ command: String, _ value: String, snapshot: AirPodsReply) {
         guard !busy, !unavailable else { return }
         if refreshing { stopProcess() }
-        run([command, value, String(snapshot.deviceID), snapshot.target], deviceID: snapshot.deviceID, mutation: true)
+        run([command, value, String(snapshot.deviceID), snapshot.target], deviceID: snapshot.deviceID, target: snapshot.target, mutation: true)
     }
-    private func run(_ arguments: [String], deviceID: UInt32, mutation: Bool) {
+    private func run(_ arguments: [String], deviceID: UInt32, target: String?, mutation: Bool) {
         guard process == nil else { return }
         refreshing = !mutation
         if mutation { busy = true; message = "正在确认耳机状态…" }
@@ -130,7 +131,8 @@ struct AirPodsReply: Decodable, Equatable {
                 defer { if mutation { self.clearPending() } }
                 self.timeout?.cancel(); self.timeout = nil; self.process = nil; self.refreshing = false
                 if self.busy { self.busy = false }
-                guard let reply, reply.valid, reply.deviceID == deviceID else {
+                guard let reply, reply.valid, reply.deviceID == deviceID,
+                      target == nil || reply.target == target else {
                     if !mutation { self.snapshot = nil }
                     self.unavailable = true
                     if mutation { self.message = "未能确认结果，请刷新或在声音设置中检查。" }

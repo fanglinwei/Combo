@@ -1,5 +1,6 @@
 import AppKit
 import ApplicationServices
+import IOKit.ps
 
 enum MenuIconState: String {
     var title: String { LKey(rawValue) }
@@ -10,92 +11,120 @@ enum MenuIconState: String {
     @Published var states: [String: MenuIconState] = [:]
     @Published var busy = false
     @Published var message: LocalizedText = "尚未读取系统设置；结果只作辅助确认。"
-    @Published var needsRecovery = UserDefaults.standard.bool(forKey: "menuSetupSessionActive")
-    private let ids = ["wifi": "controlcenter-wifi-id", "battery": "controlcenter-battery-id", "sound": "controlcenter-sound-id"]
+    @Published private(set) var baseline: [String: Bool]
+    @Published private(set) var recordedAt: Date?
+    @Published private(set) var failedKeys: Set<String> = []
+    private let defaults: UserDefaults
+    private let ids: [String: String]
     private let baselineKey = "menuSetupBaseline"
-    private let activeKey = "menuSetupSessionActive"
-    private let menuBarURL = URL(string: "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension?MenuBar")!
+    private let dateKey = "menuSetupRecordedAt"
+    private let menuBarURL = URL(string: "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension?MenuBar")
+    var hasBaseline: Bool { Set(baseline.keys).isSuperset(of: ids.keys) }
+    var supportedKeys: [String] { ["wifi", "sound", "battery"].filter { ids[$0] != nil } }
+
+    init(defaults: UserDefaults = .standard, hasInternalBattery: Bool? = nil) {
+        self.defaults = defaults
+        let hasBattery = hasInternalBattery ?? Self.hasBattery()
+        var ids = ["wifi": "controlcenter-wifi-id", "sound": "controlcenter-sound-id"]
+        if hasBattery { ids["battery"] = "controlcenter-battery-id" }
+        self.ids = ids
+        baseline = defaults.dictionary(forKey: "menuSetupBaseline") as? [String: Bool] ?? [:]
+        recordedAt = defaults.object(forKey: "menuSetupRecordedAt") as? Date
+    }
+
+    private static func hasBattery() -> Bool {
+        guard let info = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let sources = IOPSCopyPowerSourcesList(info)?.takeRetainedValue() as? [CFTypeRef] else { return false }
+        return sources.contains { source in
+            let description = IOPSGetPowerSourceDescription(info, source)?.takeUnretainedValue() as? [String: Any]
+            return description?[kIOPSTypeKey] as? String == kIOPSInternalBatteryType
+        }
+    }
 
     func openWithoutCapture() -> Bool {
-        if NSWorkspace.shared.open(menuBarURL) { return true }
+        if let menuBarURL, NSWorkspace.shared.open(menuBarURL) { return true }
         guard let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.systempreferences") else { return false }
         return NSWorkspace.shared.open(app)
     }
 
+    /// Only a complete, explicitly requested read establishes the first baseline.
+    @discardableResult func recordBaseline(_ values: [String: Bool]) -> Bool {
+        guard !hasBaseline else { return true }
+        guard Set(values.keys).isSuperset(of: ids.keys) else { return false }
+        baseline = values.filter { ids[$0.key] != nil }
+        recordedAt = Date()
+        defaults.set(baseline, forKey: baselineKey)
+        defaults.set(recordedAt, forKey: dateKey)
+        return true
+    }
+
     func openAndCapture() {
-        guard NSWorkspace.shared.open(menuBarURL) else { message = "无法打开菜单栏设置。请手动进入“系统设置 → 菜单栏”。"; return }
+        guard !busy else { return }
+        guard AXIsProcessTrusted() else { message = "读取图标显示设置需要辅助功能权限。"; return }
+        guard openWithoutCapture() else { message = "无法打开菜单栏设置。请手动进入“系统设置 → 菜单栏”。"; return }
         busy = true
         Task {
-            let values = await waitForValues()
-            busy = false
+            let values = await waitForValues(keys: Set(ids.keys))
             updateStates(values)
-            guard values.count == ids.count else {
-                message = "已打开系统设置，但无法完整读取三项；请手动确认，Combo 不会猜测原始状态。"
+            busy = false
+            guard recordBaseline(values) else {
+                message = "无法完整读取适用项目，未记录；请手动确认，Combo 不会猜测原始状态。"
                 return
             }
-            if UserDefaults.standard.bool(forKey: activeKey) {
-                message = "已保留首次记录的原始状态；请修改系统设置后点“重新检测”。"
-                return
-            }
-            UserDefaults.standard.set(values, forKey: baselineKey)
-            UserDefaults.standard.set(true, forKey: activeKey)
-            message = "已记录三项原始设置。请在系统设置中亲自关闭想合并的图标，返回后点“重新检测”。"
+            message = "已保留首次记录的设置。请手动隐藏图标，返回后重新检测；记录前已隐藏的项目不会被猜成显示。"
         }
     }
 
     func check() {
+        guard !busy else { return }
         busy = true
         Task {
             let values = readValues()
-            busy = false
             updateStates(values)
+            busy = false
             message = values.count == ids.count ? "已读取系统设置的勾选状态；仍请在菜单栏上人工确认。" : "无法完整读取设置；请先打开“系统设置 → 菜单栏”，并确认辅助功能权限。"
         }
     }
 
-    func restore() async -> Bool {
-        guard let original = UserDefaults.standard.dictionary(forKey: baselineKey) as? [String: Bool], original.count == ids.count else {
-            message = "没有完整的原始状态记录，请在系统设置中手动恢复。"
-            return false
-        }
-        guard AXIsProcessTrusted(), NSWorkspace.shared.open(menuBarURL) else {
-            message = "无法自动恢复；请授权辅助功能并在系统设置中手动恢复。"
+    /// Retry targets only the items that failed verification; the baseline survives both outcomes.
+    func restore(retryOnly: Bool = false) async -> Bool {
+        guard !busy, hasBaseline else { message = "没有完整的原始状态记录，请在系统设置中手动恢复。"; return false }
+        let keys = retryOnly ? failedKeys : Set(ids.keys)
+        guard !keys.isEmpty else { return true }
+        guard AXIsProcessTrusted(), openWithoutCapture() else {
+            message = "无法恢复；请检查辅助功能权限和系统菜单栏设置。"
             return false
         }
         busy = true
-        let before = await waitForValues()
-        guard let changes = menuBarRestoreKeys(original: original, current: before, keys: Set(ids.keys)) else {
-            busy = false
-            message = "无法完整读取三项设置，未作修改；请手动恢复。"
+        defer { busy = false }
+        let before = await waitForValues(keys: keys)
+        guard let changes = menuBarRestoreKeys(original: baseline, current: before, keys: keys) else {
+            failedKeys.formUnion(keys)
+            message = "无法完整读取待恢复项目，未作修改；请重试或手动恢复。"
             return false
         }
-        var failed = false
         for key in changes {
-            guard let identifier = ids[key] else { continue }
-            guard let desired = original[key], let (element, current) = findCheckbox(identifier) else { failed = true; continue }
-            if current != desired && AXUIElementPerformAction(element, kAXPressAction as CFString) != .success { failed = true }
+            guard let identifier = ids[key], let desired = baseline[key],
+                  let (element, current) = findCheckbox(identifier) else { continue }
+            if current != desired { _ = AXUIElementPerformAction(element, kAXPressAction as CFString) }
         }
         try? await Task.sleep(for: .milliseconds(300))
         let verified = readValues()
         updateStates(verified)
-        busy = false
-        let complete = !failed && ids.keys.allSatisfy { verified[$0] == original[$0] }
-        if complete {
-            UserDefaults.standard.removeObject(forKey: activeKey)
-            needsRecovery = false
-            message = "已恢复到首次记录的菜单栏图标状态。"
+        failedKeys.subtract(keys)
+        failedKeys.formUnion(keys.filter { verified[$0] != baseline[$0] })
+        if failedKeys.isEmpty {
+            message = "已恢复到记录的菜单栏图标设置；记录仍保留。"
         } else {
-            UserDefaults.standard.set(true, forKey: activeKey)
-            needsRecovery = true
-            message = "自动恢复未能确认成功；请在“系统设置 → 菜单栏”手动检查三项。"
+            message = "部分项目未能确认恢复；可只重试失败项，也可在系统设置中手动检查。"
         }
-        return complete
+        return failedKeys.isEmpty
     }
 
-    private func waitForValues() async -> [String: Bool] {
+    private func waitForValues(keys: Set<String>) async -> [String: Bool] {
         for _ in 0..<4 {
             let values = readValues()
-            if values.count == ids.count { return values }
+            if Set(values.keys).isSuperset(of: keys) { return values }
             try? await Task.sleep(for: .milliseconds(350))
         }
         return readValues()

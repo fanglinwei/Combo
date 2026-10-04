@@ -16,11 +16,23 @@ import IOKit.ps
     @Published var chargeLimit: ChargeLimit = .unknown
     @Published var displayThreshold: Int {
         didSet {
-            UserDefaults.standard.set(displayThreshold, forKey: "batteryDisplayThreshold")
+            defaults.set(displayThreshold, forKey: "batteryDisplayThreshold")
+            if displayThreshold > 0 { lastDisplayThreshold = displayThreshold }
             onDisplayThresholdChange?()
         }
     }
-    @Published var energyAppLimit: Int { didSet { UserDefaults.standard.set(EnergyApps.displayLimit(energyAppLimit), forKey: "energyAppLimit") } }
+    @Published private(set) var lastDisplayThreshold: Int {
+        didSet { defaults.set(lastDisplayThreshold, forKey: "batteryLastDisplayThreshold") }
+    }
+    var displayEnabled: Bool {
+        get { displayThreshold > 0 }
+        set {
+            if !newValue, displayThreshold > 0 { lastDisplayThreshold = displayThreshold }
+            displayThreshold = newValue ? lastDisplayThreshold : 0
+        }
+    }
+    private let defaults: UserDefaults
+    @Published var energyAppLimit: Int { didSet { defaults.set(EnergyApps.displayLimit(energyAppLimit), forKey: "energyAppLimit") } }
     let energyApps = EnergyApps()
     let powerMode = PowerModeControl()
     let chargeControl = ChargeControl()
@@ -45,9 +57,12 @@ import IOKit.ps
         guard canRequestFullCharge(scene: scene), case .value(let limit) = chargeLimit else { return }
         chargeControl.request(expectedLimit: limit) { [weak self] in self?.refreshBattery() }
     }
-    init() {
-        displayThreshold = min(100, max(0, UserDefaults.standard.object(forKey: "batteryDisplayThreshold") as? Int ?? 50))
-        energyAppLimit = EnergyApps.displayLimit(UserDefaults.standard.object(forKey: "energyAppLimit") as? Int ?? 1)
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        let threshold = min(100, max(0, defaults.object(forKey: "batteryDisplayThreshold") as? Int ?? 20))
+        displayThreshold = threshold
+        lastDisplayThreshold = threshold > 0 ? threshold : min(100, max(1, defaults.object(forKey: "batteryLastDisplayThreshold") as? Int ?? 20))
+        energyAppLimit = EnergyApps.displayLimit(defaults.object(forKey: "energyAppLimit") as? Int ?? 1)
     }
     func start() {
         batterySource = IOPSNotificationCreateRunLoopSource({ context in

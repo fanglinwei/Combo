@@ -3,6 +3,7 @@ set -eu
 cd "${0:A:h}"
 export DEVELOPER_DIR="${COMBO_DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 ./build.sh
+python3 Tests/PanelLocalizationCheck.py
 SDK="$(xcrun --sdk macosx --show-sdk-path)"
 TARGET="$(uname -m)-apple-macosx26.0"
 APP="$(xcodebuild -project Combo.xcodeproj -scheme Combo -configuration Debug -destination "platform=macOS,arch=$(uname -m)" -showBuildSettings -json | python3 -c 'import json,sys; s=json.load(sys.stdin)[0]["buildSettings"]; print(s["TARGET_BUILD_DIR"] + "/" + s["FULL_PRODUCT_NAME"])')"
@@ -12,7 +13,13 @@ PRODUCTS="${APP:h}"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library -I "$PRODUCTS" Tests/PanelMotionCheck.swift "$APP/Contents/MacOS/Combo.debug.dylib" -Xlinker -rpath -Xlinker "$APP/Contents/MacOS" -o "$OUT/panel-motion-check"
 "$OUT/panel-motion-check"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library -I "$PRODUCTS" Tests/PanelDismissCheck.swift "$APP/Contents/MacOS/Combo.debug.dylib" -Xlinker -rpath -Xlinker "$APP/Contents/MacOS" -o "$OUT/panel-dismiss-check"
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library -I "$PRODUCTS" Tests/PanelDesignCheck.swift "$APP/Contents/MacOS/Combo.debug.dylib" -Xlinker -rpath -Xlinker "$APP/Contents/MacOS" -o "$OUT/panel-design-check"
+"$OUT/panel-design-check"
 "$OUT/panel-dismiss-check"
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library -I "$PRODUCTS" Tests/DetailFeedbackCheck.swift "$APP/Contents/MacOS/Combo.debug.dylib" -Xlinker -rpath -Xlinker "$APP/Contents/MacOS" -o "$OUT/detail-feedback-check"
+"$OUT/detail-feedback-check"
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library -I "$PRODUCTS" Tests/SettingsPreferencesCheck.swift "$APP/Contents/MacOS/Combo.debug.dylib" -Xlinker -rpath -Xlinker "$APP/Contents/MacOS" -o "$OUT/settings-preferences-check"
+"$OUT/settings-preferences-check"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library -I "$PRODUCTS" Tests/MediaBarsCheck.swift "$APP/Contents/MacOS/Combo.debug.dylib" -Xlinker -rpath -Xlinker "$APP/Contents/MacOS" -o "$OUT/media-bars-check"
 "$OUT/media-bars-check"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" Combo/App/Localization.swift Combo/App/State.swift Combo/Audio/OutputDevice.swift Tests/main.swift -o "$OUT/state-check"
@@ -31,6 +38,14 @@ xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Co
 "$OUT/wifi-control-check"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/Onboarding/OnboardingState.swift Tests/OnboardingCheck.swift -o "$OUT/onboarding-check"
 "$OUT/onboarding-check"
+GUIDE_CHECK_APP="$OUT/OnboardingDesignCheck.app"
+mkdir -p "$GUIDE_CHECK_APP/Contents/MacOS" "$GUIDE_CHECK_APP/Contents/Resources"
+cp -R "$APP/Contents/Resources/en.lproj" "$APP/Contents/Resources/zh-Hans.lproj" "$APP/Contents/Resources/Assets.car" "$APP/Contents/Resources/AppIcon.icns" "$GUIDE_CHECK_APP/Contents/Resources/"
+cat > "$GUIDE_CHECK_APP/Contents/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>local.combo.onboarding-design-check</string><key>CFBundleExecutable</key><string>OnboardingDesignCheck</string></dict></plist>
+PLIST
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library -I "$PRODUCTS" Tests/OnboardingDesignCheck.swift "$APP/Contents/MacOS/Combo.debug.dylib" -Xlinker -rpath -Xlinker "$APP/Contents/MacOS" -o "$GUIDE_CHECK_APP/Contents/MacOS/OnboardingDesignCheck"
+"$GUIDE_CHECK_APP/Contents/MacOS/OnboardingDesignCheck"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/Network/HotspotControl.swift Tests/HotspotControlCheck.swift -o "$OUT/hotspot-control-check"
 "$OUT/hotspot-control-check"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/App/Localization.swift Combo/App/State.swift Combo/Audio/OutputDevice.swift Combo/Battery/ChargeControl.swift Tests/ChargeControlCheck.swift -o "$OUT/charge-control-check"

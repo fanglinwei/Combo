@@ -13,22 +13,22 @@
 
 ## 运行
 
-用 Xcode 打开 `Combo.xcodeproj` 并运行 Combo scheme，或在终端执行 `./build.sh` 后打开 Xcode 的 DerivedData/Build/Products/Debug/Combo.app。Debug 运行时自动打开设置窗口；Release 首次启动会打开引导（找到并点开菜单栏图标 → 按需整理菜单栏 → 按需授权 → 完成页可选“登录时启动”）。每步都可以“稍后再说”，进度会保留，之后可从「设置 → 通用 → 重新查看首次使用引导」继续。关闭窗口后菜单栏图标继续运行；点击菜单栏图标可操作三项功能。退出使用设置页或弹窗中的“退出 Combo”，也可按 Command-Q。
+用 Xcode 打开 `Combo.xcodeproj` 并运行 Combo scheme，或在终端执行 `./build.sh` 后打开 Xcode 的 DerivedData/Build/Products/Debug/Combo.app。Debug 运行时自动打开设置窗口；Release 首次启动会打开引导（找到并点开菜单栏图标 → 按需整理菜单栏 → 按需授权 → 完成页可选“登录时启动”）。每步都可以“稍后再说”，进度会保留，之后可从「设置 → 通用 → 查看引导」继续。关闭窗口后菜单栏图标继续运行；点击菜单栏图标可操作三项功能。退出使用设置页或弹窗中的“退出 Combo”，也可按 Command-Q。
 
 ## 可以体验
 
 - 电池电量、电源来源、充电状态、当前充电上限、低电量模式及系统提供的粗略健康状态；主面板可经系统授权切换当前电源类型的能耗模式，保留另一电源类型的设置；确认手动上限暂停充电时可“立即充满电”，临时恢复由 macOS 管理；电池设置和活动监视器入口。
 - Wi‑Fi 电源开关、当前 SSID、已知网络与可展开的其他网络、RSSI 信号等级和基础安全提示；按需定位授权后扫描与连接。个人热点显示手机名称、电量和蜂窝信号等级，点击后转交系统 Wi‑Fi 设置连接；企业认证也使用系统设置。点击已知网络时可按需使用系统钥匙串密码；设置中提供请求开关与授权说明。手动输入的密码默认在连接成功后存入本机 Combo 钥匙串，可取消记住或删除，不上传服务器。
 - 系统默认输出设备选择、主通道/左右声道音量与静音控制；AirPods 左右耳电量、通透/自适应/降噪、对话感知已接入。蓝牙类别复用已授权 helper 的 CoD 与名称，AirPlay 已建立路由可读取名称/机型；附近 AirPlay 设备首次点击“查找”后浏览，选择转交系统声音设置。设备列表支持展开/收起耳机选项；不监控空间音频，完整设置保留系统入口。实机范围与验证命令见 [声音与 AirPods](docs/airpods-audio-feasibility.md)。
-- 「通用」页的手动隐藏区域直达 macOS“菜单栏”设置，读取三项勾选状态；无法读取时明确显示“无法判断”。用户自行关闭系统图标。
-- 设置窗口包含通用、外观与动效、系统菜单整合、媒体来源、实验性项目、关于与帮助六组导航；外观页可独立选择蓝色、紫色或暖金色主题及跟随系统、浅色或深色模式，并预览示例场景，媒体页显示播放检测状态并可演示音柱。
-- 记录首次读到的三项状态，正常退出时尝试恢复；失败会提示手动检查，异常退出后下次启动提示恢复。
+- 「菜单栏与控制」页提供系统图标隐藏指引，复用引导前后对比图。用户先记录当前适用项目的勾选，再在系统设置中手动隐藏；未授权或读取失败不会猜测状态。
+- 设置窗口包含通用、外观与动效、菜单栏与控制、媒体来源、实验性项目、关于与帮助六页。共用玻璃侧栏、按钮与稳定内容组；主题支持蓝/紫/暖金及系统/深浅外观。场景选择只改变窗口内预览，明确开始后才在菜单栏演示；演示状态跨页常显，关闭设置窗口结束。媒体页保留现有播放卡片，并提供系统声音设置入口。
+- 系统图标只在完整读取适用项目后记录首份基线；已有记录不覆盖。只有用户点击并确认恢复才修改系统设置，失败项可单独重试；退出和下次启动均不自动恢复。新用户低电量阈值 20%，旧值保留，关闭后重开恢复上次阈值。
 - 登录时启动调用系统 SMAppService，只有用户主动开启才注册。
 
 ## 尚未接入与技术限制
 
 - 充电上限后台只读 `pmset -g battlimit`，只展示有效且一致的手动限制，读取失败、未知策略或不同上限显示无法判断；不是持久偏好值。到达上限提示还依赖 IORegistry 的社区已观察字段 `NotChargingReason` bit 24，跨系统版本可能不可用。无管理员 helper，不修改充电控制；参考 [Ampere](https://github.com/az-code-lab/ampere/blob/master/Sources/Shared/NativeChargeLimit.swift) 和 [OpenDente](https://github.com/killerk3emstar/OpenDente/blob/main/OpenDente/Models/BatteryState.swift)。
-- 「实验性项目」收纳自动折叠预选、8 秒单项实验、立即恢复和原生菜单诊断。自动折叠仍未启用：旧私有接口会同时隐藏 Combo。系统图标设置会持久保存；恢复依赖辅助功能权限和系统设置界面，异常退出后不能保证自动恢复。
+- 「实验性项目」收纳自动折叠预选、8 秒单项实验、立即释放限制和只读菜单诊断。自动折叠仍未启用：旧私有接口会同时隐藏 Combo。系统图标设置会持久保存；恢复依赖辅助功能权限和系统设置界面，退出及下次启动不自动恢复；用户可在设置中明确恢复已记录的值。
 - Wi‑Fi 网络名称需要定位权限；本地 ad-hoc 重新编译可能使权限授权失效。连接网络、切换输出设备和设置状态恢复仍需在不同硬件与权限状态下实机回归。
 - 媒体检测枚举系统注册的媒体客户端并聚合播放状态，任一客户端播放时启用原有底部音柱；暂停、停止或读取失败时恢复圆点，音量为零或静音时优先显示原有静音图标。主面板读取当前媒体的标题、作者、来源和可用封面，提供上一首、播放／暂停、下一首；暂停后保留媒体卡，直到系统媒体会话结束。锁屏/休眠时停止检测，唤醒后恢复。不录音、不读取网页。
 - 媒体读取使用隔离的 `MediaPlaybackHelper.m` 与系统 Perl，参考 [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter) 的加载机制；不是公开 API 的兼容性承诺。每秒查询一次全部已注册媒体客户端，单次超时 2 秒，宿主设 5 秒看门狗并处理退出/失效。未向系统注册的播放器不能识别；每个客户端查询默认播放器，多播放器子会话仍需实机验证。普通通知音不注册媒体会话；已显式排除 FaceTime、微信、QQ、Teams、Zoom、Discord 等通讯来源，但浏览器内通话及未知通讯应用仍需验证，不能保证语义分类覆盖所有应用。
@@ -49,13 +49,9 @@
 ./verify.sh
 ```
 
-`build.sh` 调用 Xcode 27 构建 Debug 应用；`COMBO_CONFIGURATION=Release ./build.sh` 构建 Release。目标系统仍为 macOS 26.0。`verify.sh` 运行状态、Helper、图标与签名检查，并纳入 `AirPlayRouteCheck` / `AirPlayDiscoveryCheck`，覆盖取消、过期回复、切换、超时、权限/网络错误及模拟面板失焦。Xcode 从 GitHub 获取 InjectionNext 2.0.1 和 Inject 1.6.0；`Combo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` 固定版本。首次构建需要访问 GitHub，包括 InjectionNext 的 Git 子模块。
+`build.sh` 调用 Xcode 27 构建 Debug 应用；`COMBO_CONFIGURATION=Release ./build.sh` 构建 Release。目标系统仍为 macOS 26.0。`verify.sh` 运行状态、Helper、图标与签名检查，并纳入 `AirPlayRouteCheck` / `AirPlayDiscoveryCheck`，覆盖取消、过期回复、切换、超时、权限/网络错误及模拟面板失焦。项目使用系统框架构建，无需下载第三方 Swift 包。
 
-### SwiftUI 热重载
-
-安装 [InjectionNext 2.0.1](https://github.com/johnno1962/InjectionNext/releases/tag/2.0.1) 到 `/Applications`，退出 Xcode，然后从 InjectionNext 菜单栏图标选择 **Launch Xcode**。在 Xcode 里运行 Combo 的 Debug scheme；InjectionNext 图标变橙色表示应用已连接。若保存文件后没有检测到改动，在 InjectionNext 中选择 **...or Watch Project** 并指定仓库根目录。保存 `Combo/Views/` 或 `Combo/Rendering/` 中的 SwiftUI 视图实现后，InjectionNext 会编译改动并注入运行中的应用。属性布局、函数签名等结构性修改仍需重新构建运行。Debug 配置含 `-interposable`，并关闭沙盒与强化运行时以允许代码注入；Release 不设置注入链接参数。
-
-历史构建、状态测试与代码签名校验通过；本轮音频异步与发现修改的结果以实际 `./verify.sh` 输出为准，HomePod、多设备、AirPlay 1、macOS 26、蓝牙 CoD 及真实本地网络弹窗尚未完成实机回归。在 macOS 27.0 开发机此前检查三合一面板与 Wi‑Fi、声音、电池系统设置跳转。Wi‑Fi 实际连接、输出设备切换、钥匙串写入、辅助功能读取及退出恢复尚未完成实机验证。
+历史构建、状态测试与代码签名校验通过；本轮音频异步与发现修改的结果以实际 `./verify.sh` 输出为准，HomePod、多设备、AirPlay 1、macOS 26、蓝牙 CoD 及真实本地网络弹窗尚未完成实机回归。在 macOS 27.0 开发机此前检查三合一面板与 Wi‑Fi、声音、电池系统设置跳转。Wi‑Fi 实际连接、输出设备切换、钥匙串写入、辅助功能读取及手动图标恢复尚未完成实机验证。
 
 2026-09-24 Wi‑Fi 面板：普通网络留在 Combo，个人热点现通过只读发现展示手机名称、电量和蜂窝信号等级，点击直达系统 Wi‑Fi 设置（本机 AX 点击系统菜单项未能确认展开，因此不启用这条路径）。系统设置中已确认个人热点列表可见；示例数据检查了列表展开、密码表单与企业认证提示。`Tests/WiFiControlCheck.swift` 覆盖同名不同安全类型隔离、保留当前 BSSID、RSSI 未知值与基础安全分类，已接入构建。扫描仅在打开面板或手动刷新时进行，面板活跃期间每 10 秒刷新连接状态。已知网络来自 CoreWLAN 配置；点击已知的普通加密网络时，可用 `CWKeychainFindWiFiPassword` 按所选 SSID 获取系统密码，仅用于此次连接，不复制到 Combo 存储；旧版 Combo 仅按名称存储的密码不会自动复用，新条目按安全类型和名称保存，旧条目保留。低安全性提示仅基于协议类型，不承诺与系统全部规则一致；本轮没有切换真实网络或写入真实 Wi‑Fi 密码。
 

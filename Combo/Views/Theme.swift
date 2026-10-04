@@ -31,6 +31,7 @@ private func themeColor(_ rgb: UInt32) -> Color {
           blue: Double(rgb & 0xFF) / 255)
 }
 struct ComboPalette {
+    var primaryText: Color { isDark ? .white : .black }
     let canvasTop: Color
     let canvasBottom: Color
     let surface: Color
@@ -95,5 +96,232 @@ enum ComboAppearance: String, CaseIterable, Identifiable {
     }
     var nsAppearance: NSAppearance? {
         switch self { case .system: nil; case .light: NSAppearance(named: .aqua); case .dark: NSAppearance(named: .darkAqua) }
+    }
+}
+
+// Panel and detail specifications: one surface, content wells, and one optional floating layer.
+enum PanelGeometry {
+    static let radius: CGFloat = 22
+    static let inset: CGFloat = 18
+    static let cardRadius: CGFloat = 16
+    static let cardInset: CGFloat = 12
+    static let groupSpacing: CGFloat = 18
+}
+
+struct PanelSurface: ViewModifier {
+    @Environment(\.comboPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+    var tinted = false
+    var radius: CGFloat = PanelGeometry.radius
+
+    func body(content: Content) -> some View {
+        content.background {
+            let shape = RoundedRectangle(cornerRadius: radius)
+            ZStack {
+                if reduceTransparency {
+                    shape.fill(tinted ? palette.canvasBottom : Color(nsColor: .windowBackgroundColor))
+                } else {
+                    shape.fill(.regularMaterial)
+                    if tinted {
+                        shape.fill(LinearGradient(colors: [palette.canvasTop.opacity(0.72), palette.canvasBottom.opacity(0.82)],
+                                                  startPoint: .topLeading, endPoint: .bottomTrailing))
+                    }
+                    shape.strokeBorder(LinearGradient(colors: [.white.opacity(colorScheme == .dark ? 0.30 : 0.85),
+                                                               .white.opacity(0.14), .black.opacity(colorScheme == .dark ? 0.22 : 0.06)],
+                                                      startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+                    shape.inset(by: 1).strokeBorder(.white.opacity(colorScheme == .dark ? 0.14 : 0.60), lineWidth: 0.5)
+                }
+                if contrast == .increased { shape.strokeBorder(Color.primary, lineWidth: 1) }
+            }
+        }
+    }
+}
+
+struct DetailWell: ViewModifier {
+    @Environment(\.comboPalette) private var palette
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    func body(content: Content) -> some View {
+        content.frame(maxWidth: .infinity, alignment: .leading).padding(16)
+            .background {
+                let shape = RoundedRectangle(cornerRadius: PanelGeometry.cardRadius)
+                if reduceTransparency { shape.fill(Color(nsColor: .controlBackgroundColor)) }
+                shape.fill(LinearGradient(colors: [palette.accent.opacity(0.15), palette.accent.opacity(0.05)],
+                                          startPoint: .topLeading, endPoint: .bottomTrailing))
+                shape.strokeBorder(contrast == .increased ? Color.primary : palette.accent.opacity(0.20), lineWidth: 1)
+            }
+    }
+}
+
+struct DetailFloating: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    func body(content: Content) -> some View {
+        Group {
+            if reduceTransparency {
+                content.background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+            } else {
+                content.glassEffect(.regular, in: RoundedRectangle(cornerRadius: 12))
+            }
+        }.overlay {
+            if contrast == .increased { RoundedRectangle(cornerRadius: 12).strokeBorder(Color.primary, lineWidth: 1) }
+        }
+    }
+}
+
+struct PanelRowSurface: ViewModifier {
+    @Environment(\.comboPalette) private var palette
+    @Environment(\.isEnabled) private var isEnabled
+    var hovered: Bool
+    var pressed = false
+
+    func body(content: Content) -> some View {
+        content.padding(.horizontal, 8).padding(.vertical, 6).frame(minHeight: 40)
+            .background(palette.primaryText.opacity(isEnabled ? (pressed ? 0.14 : hovered ? 0.09 : 0) : 0),
+                        in: RoundedRectangle(cornerRadius: 11))
+            .contentShape(RoundedRectangle(cornerRadius: 11))
+    }
+}
+
+struct PanelRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        RowBody(configuration: configuration)
+    }
+
+    private struct RowBody: View {
+        let configuration: ButtonStyle.Configuration
+        @State private var hovered = false
+
+        var body: some View {
+            configuration.label.modifier(PanelRowSurface(hovered: hovered, pressed: configuration.isPressed))
+                .onHover { hovered = $0 }
+        }
+    }
+}
+
+struct PanelButtonStyle: ButtonStyle {
+    @Environment(\.comboPalette) private var palette
+    @Environment(\.isEnabled) private var isEnabled
+    var prominent = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        PanelButtonBody(configuration: configuration, palette: palette, isEnabled: isEnabled, prominent: prominent)
+    }
+
+    private struct PanelButtonBody: View {
+        let configuration: ButtonStyle.Configuration
+        let palette: ComboPalette
+        let isEnabled: Bool
+        let prominent: Bool
+        @State private var hovered = false
+        var body: some View {
+            configuration.label
+                .font(.system(size: 12, weight: prominent ? .semibold : .regular))
+                .padding(.horizontal, 10).frame(minWidth: 28, minHeight: 28)
+                .foregroundStyle(prominent && isEnabled ? (palette.isDark ? Color.black : .white) : palette.mutedText)
+                .background {
+                    RoundedRectangle(cornerRadius: 9)
+                        .fill(prominent && isEnabled ? palette.accent : palette.primaryText.opacity(isEnabled ? (configuration.isPressed ? 0.18 : hovered ? 0.12 : 0.10) : 0.10))
+                }
+                .opacity(isEnabled ? 1 : 0.55)
+                .onHover { hovered = $0 }
+        }
+    }
+}
+
+struct PanelIconButtonStyle: ButtonStyle {
+    var size: CGSize = CGSize(width: 28, height: 28)
+    func makeBody(configuration: Configuration) -> some View {
+        IconBody(configuration: configuration, size: size)
+    }
+    private struct IconBody: View {
+        @Environment(\.comboPalette) private var palette
+        @Environment(\.isEnabled) private var isEnabled
+        let configuration: ButtonStyle.Configuration
+        let size: CGSize
+        @State private var hovered = false
+        var body: some View {
+            configuration.label.frame(width: size.width, height: size.height)
+                .background(palette.primaryText.opacity(isEnabled ? (configuration.isPressed ? 0.18 : hovered ? 0.12 : 0) : 0), in: RoundedRectangle(cornerRadius: 9))
+                .contentShape(Rectangle()).onHover { hovered = $0 }
+        }
+    }
+}
+
+struct DetailFacts: View {
+    @Environment(\.comboPalette) private var palette
+    let facts: [(String, String)]
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], alignment: .leading, spacing: 8) {
+            ForEach(facts.indices, id: \.self) { index in
+                HStack(spacing: 6) {
+                    Text(facts[index].0).foregroundStyle(palette.mutedText)
+                    Text(facts[index].1)
+                }.font(.system(size: 11)).accessibilityElement(children: .combine)
+            }
+        }
+    }
+}
+
+struct DetailSituation: View {
+    @Environment(\.comboPalette) private var palette
+    @Environment(\.panelReduceMotion) private var reduceMotion
+    let text: String
+    var busy = false
+    var warning = false
+    var actionTitle: String?
+    var action: (() -> Void)?
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            if busy { ProgressView().controlSize(.small) }
+            else { Image(systemName: warning ? "exclamationmark.triangle" : "info.circle").foregroundStyle(warning ? Color.orange : palette.mutedText) }
+            Text(text).font(.system(size: 11)).foregroundStyle(palette.mutedText).fixedSize(horizontal: false, vertical: true)
+            if let actionTitle, let action {
+                Spacer(minLength: 0)
+                Button(actionTitle, action: action).buttonStyle(PanelButtonStyle(prominent: true))
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading).padding(12).modifier(DetailFloating())
+            .transition(.opacity)
+            .animation(Motion.animation(reduceMotion ? Motion.reducedFade : Motion.detailResize), value: text)
+            .onChange(of: text) { _, value in
+                guard !value.isEmpty else { return }
+                AccessibilityNotification.Announcement(value).post()
+            }
+    }
+}
+
+struct DetailMore<Content: View>: View {
+    @Environment(\.panelReduceMotion) private var reduceMotion
+    @Environment(\.comboPalette) private var palette
+    @State private var expanded = false
+    @ViewBuilder var content: Content
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(reduceMotion ? nil : Motion.animation(0.16)) { expanded.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.right").rotationEffect(.degrees(expanded ? 90 : 0))
+                    Text(L("更多"))
+                }.font(.system(size: 12)).frame(minHeight: 28).contentShape(Rectangle())
+            }.buttonStyle(.plain).foregroundStyle(palette.mutedText)
+                .accessibilityValue(expanded ? L("已展开") : L("已收起"))
+            if expanded { content.font(.system(size: 11)).foregroundStyle(palette.mutedText) }
+        }
+    }
+}
+
+private struct PanelReduceMotionKey: EnvironmentKey {
+    static let defaultValue = false
+}
+extension EnvironmentValues {
+    var panelReduceMotion: Bool {
+        get { self[PanelReduceMotionKey.self] }
+        set { self[PanelReduceMotionKey.self] = newValue }
     }
 }

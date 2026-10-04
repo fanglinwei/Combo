@@ -82,6 +82,20 @@ import Combine
         assert(!control.busy, "Background polling must not disable and dim the AirPods controls")
         try await settle()
         assert(control.snapshot?.mode == .noiseCancellation && !control.unavailable)
+        let target = String(repeating: "a", count: 64)
+        let statusJSON = String(decoding: try JSONSerialization.data(withJSONObject: payload), as: UTF8.self)
+        try write("test \"$1\" = --status && test \"$2\" = 99 && test \"$3\" = '" + target + "' || exit 1\nprintf '%s' '" + statusJSON + "'")
+        control.refresh(deviceID: 99, target: target)
+        try await settle()
+        assert(control.snapshot?.deviceID == 99 && !control.unavailable, "Status reads must pass the caller ID and stable UID to the helper")
+        var otherDevice = payload; otherDevice["target"] = String(repeating: "b", count: 64)
+        try respond(otherDevice)
+        control.refresh(deviceID: 99, target: target)
+        try await settle()
+        assert(control.snapshot == nil && control.unavailable, "A reused numeric ID must not accept another device's UID")
+        try respond(payload)
+        control.refresh(deviceID: 99, target: target)
+        try await settle()
         var changes = 0
         let observation = control.objectWillChange.sink { changes += 1 }
         for _ in 0..<3 {

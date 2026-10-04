@@ -1,7 +1,4 @@
 import SwiftUI
-#if canImport(Inject)
-import Inject
-#endif
 
 enum WiFiGlyph {
     static let lineWidth: CGFloat = 4.6
@@ -36,9 +33,6 @@ enum WiFiGlyph {
 }
 
 struct WiFiIcon: View {
-#if canImport(Inject)
-    @ObserveInjection var inject
-#endif
     var level = 3
     var body: some View {
         Canvas { context, size in

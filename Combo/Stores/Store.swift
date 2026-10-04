@@ -64,6 +64,7 @@ enum SystemPermissionAlert {
     @Published var panelRevealed = false
     /// Which section's detail window is open, if any. The panel and the detail window both read it.
     @Published var detailSection: PanelSection?
+    @Published var detailRevealed = false
     private var hotspotActivity: AnyCancellable?
     private var nearbyAirPlayActivity: AnyCancellable?
     private var bluetoothActivity: AnyCancellable?
@@ -193,7 +194,7 @@ enum SystemPermissionAlert {
               let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return }
         NSWorkspace.shared.open(url)
     }
-    func openSystemSettings(_ section: String) {
+    @discardableResult func openSystemSettings(_ section: String) -> Bool {
         let extensionID: String
         switch section {
         case "wifi": extensionID = "com.apple.wifi-settings-extension"
@@ -203,9 +204,10 @@ enum SystemPermissionAlert {
         }
         guard let url = URL(string: "x-apple.systempreferences:\(extensionID)"), NSWorkspace.shared.open(url) else {
             message = "无法打开系统设置；请手动进入相应的 Wi‑Fi、电池或声音页面。"
-            return
+            return false
         }
         message = ""
+        return true
     }
     func openActivityMonitor() {
         let url = URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app")
@@ -244,7 +246,7 @@ enum SystemPermissionAlert {
         catch { message = "登录项设置未完成：\(error.localizedDescription)" }
         login = SMAppService.mainApp.status == .enabled
     }
-    func resetDisplay() { animate = true; battery.displayThreshold = 50 }
+    func resetDisplay() { animate = true; battery.displayThreshold = 20 }
     func stop() {
         mediaPlayback.stop()
         centerHintTask?.cancel(); sceneExpiry?.cancel(); wifiChange?.cancel()

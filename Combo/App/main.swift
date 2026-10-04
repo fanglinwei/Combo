@@ -6,7 +6,7 @@ final class ComboPanel: NSPanel {
     override var canBecomeKey: Bool { true }
 }
 
-@MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let store: Store
 
     init(store: Store? = nil) {
@@ -33,6 +33,7 @@ final class ComboPanel: NSPanel {
     var settings: NSWindow?
     /// 引导这一步要不要压在别人上面；真正的层级由 applyGuideLevel 结合前台应用决定。
     private var guideWantsTop = false
+    private var settingsFrameBeforeGuide: NSRect?
     private var activationObserver: NSObjectProtocol?
     var change: AnyCancellable?
     private var appearanceChange: AnyCancellable?
@@ -41,7 +42,6 @@ final class ComboPanel: NSPanel {
     private var iconTransition = IconTransition()
     private var bottomTransition = BottomTransition()
     private var panelHighlight = PanelHighlightTransition()
-    private var terminating = false
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         let menu = NSMenu()
@@ -74,7 +74,7 @@ final class ComboPanel: NSPanel {
         #if DEBUG
         let showSettings = true
         #else
-        let showSettings = OnboardingState.showsGuide() || CommandLine.arguments.contains("--settings") || store.menuSetup.needsRecovery
+        let showSettings = OnboardingState.showsGuide() || CommandLine.arguments.contains("--settings")
         #endif
         if showSettings {
             openSettings(); UserDefaults.standard.set(true, forKey: "hasOpened")
@@ -87,6 +87,7 @@ final class ComboPanel: NSPanel {
         let appearance = selectedAppearance
         settings?.appearance = appearance
         panel?.appearance = appearance
+        detailWindow?.appearance = appearance
     }
     private func updateLanguage() {
         let menu = NSApp.mainMenu?.items.first?.submenu
@@ -224,9 +225,7 @@ final class ComboPanel: NSPanel {
             panel.animator().setFrame(frame, display: true)
         }
     }
-    // The section detail lives in its own window beside the panel, as in the reference. Measured off
-    // that recording: the window lands on its final frame and fades in — no scale, no slide — over
-    // ~200ms ease-out, swaps pages with a cross-fade, and leaves by fading back out.
+    // The detail window shares the overview panel's top edge.
     private var detailHeight: CGFloat = 500
     private static let detailGap: CGFloat = 12
     /// Reduce Motion keeps fades and drops movement, so these replace the old instant cuts.
@@ -235,7 +234,9 @@ final class ComboPanel: NSPanel {
         let visible = (panel?.screen ?? NSScreen.main)?.visibleFrame ?? .zero
         let height = min(detailHeight, max(1, visible.height - 16))
         let x = (panel?.frame.minX ?? visible.maxX) - PanelView.width - Self.detailGap
-        return NSRect(x: max(visible.minX + 8, x), y: visible.maxY - height - 8, width: PanelView.width, height: height)
+        let top = min(visible.maxY - 8, panel?.frame.maxY ?? visible.maxY - 8)
+        let y = max(visible.minY + 8, top - height)
+        return NSRect(x: max(visible.minX + 8, x), y: y, width: PanelView.width, height: height)
     }
 
     private func updateDetailHeight(_ value: CGFloat) {
@@ -270,7 +271,6 @@ final class ComboPanel: NSPanel {
         let pointer = pointerWindow ?? NSPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         if pointerWindow == nil {
             pointer.appearance = selectedAppearance
-            pointer.contentView = NSHostingView(rootView: MenuBarCallout(reduceMotion: store.reduceMotion))
             pointer.isOpaque = false
             pointer.backgroundColor = .clear
             pointer.hasShadow = true
@@ -278,6 +278,9 @@ final class ComboPanel: NSPanel {
             pointer.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             pointer.ignoresMouseEvents = true
             pointerWindow = pointer
+        }
+        if !pointer.isVisible {
+            pointer.contentView = NSHostingView(rootView: MenuBarCallout(reduceMotion: store.reduceMotion))
         }
         pointer.setFrame(frame, display: false)
         pointer.orderFront(nil)
@@ -288,6 +291,7 @@ final class ComboPanel: NSPanel {
         guard let section else {
             if let escapeMonitor { NSEvent.removeMonitor(escapeMonitor); self.escapeMonitor = nil }
             guard let window = detailWindow, window.isVisible else { return }
+            if store.panelVisible { store.detailRevealed = false }
             detailTask = Task { @MainActor in
                 await NSAnimationContext.runAnimationGroup { context in
                     // 面板一起收起时用整组右扫的时长：淡出比行程短的话，后半个行程是白跑的。
@@ -326,27 +330,38 @@ final class ComboPanel: NSPanel {
             detailWindow = window
         }
         if escapeMonitor == nil {
-            // Esc closes the detail window; it is not key, so the monitor catches the event app-wide.
+            // An inline Wi-Fi form cancels first; the next Esc closes the detail window.
             escapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                 guard event.keyCode == 53, let self, self.store.detailSection != nil else { return event }
-                self.store.detailSection = nil
+                self.handleDetailEscape()
                 return nil
             }
         }
         window.setFrame(frame, display: window.isVisible)
-        guard !window.isVisible else { window.alphaValue = 1; return }
-        window.alphaValue = 0
-        window.orderFront(nil)
+        if window.isVisible {
+            if store.detailRevealed { window.alphaValue = 1; return }
+        } else {
+            store.detailRevealed = false
+            window.alphaValue = 0
+            window.orderFront(nil)
+        }
         detailTask = Task { @MainActor in
             if !store.reduceMotion { try? await Task.sleep(for: .milliseconds(20)) }
             guard !Task.isCancelled, store.detailSection == section else { return }
             await NSAnimationContext.runAnimationGroup { context in
+                store.detailRevealed = true
                 context.duration = store.reduceMotion ? Motion.reducedFade : Motion.detailShow
                 context.timingFunction = Motion.out
                 window.animator().alphaValue = 1
             }
         }
     }
+    func handleDetailEscape() {
+        if store.detailSection == .wifi, store.wifi.passwordRequest != nil {
+            if !store.wifi.busy { store.wifi.passwordRequest = nil }
+        } else { store.detailSection = nil }
+    }
+
     // Native animators retarget the current frame and alpha when opening reverses a close.
     private func runPanelReveal(_ window: NSWindow, to target: NSRect) async {
         await NSAnimationContext.runAnimationGroup { context in
@@ -464,13 +479,25 @@ final class ComboPanel: NSPanel {
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 850, height: 690), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             window.appearance = selectedAppearance
+            window.delegate = self
             window.title = L("Combo 设置"); window.titlebarAppearsTransparent = true
             window.contentView = NSHostingView(rootView: SettingsView(store: store) { [weak self, weak window] onTop in
                 guard let self, let window else { return }
                 self.guideWantsTop = onTop
+                if onTop {
+                    if self.settingsFrameBeforeGuide == nil { self.settingsFrameBeforeGuide = window.frame }
+                    var frame = window.frame
+                    frame.origin.y += frame.height - 620
+                    frame.size.height = 620
+                    window.setFrame(frame, display: true)
+                } else if let frame = self.settingsFrameBeforeGuide {
+                    window.setFrame(frame, display: true)
+                    self.settingsFrameBeforeGuide = nil
+                }
                 self.applyGuideLevel(window)
             })
             window.minSize = NSSize(width: 780, height: 620)
+            window.setFrame(NSRect(x: 0, y: 0, width: 850, height: 690), display: false)
             window.isReleasedWhenClosed = false; window.center(); settings = window
         }
         NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
@@ -486,22 +513,10 @@ final class ComboPanel: NSPanel {
         window.collectionBehavior = onTop ? [.moveToActiveSpace, .fullScreenAuxiliary] : []
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { openSettings(); return true }
-    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard !terminating else { return .terminateLater }
-        terminating = true
-        Task {
-            if UserDefaults.standard.bool(forKey: "menuSetupSessionActive"), await !store.menuSetup.restore() {
-                NSApp.activate(ignoringOtherApps: true)
-                let alert = NSAlert()
-                alert.messageText = L("系统图标尚未确认恢复")
-                alert.informativeText = store.menuSetup.message.string
-                alert.addButton(withTitle: L("取消退出并手动检查"))
-                alert.addButton(withTitle: L("仍要退出"))
-                if alert.runModal() == .alertFirstButtonReturn { terminating = false; sender.reply(toApplicationShouldTerminate: false); return }
-            }
-            sender.reply(toApplicationShouldTerminate: true)
-        }
-        return .terminateLater
+    func windowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, window === settings else { return }
+        store.scene = .live
+        store.showMenuPermission = false
     }
     func applicationWillTerminate(_ notification: Notification) { stopPanelDismissalMonitoring(); animator?.invalidate(); store.stop() }
 }

@@ -103,25 +103,27 @@ int main(int argc, const char *argv[]) {
         BOOL writing = argc == 5 && (!strcmp(argv[1], "--mode") || !strcmp(argv[1], "--conversation"));
         // Route metadata does not enumerate Bluetooth devices or request Bluetooth access.
         BOOL route = (argc == 2 || argc == 4) && !strcmp(argv[1], "--route");
-        if (!writing && !route && !(argc == 1 || (argc == 2 && !strcmp(argv[1], "--status")))) return 2;
+        BOOL status = argc == 1 || ((argc == 2 || argc == 4) && !strcmp(argv[1], "--status"));
+        if (!writing && !route && !status) return 2;
         NSString *command = writing ? @(argv[1]) : @"--status";
         NSString *requested = writing ? @(argv[2]) : nil;
         if (([command isEqual:@"--mode"] && !Modes()[requested]) ||
             ([command isEqual:@"--conversation"] && ![@[@"on", @"off"] containsObject:requested])) return 2;
         AudioDeviceID device = DefaultOutput();
         NSString *token = DeviceToken(device);
+        // HAL IDs belong to each process. Match the UID, and echo the caller's ID for correlation.
+        AudioDeviceID replyDevice = device;
+        NSString *requestedToken = nil;
+        if (writing || argc == 4) {
+            NSString *requestedDevice = @(argv[writing ? 3 : 2]);
+            long long value = requestedDevice.longLongValue;
+            if (value <= 0 || value > UINT32_MAX || ![requestedDevice isEqual:[@(value) stringValue]]) return 1;
+            replyDevice = (AudioDeviceID)value;
+            requestedToken = @(argv[writing ? 4 : 3]);
+            if (!writing && ![token isEqual:requestedToken]) return 1;
+        }
         if (route) {
             if (!AirPlayDevice(device) || token.length != 64) return 1;
-            // HAL IDs can differ between the app and this process after a route switch.
-            // Match the current device UID, and echo the caller's ID only as request correlation.
-            AudioDeviceID replyDevice = device;
-            if (argc == 4) {
-                NSString *requested = @(argv[2]);
-                long long value = requested.longLongValue;
-                if (value <= 0 || value > UINT32_MAX || ![requested isEqual:[@(value) stringValue]]
-                    || ![token isEqual:@(argv[3])]) return 1;
-                replyDevice = (AudioDeviceID)value;
-            }
             id context = SystemAudioContext();
             id endpoint = RouteEndpoint(context);
             id identifier = Value(endpoint, @"deviceID");
@@ -137,7 +139,7 @@ int main(int argc, const char *argv[]) {
             [[NSFileHandle fileHandleWithStandardOutput] writeData:data];
             return 0;
         }
-        NSMutableDictionary *reply = [@{@"deviceID": @(device), @"target": token ?: @"", @"available": @NO,
+        NSMutableDictionary *reply = [@{@"deviceID": @(replyDevice), @"target": token ?: @"", @"available": @NO,
             @"modes": @[], @"canSetMode": @NO, @"canSetConversation": @NO,
             @"classOfDevice": NSNull.null, @"attempted": @NO, @"verified": @NO} mutableCopy];
         IOBluetoothDevice *bluetooth = nil;
@@ -167,9 +169,8 @@ int main(int argc, const char *argv[]) {
         BOOL canCA = matched && supportsCA && BoolValue(Value(output, @"isConversationDetectionEnabled")) != NSNull.null
             && [output respondsToSelector:@selector(setConversationDetectionEnabled:error:)];
         if (writing) {
-            // UI passes both its observed object ID and a UID hash; refuse stale clicks.
-            NSString *expectedDevice = @(argv[3]);
-            BOOL sameTarget = [expectedDevice isEqual:[@(device) stringValue]] && [token isEqual:@(argv[4])];
+            // The stable UID hash identifies the device; the caller's HAL ID is process-local.
+            BOOL sameTarget = [token isEqual:requestedToken];
             BOOL modeCommand = [command isEqual:@"--mode"];
             BOOL allowed = modeCommand ? canMode && [AvailableModes(output) containsObject:requested] : canCA;
             if (!sameTarget || !matched) reply[@"error"] = @"device_changed";

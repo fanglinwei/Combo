@@ -87,6 +87,7 @@ enum WiFiPasswordLookup: Equatable {
     @Published var currentSecurity: CWSecurity = .unknown
     @Published var knownNames: Set<String>?
     @Published var hasScanned = false
+    @Published private(set) var scanFailed = false
     @Published private(set) var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
     @Published var passwordRequest: WiFiChoice?
     @Published private(set) var systemAccessDeclined = false
@@ -253,10 +254,12 @@ enum WiFiPasswordLookup: Equatable {
         guard powerOn == true, nameAccess else { return }
         switch result {
         case .success(let found):
+            scanFailed = false
             networks = WiFiChoice.choices(from: Array(found), connectedBSSID: currentBSSID)
             knownNames = known; hasScanned = true
             message = networks.isEmpty ? "未发现可显示的网络；可在系统 Wi‑Fi 设置中查看。" : ""
         case .failure(let error):
+            scanFailed = true
             networks = []; knownNames = nil; hasScanned = false
             message = "查找网络失败：\(error.localizedDescription)"
         }

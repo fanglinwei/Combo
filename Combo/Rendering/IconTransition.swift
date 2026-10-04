@@ -1,7 +1,4 @@
 import SwiftUI
-#if canImport(Inject)
-import Inject
-#endif
 import AppKit
 import CoreText
 

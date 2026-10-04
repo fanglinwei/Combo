@@ -176,7 +176,7 @@ func volumeHintActive(changedAt: TimeInterval?, now: TimeInterval) -> Bool {
 }
 
 func menuBarRestoreKeys(original: [String: Bool], current: [String: Bool], keys: Set<String>) -> [String]? {
-    guard Set(original.keys) == keys, keys.isSubset(of: Set(current.keys)) else { return nil }
+    guard keys.isSubset(of: Set(original.keys)), keys.isSubset(of: Set(current.keys)) else { return nil }
     return keys.sorted().filter { original[$0] != current[$0] }
 }
 
