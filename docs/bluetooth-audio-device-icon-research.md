@@ -1,6 +1,6 @@
 # 按蓝牙设备类型切换中央图标：实现与验证边界
 
-更新：2026-10-03。环境为 macOS 27.0（Build 26A428）、Apple Silicon、自用 ad-hoc 原型。本文同步当前实现；历史字段取证见 [蓝牙音频输出设备识别：API 与信号证据](bluetooth-audio-device-api-evidence.md)。
+整理：2026-10-04；实现与历史取证：2026-10-03。环境为 macOS 27.0（Build 26A428）、Apple Silicon、自用 ad-hoc 原型。本文合并当前分类实现与历史 API 证据；历史采集不代表连接态硬件已经验收。
 
 ## 1. 当前范围
 
@@ -14,7 +14,7 @@ CoreAudio 默认输出的 transport 为 `'blue'` / `'blea'` 才进入蓝牙分�
 
 读取需蓝牙已授权，且真实 live 面板活动、屏幕未休眠；普通蓝牙输出每次活动/目标变化读取一次，当前 AirPods 复用原有每 3 秒状态更新。不另起 `system_profiler`，不在主进程增加 IOBluetooth 设备枚举。共享状态读取由 Store 管理，避免两个 `PanelView` 实例争抢同一个取消任务。具体权限复用、连接设备字段与面板生命周期仍需实机回归。
 
-旧版“CoD 没有生产者”“必须先在主进程接入 IOBluetooth”已失效；旧版 `system_profiler` 产品 ID 增强是未采用的研究方案。本轮不内置未经证实的产品 ID 表、不轮询系统报告；`0x2014` 的具体型号仍未确认。改名 AirPods 若没有产品型号信号，仅凭 CoD 不能恢复其型号，仍会显示通用类别。
+旧版“CoD 没有生产者”“必须先在主进程接入 IOBluetooth”已失效；旧版 `system_profiler` 产品 ID 增强是未采用的研究方案。当前不内置未经证实的产品 ID 表、不轮询系统报告；`0x2014` 的具体型号仍未确认。改名 AirPods 若没有产品型号信号，仅凭 CoD 不能恢复其型号，仍会显示通用类别。
 
 ## 3. 分类顺序与映射
 
@@ -43,10 +43,38 @@ CoD 为 24 位：`major = (cod >> 8) & 0x1F`，`minor = (cod >> 2) & 0x3F`；表
 
 ## 5. 检查与未实机验证项
 
-`./verify.sh` 的输出设备、AirPods helper 与图标检查覆盖 transport 入口、品牌/CoD/通用名称顺序、CoD 位域与零值、改名回退、符号解析及中央/列表一致性。AirPlay 的异步路由与发现检查另见 [AirPlay 文档](airplay-homepod-icon-research.md#4-开销与检查)。自动化覆盖不等于各硬件类别已验收，测试通过与否以本轮实际运行结果为准。
+`./verify.sh` 的输出设备、AirPods helper 与图标检查覆盖 transport 入口、品牌/CoD/通用名称顺序、CoD 位域与零值、改名回退、符号解析及中央/列表一致性。AirPlay 的异步路由与发现检查另见 [AirPlay 文档](airplay-homepod-icon-research.md#4-开销与检查)。自动化覆盖不等于各硬件类别已验收，测试通过与否以实际运行结果为准。
 
 仍需真实连接设备确认：默认输出 transport/UID 与 helper 身份匹配、公开 CoD getter 的取值、蓝牙授权后回流、快速切换/断开/睡眠唤醒、两个面板实例的读取生命周期。音箱、车载、助听器、LE Audio、改名 AirPods 与 macOS 26 尚未完成实机回归。历史配对表采集只能证明字段当时存在，不能替代连接态读数或具体型号证据。
 
 不解析 Apple BLE 广播、不用私有 `CBProductInfo` 推型号、不引入空间音频或接收端播放控制。需要精确产品型号时，先取得可复核的身份与型号证据，再增加映射。
 
-相关：[声音与 AirPods](airpods-audio-feasibility.md) · [AirPods API 证据](airpods-api-evidence.md) · [中央状态优先级](combo-settings.md#31-中央状态优先级2026-09-24)。
+相关：[声音与 AirPods](airpods-audio-feasibility.md) · [中央状态优先级](combo-settings.md#31-中央状态优先级2026-09-24)。
+
+## 6. API 证据与历史观测
+
+2026-10-03 取证时默认输出为内置扬声器，没有已连接蓝牙音频设备；配对表与头文件不是连接态实测。以下来源继承历史核查，本次未重新在线核查。
+
+| 信息 | 接口 / 证据 | 限制 |
+| --- | --- | --- |
+| 当前输出身份 | `kAudioHardwarePropertyDefaultOutputDevice`、`kAudioDevicePropertyDeviceUID`、`kAudioObjectPropertyName` | UID 是身份线索，不是型号名；生产匹配须核对实时连接与 helper token |
+| 蓝牙 / LE transport | 公开 SDK `AudioHardwareBase.h`：`'blue'` / `'blea'` | 两种不同传输；仅配对不能作为默认输出 |
+| 类别 | 公开 `IOBluetoothDevice.classOfDevice` 与 `BluetoothAssignedNumbers.h` | 自报弱信号，0/缺失必须回退；CoreAudio 不直接提供耳机/车载等类别 |
+| 精确型号 | 系统报告 `device_productID` 或私有 `CBProductInfo` | 当前未采用，不能把 HAL ModelUID 当型号 |
+| 播放状态 | 当前 [MediaRemote helper](media-implementation-evidence.md) | 不提供输出设备身份，不能以 playing 判设备类型 |
+
+CoD 公开常量：Audio/Video major `0x04`、Wearable `0x07`、Health `0x09`；Audio minor 中耳麦 `0x01`、Hands-free `0x02`、音箱 `0x05`、耳机 `0x06`、便携 `0x07`、车载 `0x08`、HiFi `0x0a`、游戏/玩具 `0x12`。这些标签本身不能保证精确产品类型，Health 不等于每台设备必为助听器。
+
+### 系统报告的历史字段
+
+`system_profiler SPBluetoothDataType -json` 按 `device_connected` / `device_not_connected` 分桶，无连接时前者可能整体缺失。历史配对的 Apple 设备有地址、vendor/product ID、minorType、固件，耳机另有盒子与左右耳字段；其他记录可能只有地址。`device_minorType` 不能区分 AirPods 代际，`device_rssi` 是运行时信号，不是类别。
+
+当时实测到产品字段 `0x2027`、`0x2014`，并未验证完整型号表。IORegistry 采到 CoD 为 0 的条目，但未逐条确认归属，不能推广为“非 Apple 设备一律为 0”。系统音频偏好中蓝牙 UID 曾呈地址形式，仍不能代替当前默认输出的实时读取。名称可改，报告有枚举成本，不用于轮询。
+
+### 符号与属性的易错边界
+
+本机曾逐个调用 `NSImage(systemSymbolName:accessibilityDescription:)` 核查公开耳机/音箱/车载/AirPlay 符号；`airplay.audio.fill` 当时不存在。`airpodspro` / `airpodsmax` 旧别名可以解析，不能只查 `symbol_order.plist` 就判不存在；规范名为 `airpods.pro` / `airpods.max`。私有 `speaker.bluetooth` 不作为当前中央图标资源。
+
+`CFStringGetFromAudioObject` 不是 SDK API，CFString 属性用 `AudioObjectGetPropertyData` 读取；ModelUID 不是人类型号。`kAudioDevicePropertyDataSource` 用于线路源选择，不作为蓝牙类型依据；`SPAudioDataType` 的 Transport 也可能 Unknown。
+
+来源：[Apple IOBluetoothDevice](https://developer.apple.com/documentation/iobluetooth/iobluetoothdevice)、[Bluetooth SIG 类别表](https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Assigned_Numbers/out/en/Assigned_Numbers.pdf)、[蓝牙沙盒 entitlement](https://developer.apple.com/documentation/BundleResources/Entitlements/com.apple.security.device.bluetooth)，以及历史 macOS SDK 头文件和本机符号解析。未启用沙盒的原型测试不证明沙盒发行能力。

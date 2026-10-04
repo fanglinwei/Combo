@@ -10,6 +10,6 @@
 | 浅色背景 | `#F8FBFF` |
 | 深色背景 | `#17263C` |
 
-`combo-iris-logo.svg` 是透明标志，`combo-iris-app-icon.svg` 是应用图标源文件。`Tests/RenderBrand.swift` 生成用于构建的 PNG，`build.sh` 将其打包成 `Combo.icns`。`render.py` 生成设计预览及透明 Logo 的 SVG 和 PNG，直接复用原版 APP 图标，不覆盖应用图标资源；`combo-brand-preview.png` 是概念示意，不是 APP 截图。
+`combo-iris-logo.svg` 是透明标志，`combo-iris-app-icon.svg` 是应用图标源文件。应用图标位于 `Combo/App/Media.xcassets/AppIcon.appiconset`，由 Xcode 编译并打包，`Tests/check-brand.sh` 检查打包结果。早期 PNG 生成工具已清理。`render.py` 生成设计预览及透明 Logo 的 SVG 和 PNG，直接复用原版 APP 图标，不覆盖应用图标资源；`combo-brand-preview.png` 是概念示意，不是 APP 截图。
 
 白字与浅色界面强调色对比度约 4.7:1；深色强调色与深色背景对比度约 8.2:1。危险和警告颜色保持独立语义。

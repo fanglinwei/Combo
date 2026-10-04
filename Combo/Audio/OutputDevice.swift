@@ -38,7 +38,7 @@ enum BluetoothFamily: CaseIterable {
 }
 
 /// AirPlay 路由的机型档位。信号来自 `AVOutputDevice.modelID`（如 `AppleTV14,1`），
-/// 由 helper 通过 AVRouting SPI 读出，见 docs/airplay-homepod-api-evidence.md §3.1。
+/// 由 helper 通过 AVRouting SPI 读出，见 docs/airplay-homepod-icon-research.md §5。
 ///
 /// 机型表来源：libirecovery 的 `irecv_devices[]`（LGPL，维护到 2026 代设备）。HomePod 全部
 /// ID 为 `AudioAccessory1,1` / `1,2`（1 代）、`5,1`（mini）、`6,1`（2 代），表中没有更新的

@@ -38,8 +38,7 @@
 
 验证重点：目标型号、有效值与缺失值、左右耳及盒子独立状态、开合盖、断开重连、更新时间、设备身份匹配，以及目标分发环境。
 
-- [AirPods 电量可行性报告](airpods-battery-research.md)
-- [AirPods API 与源码证据](airpods-api-evidence.md)
+- [AirPods 当前实现与电量扩展证据](airpods-audio-feasibility.md#电量来源与扩展研究)
 
 ### iPhone 电量
 
@@ -48,15 +47,15 @@
 验证重点：有线 Mac 与手机所在网络的发现和可达性、配对失效、锁屏、重启、睡眠唤醒、充电状态、字段缺失和目标分发环境。蓝牙读取或手机配套 App 作为备选研究，不同时启动多套方案。
 
 - [iPhone 电量可行性报告](iphone-battery-research.md)
-- [iPhone API 与调用证据](iphone-api-evidence.md)
+- [查询证据与信任条件](iphone-battery-research.md#查询证据与信任条件)
 
 ### 蓝牙输出设备类型与中央图标
 
 已实现 CoreAudio transport 入口与共享分类：AirPods/Beats 品牌名 → 非 0 CoD → 通用名称或 unknown。CoD 由现有 helper 的 status 返回对应已连接默认输出设备的公开 getter，复用设备 ID 与 UID token 复核；需蓝牙已授权、真实 live 面板活动。普通蓝牙读取一次，当前 AirPods 复用每 3 秒状态更新，共享生命周期避免两个面板争抢取消任务。
 
-本轮未采用 `system_profiler` 产品 ID 表或轮询；改名 AirPods 无型号信号仍可能显示通用耳机。CoD 自报弱信号，音箱、车载、助听器与连接态身份仍待实机回归。下一步先验证实际硬件和权限回流，取得具体型号证据后再考虑增加映射。
+当前未采用 `system_profiler` 产品 ID 表或轮询；改名 AirPods 无型号信号仍可能显示通用耳机。CoD 自报弱信号，音箱、车载、助听器与连接态身份仍待实机回归。下一步先验证实际硬件和权限回流，取得具体型号证据后再考虑增加映射。
 - [蓝牙输出设备类型与中央图标可行性](bluetooth-audio-device-icon-research.md)
-- [蓝牙音频输出设备识别：API 与信号证据](bluetooth-audio-device-api-evidence.md)
+- [API 证据与历史观测](bluetooth-audio-device-icon-research.md#6-api-证据与历史观测)
 
 ### AirPlay / HomePod 设备识别与中央图标
 
@@ -64,9 +63,9 @@
 
 附近发现已采用 `NWBrowser` 浏览 `_airplay._tcp`，替换此前“mDNS 只作备选”的规划。首次按“查找”启用并保存 opt-in，随后仅活动真实面板自动恢复；关闭/演示/睡眠停止，旧回调失效，列表随当前路由动态过滤。权限拒绝与普通网络故障分别处理，提供设置/重试；系统弹窗出现前仅为应用切换提供一秒交接保护，弹窗可见期间按系统授权窗口保护，不以固定时长限制用户作答。允许或拒绝后保留面板，下一次外部交互正常收起；实际弹窗与 ad-hoc 授权稳定性未实机验证。
 
-历史 Apple TV 已采到通用 CoreAudio 名 `AirPlay` 与 SPI 房间名/机型 `客厅` / `AppleTV14,1`；本轮新异步及权限流程尚未实机验收。HomePod 全尺寸/mini、多设备、AirPlay 1（`_raop._tcp` 未覆盖）与 macOS 26 待验证。不承诺一键建立全系统路由，继续转交系统声音设置；HomePod 播放控制与投送仍延后。
+历史 Apple TV 已采到通用 CoreAudio 名 `AirPlay` 与 SPI 房间名/机型 `客厅` / `AppleTV14,1`；当前异步及权限流程尚未实机验收。HomePod 全尺寸/mini、多设备、AirPlay 1（`_raop._tcp` 未覆盖）与 macOS 26 待验证。不承诺一键建立全系统路由，继续转交系统声音设置；HomePod 播放控制与投送仍延后。
 - [AirPlay / HomePod 中央图标可行性](airplay-homepod-icon-research.md)
-- [AirPlay / HomePod API 与信号证据](airplay-homepod-api-evidence.md)
+- [AirPlay API 与面板切换候选](airplay-homepod-icon-research.md#5-api-证据与历史观测)
 
 ## 建议推进顺序
 

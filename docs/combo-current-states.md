@@ -11,7 +11,7 @@
 | 底部 | 静音符号 → 调音量时的音量点 → 播放音柱 → 普通音量点。音量未知时显示短横线；音量为 0 也按静音显示。 |
 | 动效 | 普通播放音柱按 1.2 秒循环；开启“减少动态效果”后停在固定形态。关闭 Combo 的播放动效后，播放时保留音量点。 |
 
-同级中央内容切换或优先级下降时，中心约 **0.23 秒交叉淡化**。优先级升高时通常先隐去旧图标，再放大新内容、停留并恢复外围，完整入场约 **4.7 秒**。减少动态效果下中央切换约 **0.16 秒**，只淡化、不缩放。网络连接有专门的放大和 Wi-Fi 形变；连接未结束时持续脉冲。音量提示保持约 **2 秒**，插拔电提示约 **9.2 秒**后回到当时的常驻内容。下列 GIF 以默认阈值、播放动效开启、深色外观展示；设置不同或实时数据不同，组合结果也会不同。
+当前规则为同级不同状态或升优先级通常播放切换动画，降优先级直接恢复；网络内部切换有专用时序。早期 GIF 的具体入场参数不作为当前时序保证。减少动态效果下中央切换约 **0.16 秒**，只淡化、不缩放。网络连接有专门的放大和 Wi-Fi 形变；连接未结束时持续脉冲。音量提示保持约 **2 秒**，插拔电提示约 **9.2 秒**后回到当时的常驻内容。下列 GIF 为历史演示数据，使用播放动效开启与深色外观；设置不同或实时数据不同，组合结果也会不同。
 
 浅色外观使用同一套图形与状态规则，四个代表状态如下：
 
@@ -59,7 +59,7 @@ Wi-Fi → 有线默认内容：中央显示本机电量 `82`，不显示网口�
 
 ### 低电量
 
-`82%` → `12%`：外圈变短并变红，中央数字同步变化。演示中低于默认的 50% 中央电量阈值。
+`82%` → `12%`：外圈变短并变红，中央数字同步变化。演示值低于当前新用户默认的 20% 中央电量阈值。
 
 ![低电量进入](assets/states/low.gif)
 
@@ -134,7 +134,7 @@ AirPods 播放中调到 75%：中央临时显示 `75`，底部显示三颗亮点
 | 位置 | 当前分支 |
 | --- | --- |
 | 主面板 | 总览；电池、Wi-Fi、声音三个详情页。 |
-| 设置窗口 | 通用、外观与动效、系统菜单整合、媒体来源、实验性项目、关于与帮助六页；外观可跟随系统、浅色或深色。 |
+| 设置窗口 | 通用、外观与动效、菜单栏与控制、媒体来源、实验性项目、关于与帮助六页；外观可跟随系统、浅色或深色。 |
 | 系统图标手动隐藏检查 | Wi-Fi、声音、电池各为“设置为显示”“设置为隐藏”或“无法判断”；读取和恢复期间有忙碌与结果提示。 |
 | 媒体来源 | 正在播放、已暂停、未检测到播放、重新连接中。 |
 | 个人热点与高耗能应用 | 读取中、不可用、可用；可用但列表为空时各有空状态说明。 |
@@ -149,11 +149,11 @@ AirPods 播放中调到 75%：中央临时显示 `75`，底部显示三颗亮点
 - 实时场景、阈值与提示到期：[Store.swift](../Combo/Stores/Store.swift) 与 [BatteryStore.swift](../Combo/Stores/BatteryStore.swift)。
 - GIF 生成脚本：[render_current_states.swift](assets/render_current_states.swift)。它只生成文档资源，不修改应用或系统状态。
 
-在仓库根目录重绘（使用与项目构建相同的 macOS 26 SDK）：
+在仓库根目录重绘（命令使用当前 `xcrun` 选中的 SDK，最低目标为 macOS 26）：
 
 ```sh
 mkdir -p build
-xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -target arm64-apple-macosx26.0 -swift-version 5 -parse-as-library Combo/App/State.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift docs/assets/render_current_states.swift -o build/render-current-states
+xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -target arm64-apple-macosx26.0 -swift-version 5 -parse-as-library Combo/App/Localization.swift Combo/App/State.swift Combo/Audio/OutputDevice.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift docs/assets/render_current_states.swift -o build/render-current-states
 ./build/render-current-states
 ```
 

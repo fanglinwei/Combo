@@ -645,7 +645,7 @@ struct SettingsView: View {
     }
 
 /// 媒体来源页：当前在播来源、菜单栏四个状态的对照、状态是怎么读到的。
-/// 单独成视图是为了能脱离设置窗渲染核对（见 Tests/RenderMediaPage.swift）。
+/// 单独成视图便于渲染核对与媒体音柱回归检查（见 Tests/MediaBarsCheck.swift）。
 struct MediaPage: View {
     @ObservedObject var store: Store
     @Environment(\.comboPalette) private var palette
