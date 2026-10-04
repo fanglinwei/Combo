@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Combo · 安装指南</title>
+  <style>
+    :root { color-scheme: dark; --canvas: #0d1117; --surface: #171d25; --text: #e9eef5; --muted: #a5b1c2; --purple: #ab7aff; --link: #62adff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--text); font: 18px/1.8 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { max-width: 1160px; margin: 0 auto; padding: 52px 40px 64px; }
+    h1, h2, h3 { line-height: 1.45; letter-spacing: -.02em; }
+    h1 { font-size: 36px; margin: 0 0 8px; }
+    h2 { font-size: 25px; margin: 30px 0 20px; }
+    h3 { font-size: 21px; margin: 28px 0 14px; }
+    p { margin: 16px 0; }
+    a { color: var(--link); text-underline-offset: 4px; }
+    a:hover { color: #9bcbff; }
+    code { font: .93em/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; background: #252b33; border-radius: 7px; padding: 3px 8px; overflow-wrap: anywhere; }
+    ol { padding-left: 26px; }
+    li { padding-left: 5px; margin: 8px 0; }
+    .meta, .note, footer { color: var(--muted); font-size: 15px; }
+    .meta { margin-top: 0; }
+    .important { border-left: 5px solid var(--purple); padding: 2px 0 2px 26px; margin-top: 32px; }
+    .label { color: var(--purple); font-size: 23px; font-weight: 600; margin: 0 0 22px; display: flex; align-items: center; gap: 12px; }
+    .label svg { width: 26px; height: 26px; flex: none; }
+    .important > h2 { margin-top: 0; }
+    .command { display: flex; align-items: flex-start; gap: 16px; padding: 20px; margin: 20px 0; background: var(--surface); }
+    .command pre { flex: 1; min-width: 0; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+    .command code { color: #b5dcff; background: transparent; padding: 0; border-radius: 0; font-size: 17px; }
+    button { flex: none; padding: 7px 12px; border: 1px solid #556171; border-radius: 6px; background: transparent; color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+    button:hover { background: #293443; }
+    button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid var(--purple); outline-offset: 4px; }
+    .copy-status { min-height: 1.8em; color: var(--muted); font-size: 14px; }
+    details { margin-top: 30px; }
+    summary { cursor: pointer; font-size: 21px; font-weight: 600; }
+    details[open] summary { margin-bottom: 16px; }
+    footer { border-top: 1px solid #2c3440; margin-top: 36px; padding-top: 20px; }
+    footer a { display: inline-block; margin: 4px 18px 4px 0; }
+    .clipboard-buffer { position: fixed; left: -9999px; top: 0; }
+    @media (max-width: 640px) {
+      body { font-size: 16px; }
+      main { padding: 28px 20px 40px; }
+      h1 { font-size: 29px; }
+      h2 { font-size: 22px; }
+      h3, summary { font-size: 19px; }
+      .important { padding-left: 16px; }
+      .command { padding: 14px; gap: 12px; flex-wrap: wrap; }
+      .command pre { flex-basis: 100%; }
+      .command code { font-size: 14px; }
+    }
+    @media print { body { color: #111; background: #fff; } main { padding: 0; } button, .copy-status { display: none; } .command { background: #eee; } .command code, a { color: #174577; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Combo 安装指南</h1>
+      <p class="meta">@VERSION@（build @BUILD@） · Apple Silicon（M 系列芯片） · macOS @MINIMUM_MACOS@ 或更高版本</p>
+    </header>
+    <section aria-labelledby="install-title">
+      <h2 id="install-title">手动下载与拖动安装</h2>
+      <p>下载 <code>@DMG_NAME@</code>，双击打开，将 <code>Combo.app</code> 拖入右侧的 <strong>Applications（应用程序）</strong> 文件夹快捷方式。</p>
+      <ol>
+        <li>若替换旧版本，请先退出正在运行的 Combo。</li>
+        <li>等待复制完成，从「应用程序」文件夹打开 Combo，查看屏幕顶部的菜单栏图标。</li>
+        <li>若首次打开被拦截，可在安装磁盘中双击「清除下载隔离」，完成后弹出安装磁盘。</li>
+      </ol>
+      <p class="note">本次安装包仅支持 Apple Silicon，不支持 Intel Mac。</p>
+    </section>
+    <section class="important" aria-labelledby="first-open-title">
+      <p class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-8l-5 3v-3H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M12 7v6m0 2v1"/></svg>Important</p>
+      <h2 id="first-open-title">首次打开提示“已损坏”或“无法验证开发者”？</h2>
+      <p>本包使用本机 ad-hoc 签名，没有使用 Apple 开发者证书签名，也未经 Apple 公证。Gatekeeper 可能拦截首次启动。确认安装包来源可信后，可按下面的方法处理。</p>
+      <h3>① 清除下载隔离等扩展属性（一条命令）</h3>
+      <p>先完成拖动安装，确认 App 位于 <code>/Applications/Combo.app</code>。在 DMG 中双击 <strong>清除下载隔离</strong>（<code>清除下载隔离.command</code>），会自动打开终端并执行下面的命令。也可直接打开「终端」，粘贴并执行：</p>
+      <div class="command">
+        <pre><code id="quarantine-command">sudo xattr -cr "/Applications/Combo.app"</code></pre>
+        <button type="button" data-copy="quarantine-command" aria-label="复制清除 Combo 扩展属性命令">复制</button>
+      </div>
+      <p>输入 Mac 的管理员密码并按回车；输入密码时终端不会显示字符。命令成功时通常没有输出。之后再次从「应用程序」打开 Combo。</p>
+      <p class="note">清除下载隔离脚本会先检查 Combo 是否已安装，处理完成后显示结果。如果脚本本身被 macOS 拦截，可以使用下方的系统设置放行方法，或直接在终端粘贴上面的命令。</p>
+      <p class="note">此命令递归清除 Combo 应用包的所有扩展属性，包括下载隔离属性。它不能修复文件真正损坏、缺失或芯片架构不匹配的问题。如果仍无法打开，请重新下载，并检查 macOS 版本及芯片类型。若系统提示应用将损坏电脑或检测到恶意软件，请停止使用，不要用此命令绕过该警告。</p>
+      <h3>② 系统设置放行</h3>
+      <p>首次尝试打开 Combo 被拦截后，打开「系统设置 → 隐私与安全性」，向下滚动至「安全性」，点击 Combo 对应的「仍要打开」，按系统提示验证身份并确认「打开」。系统会为这份 App 保存例外。</p>
+      <p class="note">仅安装 Combo 通常使用单独放行方法即可。新版本或重新覆盖安装后，可能需要再次处理。</p>
+      <h3>③ 本地自签名（可选）</h3>
+      <p>本安装包已完成 ad-hoc 签名，通常无需重复执行。若你自行修改过 App，或清除隔离属性后仍遇到签名问题，可在终端尝试重新生成本机签名：</p>
+      <div class="command">
+        <pre><code id="sign-command">sudo codesign --force --deep --sign - "/Applications/Combo.app"</code></pre>
+        <button type="button" data-copy="sign-command" aria-label="复制 Combo 本地自签名命令">复制</button>
+      </div>
+      <p class="note">此命令仅重建 ad-hoc 签名，不提供 Apple 开发者身份认证，也不等于公证。它不能保证系统升级、App 更新或重新安装后永远不再出现提示；不能修复缺失文件或架构不匹配。这里的 <code>--deep</code> 用于手动兼容修复，Apple 已弃用它作为常规签名方式。</p>
+      <details>
+        <summary>④ 允许安装任意来源（可选）</summary>
+        <p>这是系统全局设置，会影响其他 App 的来源限制；安装 Combo 并不要求开启它。若你明确希望使用「任何来源」，在 DMG 中双击 <strong>允许任意来源</strong>（<code>允许任意来源.command</code>），会自动打开终端并执行下面的命令；也可手动执行：</p>
+        <div class="command">
+          <pre><code id="anywhere-command">sudo spctl --global-disable</code></pre>
+          <button type="button" data-copy="anywhere-command" aria-label="复制显示任何来源选项命令">复制</button>
+        </div>
+        <p>随后打开「系统设置 → 隐私与安全性 → 安全性」，在「允许从以下位置下载的 App」中选择 <strong>任何来源（Anywhere）</strong>，按系统提示确认。</p>
+        <p class="note">当前 macOS 中，此命令用于显示「任何来源」选项，仍需手动选择。DMG 不会自动替你更改设置。受单位管理的 Mac 可能无法更改该选项；全局来源设置也不能保证任何 App 都能运行。使用后可在同一位置选回「App Store 和被认可的开发者」。</p>
+      </details>
+      <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+    </section>
+    <footer>
+      <p>本包未使用 Apple 开发者证书签名，未经 Apple 公证。ad-hoc 签名不保证系统升级或后续安装永远不再出现提示。</p>
+      <p><a href="https://support.apple.com/zh-cn/102445">Apple：在 Mac 上安全地打开 App</a><a href="https://developer.apple.com/news/?id=saqachfa">Apple：macOS 运行时保护更新</a></p>
+      <p>命令细节：<code>man xattr</code>、<code>man spctl</code>、<code>man codesign</code>。本指南同时保存在 Releases 文件夹和 DMG 内，可离线使用；DMG 内另附两个终端快捷脚本。</p>
+    </footer>
+  </main>
+  <script>
+    document.querySelectorAll('[data-copy]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const command = document.getElementById(button.dataset.copy).textContent;
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(command);
+          copied = true;
+        } catch {
+          const buffer = document.createElement('textarea');
+          buffer.value = command;
+          buffer.className = 'clipboard-buffer';
+          buffer.setAttribute('aria-label', '待复制命令');
+          document.body.append(buffer);
+          buffer.select();
+          try { copied = document.execCommand('copy'); } catch {}
+          buffer.remove();
+          button.focus();
+        }
+        document.getElementById('copy-status').textContent = copied
+          ? '命令已复制。请在终端中粘贴并执行。'
+          : '浏览器未允许复制，请选中上方命令并按 ⌘C。';
+      });
+    });
+  </script>
+</body>
+</html>
