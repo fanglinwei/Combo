@@ -33,11 +33,11 @@ AppKit NSStatusBar / NSStatusItem 提供本应用状态项的创建与管理；�
 - [AirPods 空间音频与头部跟踪](https://support.apple.com/en-me/guide/airpods/-dev00eb7e0a3/web)：AirPods 菜单图标通过 Sound 项显示。
 - [NSStatusBar](https://developer.apple.com/documentation/appkit/nsstatusbar)：应用状态项管理 API。未找到通用跨进程隐藏 API 是本次调研结论，不是证明所有私有或自动化手段都不存在。
 
-## 后续决定：保留状态项并折叠
+## 当前决定与保留的研究
 
-用户已同意可选整合模式：左键 Combo 展开面板，选择 Wi-Fi／声音／电池，再临时展开并打开对应原生菜单；菜单关闭后收起。电池为新增同级目标。此模式不能按上文取消系统项显示，否则失去可转交的原菜单入口。
+当前版本由用户在系统设置中手动隐藏图标，Combo 提供记录、指引和确认恢复，不自动折叠或在退出时恢复。行为以 [设置规格](combo-settings.md#41-系统图标记录与手动恢复) 为准。
 
-Ice 的公开源码表明其采用占位折叠和临时移动后点击，且包含私有接口；这不是纯公开 API 可行性的保证。Combo 先以公开 AX 探针验证三个指定系统项，不截图，不改用户布局。完整要求见[系统菜单整合计划](menu-integration-plan.md)。
+Ice 的占位折叠、临时移动与点击机制仅保留为研究证据，不作为当前实施要求。macOS 实测边界见 [菜单折叠研究](macos27-menu-folding-research.md)。
 
 - [Ice 折叠控制项](https://github.com/jordanbaird/Ice/blob/main/Ice/MenuBar/ControlItem/ControlItem.swift)
 - [临时展开和点击](https://github.com/jordanbaird/Ice/blob/main/Ice/MenuBar/MenuBarItems/MenuBarItemManager.swift)
