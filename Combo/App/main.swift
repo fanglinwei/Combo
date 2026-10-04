@@ -71,11 +71,7 @@ final class ComboPanel: NSPanel {
         }
         updateIcon()
         OnboardingState.migrate()
-        #if DEBUG
-        let showSettings = true
-        #else
         let showSettings = OnboardingState.showsGuide() || CommandLine.arguments.contains("--settings")
-        #endif
         if showSettings {
             openSettings(); UserDefaults.standard.set(true, forKey: "hasOpened")
         }
@@ -481,7 +477,9 @@ final class ComboPanel: NSPanel {
             window.appearance = selectedAppearance
             window.delegate = self
             window.title = L("Combo 设置"); window.titlebarAppearsTransparent = true
-            window.contentView = NSHostingView(rootView: SettingsView(store: store) { [weak self, weak window] onTop in
+            window.contentView = NSHostingView(rootView: SettingsView(store: store, closeGuide: { [weak window] in
+                window?.close()
+            }) { [weak self, weak window] onTop in
                 guard let self, let window else { return }
                 self.guideWantsTop = onTop
                 if onTop {

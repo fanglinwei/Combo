@@ -21,6 +21,7 @@ import SwiftUI
         store.screenActive = false
         store.reduceMotion = true
         defer { store.stop() }
+        try await checkStartup(store: store)
         try await checkWindowRestoration(store: store)
         let directory = URL(fileURLWithPath: CommandLine.arguments.dropFirst().first ?? "build/checks/onboarding-design", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -125,7 +126,43 @@ import SwiftUI
         assert(store.audio.bluetoothPermission.askedAt == nil,
                "Showing and navigating the guide must not request permissions")
         assert(renders == 96)
-        print("PASS: compact 620pt guide with settings frame restoration; \(renders) native guide renders; forward/back/forward navigation, fixed footer, Return/Escape, saved progress, completion and demo cleanup")
+        print("PASS: first launch guide, silent completed launch, completion closes window and manual settings reopening; \(renders) native guide renders; forward/back/forward navigation, fixed footer, Return/Escape, saved progress and demo cleanup")
+    }
+
+    /// Exercise the actual launch path with fresh and completed installation preferences.
+    @MainActor private static func checkStartup(store: Store) async throws {
+        assert(Bundle.main.bundleIdentifier == "local.combo.onboarding-design-check", "Startup checks must run in the isolated test app")
+        let defaults = UserDefaults.standard
+        let keys = [OnboardingState.completedKey, OnboardingState.postponedKey, OnboardingState.stepKey, "hasOpened"]
+        let saved = keys.map { defaults.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) } }
+        for key in keys { defaults.removeObject(forKey: key) }
+        let notification = Notification(name: NSApplication.didFinishLaunchingNotification, object: NSApp)
+        let firstLaunch = AppDelegate(store: store)
+        firstLaunch.applicationDidFinishLaunching(notification)
+        defer {
+            firstLaunch.settings?.close()
+            firstLaunch.animator?.invalidate()
+            NSStatusBar.system.removeStatusItem(firstLaunch.status)
+        }
+        try await settle()
+        guard let window = firstLaunch.settings else { throw Failure.render }
+        assert(window.isVisible && OnboardingState.showsGuide(), "A fresh installation must show the guide")
+        defaults.set(1, forKey: OnboardingState.stepKey)
+        window.close()
+        assert(OnboardingState.showsGuide() && defaults.integer(forKey: OnboardingState.stepKey) == 1,
+               "Closing an unfinished guide must preserve progress and show it on the next launch")
+
+        defaults.set(true, forKey: OnboardingState.completedKey)
+        let completedLaunch = AppDelegate(store: store)
+        completedLaunch.applicationDidFinishLaunching(notification)
+        defer {
+            completedLaunch.animator?.invalidate()
+            NSStatusBar.system.removeStatusItem(completedLaunch.status)
+        }
+        try await settle()
+        assert(completedLaunch.settings == nil, "A completed installation must launch without opening settings in Debug or Release")
+        assert(completedLaunch.status.button != nil, "Combo must remain available in the menu bar")
     }
 
     @MainActor private static func checkWindowRestoration(store: Store) async throws {
@@ -142,9 +179,11 @@ import SwiftUI
         guard let window = delegate.settings, let hosting = window.contentView else { throw Failure.render }
         window.orderOut(nil)
         try await settle()
-        for height in [CGFloat(870), 760] {
+        guard let visibleFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame else { throw Failure.render }
+        for height in [min(CGFloat(870), visibleFrame.height), min(CGFloat(760), visibleFrame.height)] {
             var original = window.frame
             original.size.height = height
+            original.origin.y = visibleFrame.maxY - height
             window.setFrame(original, display: true)
             defaults.set(false, forKey: OnboardingState.completedKey)
             try await settle()
@@ -158,7 +197,13 @@ import SwiftUI
                 try await settle()
             }
             assert(defaults.bool(forKey: OnboardingState.completedKey))
-            assert(window.frame == original, "Completing a reopened guide must restore the previous settings frame")
+            assert(!window.isVisible, "Completing the guide must close the window without showing settings")
+            assert(window.frame == original, "Completing the guide must restore the previous settings frame while hidden")
+            delegate.openSettings()
+            try await settle()
+            assert(window.isVisible && window.frame == original,
+                   "Manually opening settings must restore the previous settings frame: visible=\(window.isVisible), frame=\(window.frame), expected=\(original)")
+            window.orderOut(nil)
         }
         window.contentView = nil
         window.close()

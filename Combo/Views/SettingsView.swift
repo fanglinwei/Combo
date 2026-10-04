@@ -73,11 +73,13 @@ struct SettingsView: View {
     @ObservedObject var setup: MenuBarSetup
     /// 引导是否在屏幕上。它决定窗口要不要抬到浮动层，逻辑留在 AppDelegate。
     let setGuideOnTop: (Bool) -> Void
-    init(store: Store, page: Page = .general, setGuideOnTop: @escaping (Bool) -> Void) {
+    let closeGuide: () -> Void
+    init(store: Store, page: Page = .general, closeGuide: @escaping () -> Void = {}, setGuideOnTop: @escaping (Bool) -> Void) {
         self.store = store
         self.battery = store.battery
         self.setup = store.menuSetup
         self.setGuideOnTop = setGuideOnTop
+        self.closeGuide = closeGuide
         _page = State(initialValue: page)
     }
     @State private var page: Page
@@ -118,6 +120,7 @@ struct SettingsView: View {
         Group {
             if guideVisible {
                 OnboardingView(store: store, step: $onboardingStep) { completed in
+                    closeGuide()
                     onboardingCompleted = completed
                     onboardingPostponed = !completed
                     if completed { onboardingStep = 0; page = .general }

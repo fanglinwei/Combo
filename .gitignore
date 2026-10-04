@@ -1,6 +1,7 @@
 .DS_Store
 .codegraph/
 build/
+/Releases/
 xcuserdata/
 __pycache__/
 prototypes/menu-access/MenuProbe

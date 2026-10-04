@@ -14,7 +14,7 @@ enum OnboardingState {
         defaults.set(defaults.bool(forKey: "hasOpened"), forKey: completedKey)
     }
 
-    /// 首次启动自动打开设置窗口的唯一条件：既没完成，也没被“稍后再说”放行。
+    /// 首次启动显示引导的条件：既没完成，也没被旧版“稍后再说”放行。
     static func showsGuide(_ defaults: UserDefaults = .standard) -> Bool {
         !defaults.bool(forKey: completedKey) && !defaults.bool(forKey: postponedKey)
     }
