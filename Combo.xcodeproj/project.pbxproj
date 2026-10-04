@@ -1,0 +1,635 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07AC77614721507B247E230C /* HoverScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A453DCC82C729938A532C5 /* HoverScroller.swift */; };
+		126858ABDF709C9A021EA8DC /* EnergyApps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89D8B2128427EB6D64D4651E /* EnergyApps.swift */; };
+		186320F179D22AB5DDE7273E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141C7E0B4B8033FEFD4E6E3 /* main.swift */; };
+		20AF98593CEC5902E72C031C /* State.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAD8F5DF85A5699BF4EF74DD /* State.swift */; };
+		32E1CB35F0A51A0A3846C835 /* MenuDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E707D0608019378308FCC72 /* MenuDiagnostics.swift */; };
+		3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */; };
+		3C556937A23E487C92858565 /* ComboIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */; };
+		5E00D0EE72AF68EB37B88EE6 /* WiFiControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */; };
+		5FD40C2AFE024D728E210C68 /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560A84B06FED44A09CBCC0AD /* PanelView.swift */; };
+		6C74CABA6CF5033FA7B8715C /* AudioVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */; };
+		0DD0C0DE0000000000000002 /* OutputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000001 /* OutputDevice.swift */; };
+		0DD0C0DE0000000000000004 /* AirPlayRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000003 /* AirPlayRoute.swift */; };
+		0DD0C0DE0000000000000006 /* AirPlayDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */; };
+		75532254095A42BA9DC365C5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D54D08915E2455AB5B921B3 /* SettingsView.swift */; };
+		766CEEF22B3A4665BFA9FFCE /* BatterySections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18CFAB0D2474FDBB947237D /* BatterySections.swift */; };
+		806396930CB40D61BD38E445 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45FEC6A6DB0E3328C1EB77 /* Store.swift */; };
+		82EC1A0CE1BDECA3461169B8 /* IconTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F951B1AB68E4AC17144EF10 /* IconTransition.swift */; };
+		8916AEC4AA95CCE6EB2B924E /* AirPodsControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */; };
+		8D0E3ADF639C9B4669A8DF0A /* MenuFoldExperiment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */; };
+		908640C6F77CB53C46879E70 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 682E6A0AC33379301D321FAB /* Cocoa.framework */; };
+		954227314649115F4BCCD392 /* NetworkStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12994A42967FE55612E83F0C /* NetworkStatus.swift */; };
+		9F566B0DC2CD4AB99A876F17 /* AudioStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84944DB5015F43C89D9DB5E3 /* AudioStore.swift */; };
+		A10100000000000000000002 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000001 /* Localization.swift */; };
+		A10100000000000000000005 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000004 /* Localizable.strings */; };
+		A10100000000000000000007 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000006 /* InfoPlist.strings */; };
+		A2B82EEA79E249D2AB69201A /* SoundSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 724FA7F8C78C449A93434865 /* SoundSections.swift */; };
+		ABCD12340000000000000001 /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000001 /* OnboardingState.swift */; };
+		ABCD12340000000000000002 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000002 /* OnboardingView.swift */; };
+		AFA2F91CCEE742DEAE9C0D76 /* WiFiIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */; };
+		B34AA0BB30701F2500429926 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B34AA0BA30701F2500429926 /* Media.xcassets */; };
+		B96F6D588719478F84969E4C /* WiFiSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76685DF749374187A6431997 /* WiFiSections.swift */; };
+		BBDFDCFDFA4043FEB1A05A4D /* IconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360D743C5A0F4A49B67622DA /* IconRenderer.swift */; };
+		D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */; };
+		E9389571F13E1CBB3B732459 /* MediaPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */; };
+		F093460E736B44B681262DD8 /* BatteryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC6FB7D6A024102BD2E9F79 /* BatteryStore.swift */; };
+		F10C80F2ECA567F263086DC1 /* HotspotControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0761E92A852EF53B66972DA /* HotspotControl.swift */; };
+		F167C07E33420695912C062F /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A78ED80A91E3BE2FDD52277 /* Theme.swift */; };
+		F44BAAD3AA4CE1463CC4CD81 /* PowerModeControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0141C7E0B4B8033FEFD4E6E3 /* main.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		092B442EC711CC51B8749ADA /* Combo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Combo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B45FEC6A6DB0E3328C1EB77 /* Store.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		12994A42967FE55612E83F0C /* NetworkStatus.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NetworkStatus.swift; sourceTree = "<group>"; };
+		1D54D08915E2455AB5B921B3 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		2F951B1AB68E4AC17144EF10 /* IconTransition.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IconTransition.swift; sourceTree = "<group>"; };
+		360D743C5A0F4A49B67622DA /* IconRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IconRenderer.swift; sourceTree = "<group>"; };
+		3A78ED80A91E3BE2FDD52277 /* Theme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		3ABDC3E82DEC91AD9967B5D2 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4E707D0608019378308FCC72 /* MenuDiagnostics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuDiagnostics.swift; sourceTree = "<group>"; };
+		52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ComboIcon.swift; sourceTree = "<group>"; };
+		560A84B06FED44A09CBCC0AD /* PanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PanelView.swift; sourceTree = "<group>"; };
+		572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuFoldExperiment.swift; sourceTree = "<group>"; };
+		628947417B405D94700C64C2 /* AirPodsContext.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; path = AirPodsContext.c; sourceTree = "<group>"; };
+		62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiControl.swift; sourceTree = "<group>"; };
+		63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiIcon.swift; sourceTree = "<group>"; };
+		65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioVolume.swift; sourceTree = "<group>"; };
+		0DD0C0DE0000000000000001 /* OutputDevice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutputDevice.swift; sourceTree = "<group>"; };
+		0DD0C0DE0000000000000003 /* AirPlayRoute.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPlayRoute.swift; sourceTree = "<group>"; };
+		0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPlayDiscovery.swift; sourceTree = "<group>"; };
+		682E6A0AC33379301D321FAB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		724FA7F8C78C449A93434865 /* SoundSections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SoundSections.swift; sourceTree = "<group>"; };
+		75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChargeControl.swift; sourceTree = "<group>"; };
+		76685DF749374187A6431997 /* WiFiSections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiSections.swift; sourceTree = "<group>"; };
+		76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPodsControl.swift; sourceTree = "<group>"; };
+		7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediaPlayback.swift; sourceTree = "<group>"; };
+		832EB9E7923BEB3E683D893F /* MediaPlaybackHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = MediaPlaybackHelper.m; sourceTree = "<group>"; };
+		84944DB5015F43C89D9DB5E3 /* AudioStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioStore.swift; sourceTree = "<group>"; };
+		89D8B2128427EB6D64D4651E /* EnergyApps.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EnergyApps.swift; sourceTree = "<group>"; };
+		A0761E92A852EF53B66972DA /* HotspotControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotspotControl.swift; sourceTree = "<group>"; };
+		A10100000000000000000001 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		A10100000000000000000008 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A10100000000000000000009 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		A1010000000000000000000A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		A1010000000000000000000B /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		A3A453DCC82C729938A532C5 /* HoverScroller.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HoverScroller.swift; sourceTree = "<group>"; };
+		A7C6E6FC3866A2286D6176F1 /* EnergyHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = EnergyHelper.m; sourceTree = "<group>"; };
+		B18CFAB0D2474FDBB947237D /* BatterySections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BatterySections.swift; sourceTree = "<group>"; };
+		B34AA0BA30701F2500429926 /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
+		B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PowerModeControl.swift; sourceTree = "<group>"; };
+		B9833BCDE5F7EAD64C9BA2B3 /* ChargeHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = ChargeHelper.m; sourceTree = "<group>"; };
+		CAD8F5DF85A5699BF4EF74DD /* State.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = State.swift; sourceTree = "<group>"; };
+		DCBA43210000000000000001 /* OnboardingState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingState.swift; sourceTree = "<group>"; };
+		DCBA43210000000000000002 /* OnboardingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		DEC6FB7D6A024102BD2E9F79 /* BatteryStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BatteryStore.swift; sourceTree = "<group>"; };
+		EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuBarSetup.swift; sourceTree = "<group>"; };
+		F6CE5149DF92562886DF166F /* AirPodsHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = AirPodsHelper.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AFB386B3A0D35C79122B162F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				908640C6F77CB53C46879E70 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1D8D29E072EA45598FE7D157 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				DCBA43210000000000000001 /* OnboardingState.swift */,
+				DCBA43210000000000000002 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		275E14D7993944F3A200D4BC /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */,
+				4E707D0608019378308FCC72 /* MenuDiagnostics.swift */,
+				572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		3C58C0D3217474974257123A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				092B442EC711CC51B8749ADA /* Combo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		42AF82BC159C493597535D65 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				A0761E92A852EF53B66972DA /* HotspotControl.swift */,
+				12994A42967FE55612E83F0C /* NetworkStatus.swift */,
+				62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		4451806E1B3B5BE316D9CC3E /* Combo */ = {
+			isa = PBXGroup;
+			children = (
+				477A1BE9857448B78B2C3D65 /* App */,
+				A10100000000000000000003 /* Localization */,
+				D0BB29948FD940CFAF28711A /* Audio */,
+				5571A3256A8942BAB16B8F6F /* Battery */,
+				42AF82BC159C493597535D65 /* Network */,
+				275E14D7993944F3A200D4BC /* MenuBar */,
+				1D8D29E072EA45598FE7D157 /* Onboarding */,
+				FB37982F6EFE4EDAB569B50B /* Rendering */,
+				69079DF3A660422CB8FF703F /* Stores */,
+				CD8E7DF5640F4EEDB84056B3 /* Views */,
+			);
+			path = Combo;
+			sourceTree = "<group>";
+		};
+		477A1BE9857448B78B2C3D65 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				0141C7E0B4B8033FEFD4E6E3 /* main.swift */,
+				A10100000000000000000001 /* Localization.swift */,
+				3ABDC3E82DEC91AD9967B5D2 /* Info.plist */,
+				CAD8F5DF85A5699BF4EF74DD /* State.swift */,
+				B34AA0BA30701F2500429926 /* Media.xcassets */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		5571A3256A8942BAB16B8F6F /* Battery */ = {
+			isa = PBXGroup;
+			children = (
+				75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */,
+				B9833BCDE5F7EAD64C9BA2B3 /* ChargeHelper.m */,
+				89D8B2128427EB6D64D4651E /* EnergyApps.swift */,
+				A7C6E6FC3866A2286D6176F1 /* EnergyHelper.m */,
+				B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */,
+			);
+			path = Battery;
+			sourceTree = "<group>";
+		};
+		69079DF3A660422CB8FF703F /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				0B45FEC6A6DB0E3328C1EB77 /* Store.swift */,
+				DEC6FB7D6A024102BD2E9F79 /* BatteryStore.swift */,
+				84944DB5015F43C89D9DB5E3 /* AudioStore.swift */,
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		7B0EC1FEBC72CEF03CCA2F9E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9550E48EBA119469F91D6290 /* OS X */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		9550E48EBA119469F91D6290 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				682E6A0AC33379301D321FAB /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		A10100000000000000000003 /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				A10100000000000000000004 /* Localizable.strings */,
+				A10100000000000000000006 /* InfoPlist.strings */,
+			);
+			path = Localization;
+			sourceTree = "<group>";
+		};
+		CD8E7DF5640F4EEDB84056B3 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A3A453DCC82C729938A532C5 /* HoverScroller.swift */,
+				3A78ED80A91E3BE2FDD52277 /* Theme.swift */,
+				1D54D08915E2455AB5B921B3 /* SettingsView.swift */,
+				560A84B06FED44A09CBCC0AD /* PanelView.swift */,
+				724FA7F8C78C449A93434865 /* SoundSections.swift */,
+				B18CFAB0D2474FDBB947237D /* BatterySections.swift */,
+				76685DF749374187A6431997 /* WiFiSections.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		CD922D4D2A542514D8565DDF = {
+			isa = PBXGroup;
+			children = (
+				3C58C0D3217474974257123A /* Products */,
+				7B0EC1FEBC72CEF03CCA2F9E /* Frameworks */,
+				4451806E1B3B5BE316D9CC3E /* Combo */,
+			);
+			sourceTree = "<group>";
+		};
+		D0BB29948FD940CFAF28711A /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				628947417B405D94700C64C2 /* AirPodsContext.c */,
+				76DBFBB37B940F1D77BB12CD /* AirPodsControl.swift */,
+				F6CE5149DF92562886DF166F /* AirPodsHelper.m */,
+				65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */,
+				0DD0C0DE0000000000000001 /* OutputDevice.swift */,
+				0DD0C0DE0000000000000003 /* AirPlayRoute.swift */,
+				0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */,
+				7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */,
+				832EB9E7923BEB3E683D893F /* MediaPlaybackHelper.m */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		FB37982F6EFE4EDAB569B50B /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				2F951B1AB68E4AC17144EF10 /* IconTransition.swift */,
+				63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */,
+				360D743C5A0F4A49B67622DA /* IconRenderer.swift */,
+				52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */,
+			);
+			path = Rendering;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BF3EB1ECE2EE2421FFF26086 /* Combo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3E469B9AD69A8FC0FF27FA63 /* Build configuration list for PBXNativeTarget "Combo" */;
+			buildPhases = (
+				944B36866F17A12741546806 /* Sources */,
+				B8559022B074028149F33E5B /* Build and sign helpers */,
+				AFB386B3A0D35C79122B162F /* Frameworks */,
+				DFF5B99CB8616F1D04269C44 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Combo;
+			productName = Combo;
+			productReference = 092B442EC711CC51B8749ADA /* Combo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E27AE2E768E52DF74108B4B1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = 7323C5B6B7F13118886E6044 /* Build configuration list for PBXProject "Combo" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = CD922D4D2A542514D8565DDF;
+			productRefGroup = 3C58C0D3217474974257123A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BF3EB1ECE2EE2421FFF26086 /* Combo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DFF5B99CB8616F1D04269C44 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10100000000000000000005 /* Localizable.strings in Resources */,
+				A10100000000000000000007 /* InfoPlist.strings in Resources */,
+				B34AA0BB30701F2500429926 /* Media.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B8559022B074028149F33E5B /* Build and sign helpers */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Combo/Battery/ChargeHelper.m",
+				"$(SRCROOT)/Combo/Battery/EnergyHelper.m",
+				"$(SRCROOT)/Combo/Audio/AirPodsContext.c",
+				"$(SRCROOT)/Combo/Audio/AirPodsHelper.m",
+				"$(SRCROOT)/Combo/Audio/MediaPlaybackHelper.m",
+			);
+			name = "Build and sign helpers";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboChargeHelper",
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboEnergyHelper",
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboAirPodsContext.dylib",
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboAirPodsHelper",
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Helpers/ComboMediaPlaybackHelper.dylib",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/zsh;
+			shellScript = "set -eu\nmkdir -p \"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Helpers\"\ncd \"$SRCROOT\"\nOUT=\"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Helpers\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -framework Foundation -framework IOKit Combo/Battery/ChargeHelper.m -o \"$OUT/ComboChargeHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/Battery/EnergyHelper.m -o \"$OUT/ComboEnergyHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -dynamiclib -Wall -Wextra -Werror Combo/Audio/AirPodsContext.c -framework CoreFoundation -framework Security -o \"$OUT/ComboAirPodsContext.dylib\"\nxcrun clang -isysroot \"$SDKROOT\" -fobjc-arc -Wall -Wextra -Werror Combo/Audio/AirPodsHelper.m -framework Foundation -framework CoreAudio -framework IOBluetooth -o \"$OUT/ComboAirPodsHelper\"\nxcrun clang -isysroot \"$SDKROOT\" -dynamiclib -fobjc-arc -Wall -Wextra -Werror -framework Foundation Combo/Audio/MediaPlaybackHelper.m -o \"$OUT/ComboMediaPlayback.dylib\"\nfor file in \"$OUT\"/*; do codesign --force --sign - \"$file\"; done\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		944B36866F17A12741546806 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10100000000000000000002 /* Localization.swift in Sources */,
+				8916AEC4AA95CCE6EB2B924E /* AirPodsControl.swift in Sources */,
+				6C74CABA6CF5033FA7B8715C /* AudioVolume.swift in Sources */,
+				0DD0C0DE0000000000000002 /* OutputDevice.swift in Sources */,
+				0DD0C0DE0000000000000004 /* AirPlayRoute.swift in Sources */,
+				0DD0C0DE0000000000000006 /* AirPlayDiscovery.swift in Sources */,
+				3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */,
+				126858ABDF709C9A021EA8DC /* EnergyApps.swift in Sources */,
+				F10C80F2ECA567F263086DC1 /* HotspotControl.swift in Sources */,
+				82EC1A0CE1BDECA3461169B8 /* IconTransition.swift in Sources */,
+				AFA2F91CCEE742DEAE9C0D76 /* WiFiIcon.swift in Sources */,
+				BBDFDCFDFA4043FEB1A05A4D /* IconRenderer.swift in Sources */,
+				3C556937A23E487C92858565 /* ComboIcon.swift in Sources */,
+				E9389571F13E1CBB3B732459 /* MediaPlayback.swift in Sources */,
+				ABCD12340000000000000001 /* OnboardingState.swift in Sources */,
+				ABCD12340000000000000002 /* OnboardingView.swift in Sources */,
+				D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */,
+				32E1CB35F0A51A0A3846C835 /* MenuDiagnostics.swift in Sources */,
+				8D0E3ADF639C9B4669A8DF0A /* MenuFoldExperiment.swift in Sources */,
+				954227314649115F4BCCD392 /* NetworkStatus.swift in Sources */,
+				F44BAAD3AA4CE1463CC4CD81 /* PowerModeControl.swift in Sources */,
+				20AF98593CEC5902E72C031C /* State.swift in Sources */,
+				806396930CB40D61BD38E445 /* Store.swift in Sources */,
+				F093460E736B44B681262DD8 /* BatteryStore.swift in Sources */,
+				9F566B0DC2CD4AB99A876F17 /* AudioStore.swift in Sources */,
+				F167C07E33420695912C062F /* Theme.swift in Sources */,
+				75532254095A42BA9DC365C5 /* SettingsView.swift in Sources */,
+				5FD40C2AFE024D728E210C68 /* PanelView.swift in Sources */,
+				A2B82EEA79E249D2AB69201A /* SoundSections.swift in Sources */,
+				766CEEF22B3A4665BFA9FFCE /* BatterySections.swift in Sources */,
+				B96F6D588719478F84969E4C /* WiFiSections.swift in Sources */,
+				5E00D0EE72AF68EB37B88EE6 /* WiFiControl.swift in Sources */,
+				186320F179D22AB5DDE7273E /* main.swift in Sources */,
+				07AC77614721507B247E230C /* HoverScroller.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		A10100000000000000000004 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A10100000000000000000008 /* en */,
+				A10100000000000000000009 /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		A10100000000000000000006 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A1010000000000000000000A /* en */,
+				A1010000000000000000000B /* zh-Hans */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		119A7A1E029DD069416D9573 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Combo/App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = local.combo.app;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_ENABLE_OPAQUE_TYPE_ERASURE = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		15C403F586D6EF92F4E4E645 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Combo/App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = local.combo.app;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_ENABLE_OPAQUE_TYPE_ERASURE = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		56DAFCCB60509F409DC77129 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A04540A7A77AB0D8DC28EB8D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3E469B9AD69A8FC0FF27FA63 /* Build configuration list for PBXNativeTarget "Combo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15C403F586D6EF92F4E4E645 /* Release */,
+				119A7A1E029DD069416D9573 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7323C5B6B7F13118886E6044 /* Build configuration list for PBXProject "Combo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				56DAFCCB60509F409DC77129 /* Debug */,
+				A04540A7A77AB0D8DC28EB8D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = E27AE2E768E52DF74108B4B1 /* Project object */;
+}

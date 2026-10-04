@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
+<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+<key>CFBundleName</key><string>Combo</string>
+<key>CFBundleDisplayName</key><string>Combo</string>
+<key>CFBundleIconName</key><string>AppIcon</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>1.0.0</string>
+<key>CFBundleVersion</key><string>1.0.0</string>
+<key>LSMinimumSystemVersion</key><string>26.0</string>
+<key>LSUIElement</key><true/>
+<key>NSHighResolutionCapable</key><true/>
+<key>NSLocationUsageDescription</key><string>macOS 需要定位授权才能读取当前 Wi‑Fi 名称及附近网络。Combo 不读取坐标，也不上传网络列表。</string>
+<key>NSLocationWhenInUseUsageDescription</key><string>macOS 需要定位授权才能读取当前 Wi‑Fi 名称及附近网络。Combo 不读取坐标，也不上传网络列表。</string>
+<key>NSBluetoothAlwaysUsageDescription</key><string>识别已连接蓝牙音频设备类别，显示支持的耳机电量和聆听模式，并在 Combo 中控制支持的聆听模式。</string>
+<key>NSLocalNetworkUsageDescription</key><string>发现本地网络中附近的 AirPlay 设备。Combo 不上传设备列表；连接由系统声音设置完成。</string>
+<key>NSBonjourServices</key><array><string>_airplay._tcp</string></array>
+</dict></plist>
