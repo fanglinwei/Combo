@@ -10,12 +10,14 @@ import SwiftUI
 
         let fresh = BatteryStore(defaults: defaults)
         assert(fresh.displayEnabled && fresh.displayThreshold == 20)
-        for threshold in [0, 1, 20, 50, 100] {
+        for threshold in [-1, 0, 1, 20, 50, 80, 100] {
             defaults.removePersistentDomain(forName: suite)
             defaults.set(threshold, forKey: "batteryDisplayThreshold")
             let battery = BatteryStore(defaults: defaults)
-            assert(battery.displayThreshold == threshold, "Existing thresholds must survive migration")
-            let expected = threshold == 0 ? 20 : threshold
+            let normalized = threshold == 0 ? 0 : min(80, max(20, threshold))
+            assert(battery.displayThreshold == normalized, "Existing thresholds must fit the slider range; zero stays disabled")
+            assert(defaults.integer(forKey: "batteryDisplayThreshold") == normalized)
+            let expected = normalized == 0 ? 20 : normalized
             battery.displayEnabled = false
             let reopened = BatteryStore(defaults: defaults)
             assert(!reopened.displayEnabled && reopened.lastDisplayThreshold == expected)
@@ -26,6 +28,19 @@ import SwiftUI
             let later = BatteryStore(defaults: defaults)
             later.displayEnabled = true
             assert(later.displayThreshold == 37)
+        }
+
+        for remembered in [1, 20, 50, 80, 100] {
+            defaults.set(0, forKey: "batteryDisplayThreshold")
+            defaults.set(remembered, forKey: "batteryLastDisplayThreshold")
+            let battery = BatteryStore(defaults: defaults)
+            assert(!battery.displayEnabled)
+            battery.displayEnabled = true
+            assert(battery.displayThreshold == min(80, max(20, remembered)))
+        }
+        for (requested, expected) in [(1, 20), (100, 80), (0, 0)] {
+            fresh.displayThreshold = requested
+            assert(fresh.displayThreshold == expected && defaults.integer(forKey: "batteryDisplayThreshold") == expected)
         }
 
         for hasBattery in [true, false] {
@@ -73,80 +88,22 @@ import SwiftUI
         assert(store.scene == .live, "Reopening Settings must keep live data")
         window.close()
         store.stop()
-        try checkThresholdInput(store: store)
-        print("PASS: threshold drafts, invalid submit/blur, valid submit/blur, 20% fresh default, existing threshold migration, off/on across restart, complete applicable baseline, preserved records and isolated retry planning and settings demo cleanup")
-    }
-
-    /// Exercise the actual SwiftUI text field through its AppKit field editor.
-    @MainActor private static func checkThresholdInput(store: Store) throws {
-        let defaults = UserDefaults.standard
-        let keys = ["batteryDisplayThreshold", "batteryLastDisplayThreshold"]
-        let saved = keys.map { ($0, defaults.object(forKey: $0)) }
-        defer { for (key, value) in saved { defaults.set(value, forKey: key) } }
-        store.battery.displayThreshold = 20
-        let hosting = NSHostingView(rootView: SettingsView(store: store, page: .integration) { _ in })
-        let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: 850, height: 1100),
-                              styleMask: [.titled], backing: .buffered, defer: false)
-        window.isReleasedWhenClosed = false
-        window.contentView = hosting
-        window.orderFrontRegardless()
-        defer { window.close() }
-        settle()
-        hosting.layoutSubtreeIfNeeded()
-        guard let field = editableField(in: hosting) else { throw Failure.field }
-
-        func enter(_ text: String) throws -> NSTextView {
-            guard window.makeFirstResponder(field) else { throw Failure.field }
-            settle()
-            guard let editor = field.currentEditor() as? NSTextView else { throw Failure.field }
-            editor.selectAll(nil)
-            for character in text {
-                editor.insertText(String(character), replacementRange: editor.selectedRange())
-                settle()
-            }
-            return editor
+        let thresholdKeys = ["batteryDisplayThreshold", "batteryLastDisplayThreshold"]
+        let savedThresholds = thresholdKeys.map { ($0, UserDefaults.standard.object(forKey: $0)) }
+        defer { for (key, value) in savedThresholds { UserDefaults.standard.set(value, forKey: key) } }
+        let settings = SettingsView(store: store, page: .integration) { _ in }
+        for (input, expected) in [(0.0, 20), (19.4, 20), (20.0, 20), (20.6, 21), (80.0, 80), (100.0, 80)] {
+            store.battery.displayThreshold = 50
+            settings.thresholdBinding.wrappedValue = input
+            assert(store.battery.displayEnabled, "Dragging the threshold slider must never turn off low-battery display")
+            assert(store.battery.displayThreshold == expected && store.battery.lastDisplayThreshold == expected)
+            assert(UserDefaults.standard.integer(forKey: "batteryDisplayThreshold") == expected)
         }
-
-        let invalid = try enter("101")
-        assert(store.battery.displayThreshold == 20, "Valid prefixes must remain drafts")
-        invalid.insertNewline(nil)
-        settle()
-        window.makeFirstResponder(nil)
-        settle()
-        assert(field.stringValue == "101", "Keep invalid input so the user can correct it")
-        assert(store.battery.displayThreshold == 20 && store.battery.lastDisplayThreshold == 20)
-        assert(defaults.integer(forKey: "batteryDisplayThreshold") == 20)
         store.battery.displayEnabled = false
-        store.battery.displayEnabled = true
-        assert(store.battery.displayThreshold == 20, "Invalid input must not change the remembered threshold")
-        settle()
-
-        let valid = try enter("37")
-        assert(store.battery.displayThreshold == 20, "Do not save while typing")
-        valid.insertNewline(nil)
-        settle()
-        assert(store.battery.displayThreshold == 37 && store.battery.lastDisplayThreshold == 37)
-        window.makeFirstResponder(nil)
-        settle()
-        _ = try enter("64")
-        assert(store.battery.displayThreshold == 37)
-        window.makeFirstResponder(nil)
-        settle()
-        assert(store.battery.displayThreshold == 64 && defaults.integer(forKey: "batteryDisplayThreshold") == 64,
-               "Leaving a valid field must commit the complete draft")
+        assert(!store.battery.displayEnabled && store.battery.lastDisplayThreshold == 80,
+               "Only the toggle should disable display while remembering the slider value")
+        print("PASS: slider boundary input never disables display, 20–80% threshold bounds and persistence, 20% fresh default, existing threshold migration, off/on across restart, complete applicable baseline, preserved records and isolated retry planning and settings demo cleanup")
     }
 
-    @MainActor private static func settle() {
-        RunLoop.current.run(until: Date().addingTimeInterval(0.05))
-    }
-
-    @MainActor private static func editableField(in view: NSView) -> NSTextField? {
-        if let field = view as? NSTextField, field.isEditable { return field }
-        for child in view.subviews {
-            if let field = editableField(in: child) { return field }
-        }
-        return nil
-    }
-
-    enum Failure: Error { case defaults, window, field }
+    enum Failure: Error { case defaults, window }
 }

@@ -36,10 +36,13 @@ struct IconContent: Equatable {
         else if snapshot.symbol == "wifi.slash" { self.init(kind: .wifiOff) }
         else if snapshot.symbol == "exclamationmark" { self.init(kind: .warning) }
         else if !snapshot.symbol.isEmpty && snapshot.symbol != "wifi" { self.init(kind: .unavailable) }
-        else if snapshot.batteryPreferred || (snapshot.charging && snapshot.battery.map { $0.isFinite && (0...1).contains($0) } == true) {
+        else if snapshot.batteryPreferred {
             self.init(kind: .battery, text: snapshot.batteryText.replacingOccurrences(of: "%", with: ""))
         }
         else if let deviceGlyph = snapshot.deviceGlyph { self.init(kind: .headphones); self.glyph = deviceGlyph }
+        else if snapshot.charging && snapshot.battery.map({ $0.isFinite && (0...1).contains($0) }) == true {
+            self.init(kind: .battery, text: snapshot.batteryText.replacingOccurrences(of: "%", with: ""))
+        }
         else if snapshot.symbol == "wifi" { self.init(kind: .wifi, priority: 1) }
         else {
             self.init(kind: .battery, text: snapshot.battery.map { String(Int(($0*100).rounded())) } ?? "—")

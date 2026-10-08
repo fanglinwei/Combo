@@ -117,7 +117,7 @@ struct Snapshot {
     var networkSymbol: String? = nil
     func preferringBattery(threshold: Int) -> Snapshot {
         guard symbol == "wifi" || symbol.isEmpty, let battery, battery.isFinite, (0...1).contains(battery),
-              charging || battery < Double(threshold) / 100 else { return self }
+              battery < Double(threshold) / 100 else { return self }
         var result = self
         result.networkSymbol = symbol
         result.symbol = ""

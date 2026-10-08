@@ -62,6 +62,7 @@ enum SystemPermissionAlert {
     /// 面板窗口真正上屏后才置真。内容入场必须等它，不能用 panelVisible：
     /// 后者在 hosting view 安装前就翻真，新视图首帧即已是真值，onChange 不会触发（卡片会一直不出现）。
     @Published var panelRevealed = false
+    @Published var panelExpanded = false
     /// Which section's detail window is open, if any. The panel and the detail window both read it.
     @Published var detailSection: PanelSection?
     @Published var detailRevealed = false
