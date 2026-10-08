@@ -309,7 +309,7 @@
 "曲目信息在播放结束后保留约 5 秒，切歌时不会闪空。" = "Track info is held for about 5 seconds after playback ends, so switching songs does not flash empty.";
 "结束演示，返回本机状态" = "End Demo and Return to Live Status";
 "在菜单栏演示播放" = "Demo Playback in Menu Bar";
-"1.1.0 · 三合一预览版" = "1.1.0 · Three-in-One Preview";
+"1.2.0 · 三合一预览版" = "1.2.0 · Three-in-One Preview";
 "电量、连接与音量，合在一个安静的图标里。" = "Battery, connection, and volume in one quiet icon.";
 "当前能力" = "Available Features";
 "本机电池、Wi‑Fi 与声音操作" = "Battery, Wi-Fi, and Sound Controls for This Mac";

@@ -218,7 +218,7 @@ struct SettingsView: View {
                     .accessibilityAddTraits(page == item ? .isSelected : [])
             }
             Spacer()
-            Text("PREVIEW \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.0")")
+            Text("PREVIEW \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.2.0")")
                 .font(.system(size: 11)).foregroundStyle(palette.mutedText).padding(12)
         }.foregroundStyle(labelColor).padding(.horizontal, 8).padding(.bottom, 12).frame(width: 192)
             .modifier(SettingsSidebarSurface(solid: reduceTransparency, increasedContrast: contrast == .increased))
@@ -920,7 +920,7 @@ struct MediaPage: View {
                     Image(nsImage: brandImage).resizable().frame(width: 64, height: 64).accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Combo").font(.system(size: 24, weight: .semibold))
-                        note(L("\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.0") · 三合一预览版"))
+                        note(L("\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.2.0") · 三合一预览版"))
                         note("macOS 26+ · MacBook")
                     }
                     Spacer()
