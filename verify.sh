@@ -49,6 +49,14 @@ cat > "$GUIDE_CHECK_APP/Contents/Info.plist" <<'PLIST'
 PLIST
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library -I "$PRODUCTS" -F "$PRODUCTS" Tests/OnboardingDesignCheck.swift "$APP/Contents/MacOS/Combo.debug.dylib" -Xlinker -rpath -Xlinker "$APP/Contents/MacOS" -o "$GUIDE_CHECK_APP/Contents/MacOS/OnboardingDesignCheck"
 "$GUIDE_CHECK_APP/Contents/MacOS/OnboardingDesignCheck"
+MENU_CHECK_APP="$OUT/ApplicationMenuCheck.app"
+mkdir -p "$MENU_CHECK_APP/Contents/MacOS" "$MENU_CHECK_APP/Contents/Resources"
+cp -R "$APP/Contents/Resources/en.lproj" "$APP/Contents/Resources/zh-Hans.lproj" "$MENU_CHECK_APP/Contents/Resources/"
+cat > "$MENU_CHECK_APP/Contents/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>local.combo.application-menu-check</string><key>CFBundleExecutable</key><string>ApplicationMenuCheck</string><key>LSUIElement</key><true/></dict></plist>
+PLIST
+xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library -I "$PRODUCTS" -F "$PRODUCTS" Tests/ApplicationMenuCheck.swift "$APP/Contents/MacOS/Combo.debug.dylib" -Xlinker -rpath -Xlinker "$APP/Contents/MacOS" -o "$MENU_CHECK_APP/Contents/MacOS/ApplicationMenuCheck"
+"$MENU_CHECK_APP/Contents/MacOS/ApplicationMenuCheck"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 -parse-as-library Combo/Network/HotspotControl.swift Tests/HotspotControlCheck.swift -o "$OUT/hotspot-control-check"
 "$OUT/hotspot-control-check"
 xcrun swiftc -sdk "$SDK" -target "$TARGET" -swift-version 5 Combo/App/Localization.swift Combo/App/State.swift Combo/Audio/OutputDevice.swift Combo/Battery/ChargeControl.swift Tests/ChargeControlCheck.swift -o "$OUT/charge-control-check"

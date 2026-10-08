@@ -30,6 +30,7 @@ import SwiftUI
         let cover = try artwork(.systemPurple)
         store.mediaTrack = MediaTrack(title: "一首标题很长很长但不应该推挤播放状态的歌曲", artist: "示例艺人", source: "Music",
                                       bundleIdentifier: nil, playing: true, artwork: cover)
+        try await checkAirPodsExpansion(store: store, directory: directory)
         var combinations = 0
         for theme in ComboTheme.allCases {
             for dark in [false, true] {
@@ -56,7 +57,7 @@ import SwiftUI
                     store.panelRevealed = false
                     store.detailSection = section
                     var measured: CGFloat = 0
-                    let view = PanelView(store: store, battery: store.battery, audio: store.audio, bluetoothPermission: store.audio.bluetoothPermission,
+                    let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: store.audio.airpods, bluetoothPermission: store.audio.bluetoothPermission,
                                          mode: section == nil ? .overview : .detail, showSettings: {}, maxHeight: 900, reportHeight: { measured = $0 })
                         .defaultAppStorage(defaults).environment(\.colorScheme, dark ? .dark : .light)
                     let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: 420, height: 900), styleMask: .borderless, backing: .buffered, defer: false)
@@ -82,6 +83,74 @@ import SwiftUI
             }
         }
         print("PASS: \(combinations) artwork/theme combinations, contrast fallback, 24 native panel/detail renders, and row hover/pressed/disabled renders in all 6 palettes")
+    }
+    @MainActor private static func checkAirPodsExpansion(store: Store, directory: URL) async throws {
+        let helper = directory.appendingPathComponent("airpods-helper")
+        let id = store.audio.selectedOutputID
+        guard id != 0 else { throw Failure.render }
+        let target = String(repeating: "a", count: 64)
+        let payload: [String: Any] = ["deviceID": id, "target": target, "available": true,
+                                    "modes": [], "canSetMode": false, "canSetConversation": false,
+                                    "left": 66, "right": 62, "attempted": false, "verified": false]
+        let json = String(decoding: try JSONSerialization.data(withJSONObject: payload), as: UTF8.self)
+        try ("#!/bin/sh\nprintf '%s' '" + json + "'\n").write(to: helper, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: helper.path)
+        defer { try? FileManager.default.removeItem(at: helper) }
+        let control = AirPodsControl(helperURL: helper, libraryURL: URL(fileURLWithPath: "/usr/lib/libSystem.B.dylib"))
+        defer { control.cancel() }
+        let scene = store.scene
+        let live = store.live
+        defer { store.scene = scene; store.live = live; store.panelExpanded = false; store.reduceMotion = true }
+        store.scene = .live
+        store.live.deviceKind = .bluetooth(.airPodsPro)
+        store.live.output = "Test AirPods Pro"
+        store.reduceMotion = false
+        store.panelExpanded = false
+        var heights: [CGFloat] = []
+        let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: control,
+                             bluetoothPermission: store.audio.bluetoothPermission, mode: .overview,
+                             showSettings: {}, maxHeight: 900, reportHeight: { heights.append($0) })
+        let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: 420, height: 900),
+                              styleMask: .borderless, backing: .buffered, defer: false)
+        let hosting = NSHostingView(rootView: view)
+        hosting.sizingOptions = []
+        window.contentView = hosting
+        window.orderFront(nil)
+        defer { window.orderOut(nil) }
+        try await Task.sleep(for: .milliseconds(100))
+        let collapsed = try requireHeight(heights.last)
+        control.refresh(deviceID: id, target: target)
+        for _ in 0..<50 {
+            if control.snapshot != nil { break }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        assert(control.snapshot != nil, "Fixture must deliver valid AirPods data")
+        try await Task.sleep(for: .milliseconds(50))
+        assert(heights.last == collapsed, "Early data must not resize a panel during entrance")
+        heights.removeAll()
+        store.panelExpanded = true
+        try await Task.sleep(for: .milliseconds(300))
+        let expanded = try requireHeight(heights.last)
+        assert(expanded > collapsed, "Battery information must expand the sound card after entrance")
+        assert(heights == [expanded], "Report one target height so the native resize animation is not restarted each frame")
+        print("PASS: AirPods early/late arrival, no reserved space, single resize target and reduced motion")
+        control.cancel()
+        try await Task.sleep(for: .milliseconds(300))
+        assert(heights.last == collapsed, "No battery information must leave no reserved space")
+        control.refresh(deviceID: id, target: target)
+        try await Task.sleep(for: .milliseconds(400))
+        assert(heights.last == expanded, "Late data must expand without reopening the panel")
+        store.reduceMotion = true
+        store.panelExpanded = false
+        try await Task.sleep(for: .milliseconds(100))
+        assert(heights.last == collapsed)
+        store.panelExpanded = true
+        try await Task.sleep(for: .milliseconds(100))
+        assert(heights.last == expanded, "Reduced motion must display the data without height animation")
+    }
+    private static func requireHeight(_ height: CGFloat?) throws -> CGFloat {
+        guard let height else { throw Failure.render }
+        return height
     }
     @MainActor private static func checkRowHover(palette: ComboPalette, name: String, directory: URL) async throws {
         let frame = NSRect(x: 0, y: 0, width: 200, height: 40)

@@ -6,7 +6,7 @@ final class ComboPanel: NSPanel {
     override var canBecomeKey: Bool { true }
 }
 
-@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuItemValidation {
     let store: Store
 
     init(store: Store? = nil) {
@@ -45,11 +45,7 @@ final class ComboPanel: NSPanel {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         AppUpdater.shared.start()
-        let menu = NSMenu()
-        let root = NSMenuItem(); menu.addItem(root)
-        let submenu = NSMenu(); submenu.addItem(withTitle: L("设置…"), action: #selector(openSettings), keyEquivalent: ",").target = self
-        submenu.addItem(withTitle: L("退出 Combo"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        root.submenu = submenu; NSApp.mainMenu = menu
+        buildApplicationMenu()
         status = NSStatusBar.system.statusItem(withLength: 30)
         status.button?.target = self; status.button?.action = #selector(togglePanel)
         status.button?.wantsLayer = true
@@ -86,10 +82,40 @@ final class ComboPanel: NSPanel {
         panel?.appearance = appearance
         detailWindow?.appearance = appearance
     }
+    func buildApplicationMenu() {
+        let menu = NSMenu()
+        let root = menu.addItem(withTitle: "Combo", action: nil, keyEquivalent: "")
+        let submenu = NSMenu(title: "Combo")
+        submenu.addItem(withTitle: L("关于 Combo"), action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "").target = NSApp
+        submenu.addItem(.separator())
+        submenu.addItem(withTitle: L("设置…"), action: #selector(openSettings), keyEquivalent: ",").target = self
+        submenu.addItem(withTitle: L("检查更新…"), action: #selector(checkForUpdates), keyEquivalent: "").target = self
+        submenu.addItem(.separator())
+        let services = NSApp.servicesMenu ?? NSMenu()
+        services.supermenu?.items.first(where: { $0.submenu === services })?.submenu = nil
+        services.title = L("服务")
+        submenu.addItem(withTitle: L("服务"), action: nil, keyEquivalent: "").submenu = services
+        submenu.addItem(.separator())
+        submenu.addItem(withTitle: L("隐藏 Combo"), action: #selector(NSApplication.hide(_:)), keyEquivalent: "h").target = NSApp
+        let hideOthers = submenu.addItem(withTitle: L("隐藏其他"), action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
+        hideOthers.target = NSApp
+        hideOthers.keyEquivalentModifierMask = [.command, .option]
+        submenu.addItem(withTitle: L("显示全部"), action: #selector(NSApplication.unhideAllApplications(_:)), keyEquivalent: "").target = NSApp
+        submenu.addItem(.separator())
+        submenu.addItem(withTitle: L("退出 Combo"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q").target = NSApp
+        root.submenu = submenu
+        NSApp.mainMenu = menu
+        NSApp.servicesMenu = services
+    }
+
+    @objc func checkForUpdates() { AppUpdater.shared.checkForUpdates() }
+
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        menuItem.action != #selector(checkForUpdates) || AppUpdater.shared.canCheckForUpdates
+    }
+
     private func updateLanguage() {
-        let menu = NSApp.mainMenu?.items.first?.submenu
-        menu?.items.first?.title = L("设置…")
-        menu?.items.last?.title = L("退出 Combo")
+        buildApplicationMenu()
         settings?.title = L("Combo 设置")
         drawIcon()
     }
@@ -156,9 +182,10 @@ final class ComboPanel: NSPanel {
                 }
                 return
             }
+            store.panelExpanded = false
             store.panelRevealed = false
             let showSettings = { [weak self] in _ = self?.openSettings() }
-            let view = PanelView(store: store, battery: store.battery, audio: store.audio, bluetoothPermission: store.audio.bluetoothPermission,
+            let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: store.audio.airpods, bluetoothPermission: store.audio.bluetoothPermission,
                                  mode: .overview, showSettings: showSettings, maxHeight: visible.height - 16,
                                  reportHeight: { [weak self] value in self?.updatePanelHeight(value) })
             let window = panel ?? ComboPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -310,7 +337,7 @@ final class ComboPanel: NSPanel {
         } else {
             let showSettings = { [weak self] in _ = self?.openSettings() }
             let maxHeight = max(1, ((panel?.screen ?? NSScreen.main)?.visibleFrame.height ?? 0) - 16)
-            let view = PanelView(store: store, battery: store.battery, audio: store.audio, bluetoothPermission: store.audio.bluetoothPermission,
+            let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: store.audio.airpods, bluetoothPermission: store.audio.bluetoothPermission,
                                  mode: .detail, showSettings: showSettings, maxHeight: maxHeight,
                                  reportHeight: { [weak self] value in self?.updateDetailHeight(value) })
             window = ComboPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -370,6 +397,7 @@ final class ComboPanel: NSPanel {
         guard !Task.isCancelled, panel === window, window.isVisible else { return }
         revealing = false
         updatePanelFrame(animated: true)
+        store.panelExpanded = true
     }
 
     private func startPanelDismissalMonitoring() {
@@ -469,10 +497,12 @@ final class ComboPanel: NSPanel {
                 guard let self, !self.store.panelVisible else { return }
                 self.revealing = false
                 panel.orderOut(nil)
+                self.store.panelExpanded = false
             }
         }
     }
     @objc func openSettings() {
+        NSApp.setActivationPolicy(.regular)
         if settings == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 850, height: 690), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             window.appearance = selectedAppearance
@@ -499,7 +529,9 @@ final class ComboPanel: NSPanel {
             window.setFrame(NSRect(x: 0, y: 0, width: 850, height: 690), display: false)
             window.isReleasedWhenClosed = false; window.center(); settings = window
         }
-        NSApp.activate(ignoringOtherApps: true); settings?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        if settings?.isMiniaturized == true { settings?.deminiaturize(nil) }
+        settings?.makeKeyAndOrderFront(nil)
     }
     func applicationDidBecomeActive(_ notification: Notification) { Localization.shared.refresh(); store.refresh(); applyGuideLevel() }
 
@@ -514,6 +546,7 @@ final class ComboPanel: NSPanel {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { openSettings(); return true }
     func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow, window === settings else { return }
+        NSApp.setActivationPolicy(.accessory)
         store.scene = .live
         store.showMenuPermission = false
     }

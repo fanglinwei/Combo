@@ -16,6 +16,10 @@ import IOKit.ps
     @Published var chargeLimit: ChargeLimit = .unknown
     @Published var displayThreshold: Int {
         didSet {
+            if displayThreshold != 0, !(20...80).contains(displayThreshold) {
+                displayThreshold = min(80, max(20, displayThreshold))
+                return
+            }
             defaults.set(displayThreshold, forKey: "batteryDisplayThreshold")
             if displayThreshold > 0 { lastDisplayThreshold = displayThreshold }
             onDisplayThresholdChange?()
@@ -59,10 +63,13 @@ import IOKit.ps
     }
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        let threshold = min(100, max(0, defaults.object(forKey: "batteryDisplayThreshold") as? Int ?? 20))
+        let savedThreshold = defaults.object(forKey: "batteryDisplayThreshold") as? Int ?? 20
+        let threshold = savedThreshold == 0 ? 0 : min(80, max(20, savedThreshold))
         displayThreshold = threshold
-        lastDisplayThreshold = threshold > 0 ? threshold : min(100, max(1, defaults.object(forKey: "batteryLastDisplayThreshold") as? Int ?? 20))
+        lastDisplayThreshold = threshold > 0 ? threshold : min(80, max(20, defaults.object(forKey: "batteryLastDisplayThreshold") as? Int ?? 20))
         energyAppLimit = EnergyApps.displayLimit(defaults.object(forKey: "energyAppLimit") as? Int ?? 1)
+        defaults.set(displayThreshold, forKey: "batteryDisplayThreshold")
+        defaults.set(lastDisplayThreshold, forKey: "batteryLastDisplayThreshold")
     }
     func start() {
         batterySource = IOPSNotificationCreateRunLoopSource({ context in

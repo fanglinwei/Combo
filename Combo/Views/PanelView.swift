@@ -72,6 +72,7 @@ struct PanelView: View {
     @ObservedObject var store: Store
     @ObservedObject var battery: BatteryStore
     @ObservedObject var audio: AudioStore
+    @ObservedObject var airpods: AirPodsControl
     @ObservedObject var bluetoothPermission: BluetoothPermission
     let mode: Mode
     let showSettings: () -> Void
@@ -231,6 +232,13 @@ struct PanelView: View {
                     .buttonStyle(PanelIconButtonStyle(size: CGSize(width: 32, height: 32))).padding(-7.5).help(L("设置…")).accessibilityLabel(L(updater.availableVersion == nil ? "设置" : "设置，有新版本可用"))
             }.foregroundStyle(mutedText).font(.system(size: 13)).padding(.horizontal, 4)
         }
+        .animation(store.reduceMotion || !store.panelExpanded ? nil : Motion.animation(Motion.detailResize), value: overviewAirPodsBattery != nil)
+    }
+    private var overviewAirPodsBattery: AirPodsReply? {
+        guard store.panelExpanded, store.scene == .live, store.snapshot.outputIsAirPods,
+              let state = airpods.snapshot, state.available, state.deviceID == audio.selectedOutputID,
+              state.left != nil || state.right != nil || state.caseBattery != nil || state.single != nil else { return nil }
+        return state
     }
     private func sectionCard(_ section: PanelSection, snapshot s: Snapshot) -> some View {
         Button { choose(section) } label: {
@@ -279,9 +287,7 @@ struct PanelView: View {
                         .monospacedDigit().frame(width: 42, alignment: .trailing)
                 }
                 Text(s.output.string).font(.system(size: 11)).foregroundStyle(mutedText).lineLimit(1).allowsHitTesting(false)
-                if store.scene == .live, s.outputIsAirPods, let state = audio.airpods.snapshot,
-                   state.available, state.deviceID == audio.selectedOutputID,
-                   state.left != nil || state.right != nil || state.caseBattery != nil || state.single != nil {
+                if let state = overviewAirPodsBattery {
                     HStack(spacing: 8) {
                         if let left = state.left { Label("\(left)%", systemImage: "airpods.pro.left") }
                         if let right = state.right { Label("\(right)%", systemImage: "airpods.pro.right") }
@@ -289,6 +295,7 @@ struct PanelView: View {
                         if let single = state.single, state.left == nil && state.right == nil { Text(L("电量 \(single)%")) }
                     }.font(.system(size: 11)).foregroundStyle(mutedText).allowsHitTesting(false)
                         .accessibilityElement(children: .ignore).accessibilityLabel(state.batteryText)
+                        .transition(.opacity)
                 }
             }
         }

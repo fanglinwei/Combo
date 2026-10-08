@@ -111,7 +111,7 @@ for symbol in ["wifi", "", "minus", "exclamationmark"] {
             for battery: Double? in [nil, 0, 0.49, 0.50, 0.51, 1, .nan] {
                 let original = Snapshot(battery: battery, charging: charging, symbol: symbol)
                 let result = original.preferringBattery(threshold: 50)
-                let expected = (symbol == "wifi" || symbol.isEmpty) && battery.map { $0.isFinite && (charging || $0 < 0.5) } == true
+                let expected = (symbol == "wifi" || symbol.isEmpty) && battery.map { $0.isFinite && $0 < 0.5 } == true
                 assert(result.symbol == (expected ? "" : symbol))
                 assert(result.batteryPreferred == expected)
                 assert(result.network == original.network && result.charging == charging)
@@ -121,7 +121,7 @@ for symbol in ["wifi", "", "minus", "exclamationmark"] {
 assert(Snapshot(battery: 0, symbol: "wifi").preferringBattery(threshold: 0).symbol == "wifi")
 assert(Snapshot(battery: 1, symbol: "wifi").preferringBattery(threshold: 100).symbol == "wifi")
 assert(Snapshot(battery: 0.99, symbol: "wifi").preferringBattery(threshold: 100).symbol == "")
-assert(Snapshot(battery: 1, charging: true, symbol: "wifi").preferringBattery(threshold: 0).symbol == "")
+assert(Snapshot(battery: 1, charging: true, symbol: "wifi").preferringBattery(threshold: 0).symbol == "wifi")
 print("PASS: battery display priority, threshold boundaries, missing data and power-change detection")
 
 let calloutSize = CGSize(width: 240, height: 68)

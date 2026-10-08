@@ -121,7 +121,24 @@ import SwiftUI
         assert(reducedCompletion.isAnimating(at: 1.159) && !reducedCompletion.isAnimating(at: 1.161))
         var media = Snapshot.demo(.airpods)
         media.charging = true
-        assert(IconContent(media.preferringBattery(threshold: 50)).kind == .battery)
+        for playing in [true, false] {
+            media.playing = playing
+            for level in [0.5, 0.6, 0.8, 1.0] {
+                media.battery = level
+                assert(IconContent(media.preferringBattery(threshold: 50)).kind == .headphones,
+                       "Active output takes precedence over charging at or above the threshold, including paused playback")
+            }
+            media.battery = 0.49
+            assert(IconContent(media.preferringBattery(threshold: 50)).kind == .battery,
+                   "Low battery takes precedence over the active output even while charging")
+            assert(IconContent(media.preferringBattery(threshold: 0)).kind == .headphones,
+                   "Disabling low-battery display restores the active output")
+        }
+        var chargingWithoutDevice = media
+        chargingWithoutDevice.battery = 0.6
+        chargingWithoutDevice.deviceKind = .other
+        assert(IconContent(chargingWithoutDevice.preferringBattery(threshold: 50)).kind == .battery,
+               "Charging without a device glyph still shows battery")
         media.charging = false; media.battery = 0.2
         assert(IconContent(media.preferringBattery(threshold: 50)).kind == .battery)
         media.battery = 0.82; media.playing = false

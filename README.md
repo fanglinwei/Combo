@@ -28,6 +28,8 @@
 
 Combo is a macOS menu bar app for checking battery status, joining Wi-Fi networks, adjusting volume, and controlling media playback.
 
+Combo is designed primarily for people who work on a MacBook and love listening to music, bringing work and music together in the menu bar.
+
 ## Interface preview
 
 ### Combo in the macOS menu bar

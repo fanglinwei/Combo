@@ -88,8 +88,6 @@ struct SettingsView: View {
     @State private var preview: Scene = .wired
     @State private var reset = false
     @State private var showingOnboarding = false
-    @State private var thresholdText = ""
-    @FocusState private var isThresholdFocused: Bool
     @State private var showingIconGuide = false
     @State private var restoreConfirmation = false
     @State private var confirmAfterPermission = false
@@ -163,21 +161,12 @@ struct SettingsView: View {
         }
         .frame(minWidth: 760, minHeight: 580).tint(palette.accent)
         .background(settingsCanvas)
-            .onAppear {
-                setGuideOnTop(guideVisible)
-                thresholdText = String(battery.lastDisplayThreshold)
-            }
+            .onAppear { setGuideOnTop(guideVisible) }
             .onChange(of: guideVisible) { _, visible in setGuideOnTop(visible) }
             .onChange(of: store.login) { _, enabled in if enabled { loginFeedback = "" } }
-            .onChange(of: battery.lastDisplayThreshold) { _, value in
-                if !isThresholdFocused { thresholdText = String(value) }
-            }
-            .onChange(of: isThresholdFocused) { _, focused in
-                if !focused { saveThreshold() }
-            }
             .alert(L("恢复显示偏好？"), isPresented: $reset) {
                 Button(L("取消"), role: .cancel) {}
-                Button(L("恢复")) { store.resetDisplay(); thresholdText = String(battery.lastDisplayThreshold) }
+                Button(L("恢复")) { store.resetDisplay() }
             } message: {
                 Text(L("播放动效开启，低电量显示开启且阈值恢复为 20%。其他偏好和系统图标记录保持不变。"))
             }
@@ -378,6 +367,13 @@ struct SettingsView: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
+    var thresholdBinding: Binding<Double> {
+        Binding(
+            get: { Double(battery.lastDisplayThreshold) },
+            set: { battery.displayThreshold = min(80, max(20, Int($0.rounded()))) }
+        )
+    }
+
     var integration: some View {
         VStack(alignment: .leading, spacing: 20) {
             groupHeader(L("系统菜单栏图标"))
@@ -414,24 +410,53 @@ struct SettingsView: View {
             SettingsGroup {
                 SettingsToggleRow(title: L("低电量时显示百分比"), isOn: Binding(
                     get: { battery.displayEnabled },
-                    set: { saveThreshold(); battery.displayEnabled = $0; thresholdText = String(battery.lastDisplayThreshold) }
+                    set: { battery.displayEnabled = $0 }
                 )).padding(16)
                 Divider()
                 HStack(spacing: 8) {
                     Text(L("显示阈值"))
                     Spacer()
                     Text(L("低于"))
-                    TextField(L("显示阈值"), text: $thresholdText).textFieldStyle(.roundedBorder)
-                        .frame(width: 60).monospacedDigit()
-                        .focused($isThresholdFocused)
-                        .onSubmit { saveThreshold() }
-                    Text("%")
+                    Slider(value: thresholdBinding, in: 0...100, enabledBounds: 20...80) { Text(L("显示阈值")) }
+                        .labelsHidden()
+                        .controlSize(.small)
+                        .frame(width: 140)
+                        .overlay {
+                            GeometryReader { geometry in
+                                let trackWidth = geometry.size.width - 16
+                                let centerY = geometry.size.height / 2
+                                let lowerX = 8 + trackWidth * 0.2
+                                let upperX = 8 + trackWidth * 0.8
+                                let thumbX = 8 + trackWidth * Double(battery.lastDisplayThreshold) / 100
+                                ZStack {
+                                    Path { path in
+                                        path.move(to: CGPoint(x: 0, y: centerY))
+                                        path.addLine(to: CGPoint(x: lowerX, y: centerY))
+                                        path.move(to: CGPoint(x: upperX, y: centerY))
+                                        path.addLine(to: CGPoint(x: geometry.size.width, y: centerY))
+                                    }.stroke(Color(nsColor: .disabledControlTextColor), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                                    Path { path in
+                                        path.move(to: CGPoint(x: lowerX, y: centerY))
+                                        path.addLine(to: CGPoint(x: upperX, y: centerY))
+                                    }.stroke(battery.displayEnabled ? palette.accent : Color(nsColor: .disabledControlTextColor), lineWidth: 4)
+                                    Path { path in
+                                        path.move(to: CGPoint(x: lowerX, y: centerY - 12))
+                                        path.addLine(to: CGPoint(x: lowerX, y: centerY + 12))
+                                        path.move(to: CGPoint(x: upperX, y: centerY - 12))
+                                        path.addLine(to: CGPoint(x: upperX, y: centerY + 12))
+                                    }.stroke(palette.mutedText, lineWidth: 1)
+                                }
+                                .mask {
+                                    Path { path in
+                                        path.addRect(CGRect(x: 0, y: centerY - 13, width: geometry.size.width, height: 26))
+                                        path.addRoundedRect(in: CGRect(x: thumbX - 10, y: centerY - 7, width: 20, height: 14), cornerSize: CGSize(width: 7, height: 7))
+                                    }.fill(style: FillStyle(eoFill: true))
+                                }
+                            }.allowsHitTesting(false).accessibilityHidden(true)
+                        }
+                        .accessibilityValue("\(battery.lastDisplayThreshold)%")
+                    Text("\(battery.lastDisplayThreshold)%").monospacedDigit().frame(width: 40, alignment: .trailing)
                 }.padding(16).disabled(!battery.displayEnabled)
-                if battery.displayEnabled && (Int(thresholdText).map { !(1...100).contains($0) } ?? true) {
-                    note(L("请输入 1–100 的整数；当前输入尚未保存。"))
-                        .accessibilityLabel(L("阈值无效，请输入 1–100 的整数。"))
-                        .padding(.horizontal, 16).padding(.bottom, 12)
-                }
                 Divider()
                 HStack {
                     Text(L("电池详情的高耗能应用"))
@@ -445,12 +470,6 @@ struct SettingsView: View {
             note(L("高耗能应用按系统结果显示，数量不足时不补齐。"))
             if let error = settingsErrors["battery"] { note(error.string) }
         }
-    }
-
-    /// Commit the complete draft; invalid input never changes the persisted threshold.
-    private func saveThreshold() {
-        guard battery.displayEnabled, let value = Int(thresholdText), (1...100).contains(value) else { return }
-        battery.displayThreshold = value
     }
 
     var experimental: some View {

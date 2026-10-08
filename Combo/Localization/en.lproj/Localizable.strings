@@ -41,6 +41,11 @@
 "已连接电源，未充电" = "Connected to Power, Not Charging";
 "设置…" = "Settings…";
 "退出 Combo" = "Quit Combo";
+"关于 Combo" = "About Combo";
+"服务" = "Services";
+"隐藏 Combo" = "Hide Combo";
+"隐藏其他" = "Hide Others";
+"显示全部" = "Show All";
 "Combo 设置" = "Combo Settings";
 "%@%@电量 %@ · %@ · 音量 %@" = "%@%@Battery %@ · %@ · Volume %@";
 "演示 · " = "Demo · ";
