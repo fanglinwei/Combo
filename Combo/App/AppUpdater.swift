@@ -13,7 +13,7 @@ import Sparkle
     #endif
 
     @Published private(set) var canCheckForUpdates = false
-    @Published private(set) var automaticallyChecksForUpdates = false
+    @Published private(set) var automaticallyChecksForUpdates: Bool
     @Published private(set) var availableVersion: String?
     @Published private(set) var lastSuccessfulCheck: Date?
     @Published private(set) var hasCheckError = false
@@ -30,6 +30,7 @@ import Sparkle
     init(isEnabled: Bool = AppUpdater.updatesEnabled, defaults: UserDefaults = .standard) {
         self.isEnabled = isEnabled
         self.defaults = defaults
+        automaticallyChecksForUpdates = defaults.object(forKey: "SUEnableAutomaticChecks") as? Bool ?? true
         lastSuccessfulCheck = defaults.object(forKey: Self.successfulCheckKey) as? Date
         super.init()
     }
