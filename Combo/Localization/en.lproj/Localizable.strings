@@ -651,3 +651,18 @@
 "这一步可以跳过" = "You can skip this step";
 
 "两项权限都可以跳过" = "Both permissions are optional";
+
+// Software updates
+"软件更新" = "Software Updates";
+"有新版本可用" = "Update Available";
+"保持 Combo 为最新版本" = "Keep Combo Up to Date";
+"开发版本已停用更新检查" = "Update checks are disabled in development builds";
+"更新检查未完成，请稍后重试。" = "The update check could not finish. Try again later.";
+"检查更新…" = "Check for Updates…";
+"查看更新…" = "View Update…";
+"自动检查更新" = "Automatically Check for Updates";
+"每天在后台检查。下载、安装和重启前会征求你的确认。" = "Checks in the background daily. Downloading, installing, and restarting require your confirmation.";
+"更新检查会连接 GitHub 获取版本信息；不上传本机状态，也不发送系统概况。" = "Update checks connect to GitHub for version information. Local status and system profiles are not sent.";
+"设置，有新版本可用" = "Settings, update available";
+"上次检查时间" = "Last Checked";
+"尚未检查" = "Not Checked Yet";

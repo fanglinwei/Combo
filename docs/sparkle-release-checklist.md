@@ -1,6 +1,6 @@
 # Combo · Sparkle 2 接入与发布清单
 
-整理：2026-10-08。适用条件：macOS 26+ / arm64，当前没有 Developer ID 证书；GitHub Releases 分发 DMG、GitHub Pages 提供更新清单。本文是操作指南，框架与发布脚本尚未接入，示例地址与命令不代表已经配置。
+整理：2026-10-08。适用条件：macOS 26+ / arm64，当前没有 Developer ID 证书；GitHub Releases 分发 DMG、GitHub Pages 提供更新清单。客户端框架、更新界面和本地更新产物准备脚本已接入。实际验证范围见本文末尾及首次准备记录。
 
 完整设计见 [远程更新方案](app-update-design.md)。本机密钥、工具、更新源与备份的实际准备结果见 [首次准备记录](sparkle-setup-record.md)。
 
@@ -17,11 +17,11 @@
 
 建议优先复用现有仓库的 Releases。Pages 可使用现有仓库或独立更新仓库；若现有 Pages 已用于官网，另建更新仓库避免冲突。仓库命名只是建议，由你管理的实际地址决定。
 
-示例结构，未部署：
+当前固定更新源与后续发布地址结构：
 
 ```text
-https://fanglinwei.github.io/combo-updates/appcast.xml
-https://fanglinwei.github.io/combo-updates/notes/1.1.0.html
+https://fanglinwei.github.io/Combo/updates/appcast.xml
+https://fanglinwei.github.io/Combo/updates/notes/1.1.0.html
 https://github.com/fanglinwei/Combo/releases/download/v1.1.0/Combo-1.1.0-arm64.dmg
 ```
 
@@ -104,11 +104,29 @@ release-output/
   release-validation.txt
 ```
 
-目录仅为目标结构，目前没有新增该脚本。脚本应校验最终 App 的公钥与发布密钥匹配、build 递增、签名和版本一致，并把 appcast 包地址指向版本固定的 GitHub Release 地址。测试源覆盖在测试构建/配置中进行，不能测试时重新修改已经签名的最终包。
+已新增 `Releases/updates/prepare-update.py`。它接收现有打包器生成的最终 DMG 和完整 HTML 更新说明，核对线上清单、递增版本/build、包内版本、固定更新源、公钥、arm64 架构和嵌套签名，然后调用官方工具生成并复核签名和 appcast。输出中保留旧清单项，不生成 delta，不修改最终 DMG 字节，不覆盖已有候选目录。
+
+维护者已确认首个支持更新版本为 **1.1.0，内部构建号 101**；此决定优先于旧发布 skill 中 App/Build 共用同一版本的约定。正式源码版本修改与打包仍须按既有 GitFlow 规则准备 `release/1.1.0` 分支。当前没有执行分支、提交或发布操作。
+
+在完成对应源码验证和最终 DMG 打包后运行：
+
+```sh
+python3 Releases/updates/prepare-update.py \
+  --dmg Releases/Combo-1.1.0-arm64.dmg \
+  --version 1.1.0 --build 101 --tag 1.1.0 \
+  --notes /absolute/path/to/reviewed-1.1.0.html \
+  --output build/release-output/1.1.0-101
+```
+
+使用已登录的 `gh` 只读核对同标签 Release（包括当前账户可见的 Draft）；任何非 404 错误都停止，不将鉴权或限流错误视为未发布。`--tag` 明确指定实际标签，避免旧文档中的 `v` 示例与 GitFlow 标签无前缀规则混淆。默认工具目录为 `~/Library/Caches/Combo/Sparkle/2.10.0/spm`，必须使用已有 `combo-updates` 密钥；脚本不生成或导出密钥。
+
+输出包括 DMG、`appcast.xml`、`notes/Combo-1.1.0-arm64.html` 和 `release-validation.json`。JSON 记录 DMG SHA-256/大小、线上清单基线摘要、版本和目标 URL；它不代表完整源码、功能验收或 GitFlow 发布记录。说明文件复制到 `docs/updates/notes/`，清单最后部署到 `docs/updates/appcast.xml`，均须在包与说明已上线且升级验收通过后另获授权执行。线上清单若变化，需要重新准备候选；不能将旧候选直接覆盖新清单。
+
+测试源覆盖在测试构建/配置中进行，不能测试时重新修改已经签名的最终包。
 
 `generate_appcast` 是生成清单与包签名的推荐工具；如果启用更新源/说明签名，改清单或说明后还需要重新签名。具体下载地址参数和禁止生成 delta 的参数以锁定工具的帮助为准，由接入脚本固定，不要求你每次手工拼 XML。[发布文档](https://sparkle-project.org/documentation/publishing/)
 
-当前已有 `Releases/package-dmg.sh` 只完成现有 DMG 打包，尚未承担 Sparkle 发布工作。尤其是同版本重复打包会替换本地同名文件；公开包不能这样覆盖。未来脚本要区分“本地可重做”和“已公开不可覆盖”，并防止签名后重新打包导致签名失效。
+`Releases/package-dmg.sh` 继续负责构建与 DMG 打包，更新准备脚本负责最终包核对与签名清单。前者同版本重复打包会替换本地同名文件；已公开包不能这样覆盖。签名后不得重新打包；上传时使用候选目录内、摘要已记录的精确 DMG。
 
 GitHub Release、tag、Pages 上传涉及实际发布和 Git 写操作；运行本地准备脚本不应默认替用户提交、打 tag 或推送。按项目规则，对具体 Git 操作与发布动作获得授权后再执行。
 
@@ -130,10 +148,12 @@ GitHub Release、tag、Pages 上传涉及实际发布和 Git 写操作；运行�
 ## 9. 现在的完成状态
 
 - 已完成：产品方案、无 Apple 证书条件下的发布设计、本操作清单。
-- 待接入：Sparkle 依赖、更新入口、构建号规则、发布脚本。
+- 已本地接入：Sparkle 远端 SPM 依赖（Package.resolved 当前锁定 2.10.0）、共享更新器、关于页检查按钮与自动检查开关、后台轻量提醒、Debug 禁用更新。
+- 已确认：首个发布版本 1.1.0、独立构建号 101。已实现本地更新产物准备脚本；正式版本尚未写入源码或生成正式候选。
 - 已准备：固定 Pages 目标地址、EdDSA 密钥、公钥文件与经过解密比对的本机加密备份；具体位置见首次准备记录。
 - 已执行：更新源文件提交/推送、Pages 启用与构建；经用户额外授权解除旧域名继承后，固定 Pages HTTPS 更新源已验证可用。
 - 待完成：独立外部备份、真实测试环境。
-- 待验证：真实网络下载后的 ad-hoc → ad-hoc 更新演练。
+- 已验证：本机隔离 Release 副本使用有效 EdDSA 签名的 DMG，从构建号 1 更新到 2；嵌套签名通过。错误签名被拒绝，原版本保留。
+- 待验收：干净 Mac 上正式网络下载后的首次批准打开、标准更新窗口、实际应用重启、偏好与权限保持。
 
-已创建密钥和本机加密备份，并在用户具体授权后提交/推送文档与更新源、启用 Pages。尚未发布新 App Release、修改客户端代码或完成实际 App 升级演练。
+已创建密钥和本机加密备份，并在用户具体授权后提交/推送文档与更新源、启用 Pages。客户端修改仍在本地工作区，尚未提交、推送或发布新 App Release。已完成本机隔离替换安装测试；正式分发包的完整用户升级演练仍需完成。
