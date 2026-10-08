@@ -5,7 +5,7 @@
 ## 已完成
 
 - 首次 GitHub API 检查确认 `fanglinwei/Combo` 为公开仓库，当前账户有 admin/push 权限，默认分支为 `main`；当时尚未启用 Pages。
-- 原计划更新源为 `https://fanglinwei.github.io/Combo/updates/appcast.xml`；后续已部署 Pages，但此 URL 受账号旧自定义域名影响而不可用，见部署记录。
+- 固定更新源为 `https://fanglinwei.github.io/Combo/updates/appcast.xml`；Pages 已部署，旧域名继承问题已在用户额外授权后解除，默认 HTTPS 地址验证通过，见部署记录。
 - 准备静态更新源文件；XML 语法检查通过，当前没有发布条目。
 - 下载官方 Sparkle 2.10.0，SHA-256 与 GitHub Release asset digest 一致：`c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c`。
 - 使用官方工具创建专用账户 `combo-updates` 的 EdDSA 密钥；私钥存钥匙串，公钥存 `updates/public-ed-key.txt`。
@@ -65,7 +65,7 @@ openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -md sha256 \
 
 GitHub Pages 已启用，来源为 `feature/update` 的 `/docs`，构建 API 返回 `built` 且无错误。合入 `main` 后可迁移来源，合并仍需另行授权。
 
-外部读取检查发现：账号主页 `fanglinwei/fanglinwei.github.io` 仍绑定 `clam1993.com`（存在 `CNAME` 文件）；Combo 项目继承了该域名。原计划 HTTPS URL 返回 301，跳转到 `http://clam1993.com/Combo/updates/appcast.xml`，目标域名无法解析。因此不能把该地址配置进正式客户端。
+首次外部读取检查发现：账号主页 `fanglinwei/fanglinwei.github.io` 绑定 `clam1993.com`（存在 `CNAME` 文件），Combo 项目继承该域名。原计划 HTTPS URL 当时返回 301，跳转到不可解析的 HTTP 地址。
 
 备用地址已经匿名 HTTPS 验证通过，返回有效 RSS XML，与本地文件字节完全一致：
 
@@ -75,4 +75,8 @@ https://raw.githubusercontent.com/fanglinwei/Combo/feature/update/docs/updates/a
 
 XML SHA-256：`bc471fcdd222263f7344a9f6a55833a938f7d4cc8c86f882c06737120b1b2bbe`。此项只验证元数据读取，不证明 App 安装更新已实现或通过测试。
 
-待用户选择：使用已验证的 raw HTTPS 更新源并保留旧网站配置，或另外授权解除账号主页域名/CNAME 绑定以恢复默认 Pages 地址。未改动账号主页、域名配置或其他仓库。
+用户随后明确授权解除账号主页的旧域名及必要 CNAME 配置。已通过 Pages API 将主页 `cname` 清空；GitHub 同时删除主页仓库的 `CNAME`，自动产生提交 `cda70f96b32b45fa98f572820ace42f37a4fefe4`（`Delete CNAME`）。该操作恢复账号下继承站点的默认 GitHub Pages 地址，没有改动网站内容或执行历史重写。
+
+最终检查：Combo Pages `html_url` 为 `https://fanglinwei.github.io/Combo/`，`https_enforced = true`，来源保持 `feature/update` 的 `/docs`。直接读取原计划更新源时限制请求及跳转只能使用 HTTPS；返回有效 XML，内容与本地字节及上述 SHA-256 一致。
+
+正式接入使用 Pages 固定地址，raw 地址仅作为已验证的诊断参考，不作为第二套自动回退源。以后将 Pages 来源迁移到 `main` 时保持 URL 不变。客户端接入与实际 App 升级测试仍未完成。

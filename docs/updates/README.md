@@ -1,10 +1,10 @@
 # Combo 更新源
 
-计划固定地址：`https://fanglinwei.github.io/Combo/updates/appcast.xml`。
+已上线固定地址：`https://fanglinwei.github.io/Combo/updates/appcast.xml`。
 
-2026-10-08 部署结果：Pages 已构建成功，但该地址因账号主页的旧 `clam1993.com` 绑定而重定向至不可解析的 HTTP 地址，当前不可作为客户端更新源。备用 `https://raw.githubusercontent.com/fanglinwei/Combo/feature/update/docs/updates/appcast.xml` 已验证返回正确 XML；最终托管方式待确认，见首次准备记录。
+2026-10-08 部署结果：Pages 已构建成功。首次检查发现账号主页旧域名继承导致 HTTP 重定向；用户额外授权解除旧绑定后，固定 Pages HTTPS 地址已验证返回与本地完全一致的 XML。接入使用此固定地址，raw 仓库地址仅作诊断参考，见首次准备记录。
 
-托管使用公开仓库 `fanglinwei/Combo` 的 GitHub Pages。当前工作分支是 `feature/update`，首次上线可在具体提交、推送授权后以此分支的 `/docs` 为来源；合入 `main` 后再将来源迁移到 `main`，公开 URL 保持不变。不要删除仍作为 Pages 来源的分支。`docs/.nojekyll` 使该目录以静态资源发布。
+托管使用公开仓库 `fanglinwei/Combo` 的 GitHub Pages，当前来源为 `feature/update` 分支的 `/docs`；合入 `main` 后再将来源迁移到 `main`，公开 URL 保持不变。不要删除仍作为 Pages 来源的分支。`docs/.nojekyll` 使该目录以静态资源发布。
 
 `appcast.xml` 已提交到远程仓库，当前只是初始骨架，没有版本条目。首个更新版本使用 Sparkle 官方 `generate_appcast` 生成经过验证的条目；不能以 GitHub Release 标签自动代替清单。
 
