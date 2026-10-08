@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/fanglinwei/Combo"><img src="https://img.shields.io/badge/GitHub-Combo-181717?style=flat-square&amp;logo=github&amp;logoColor=white" alt="GitHub"></a>
-  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-v1.0.0-007EC6?style=flat-square" alt="版本 v1.0.0"></a>
+  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-v1.1.0-007EC6?style=flat-square" alt="版本 v1.1.0"></a>
   <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/downloads-Releases-44CC11?style=flat-square" alt="GitHub Releases 下载入口"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-007EC6?style=flat-square" alt="MIT 开源协议"></a>
   <a href="#系统要求与安装"><img src="https://img.shields.io/badge/platform-macOS%2026%2B-999999?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="macOS 26 或更新版本"></a>
@@ -75,7 +75,7 @@ Combo 面板将 macOS 的 Wi-Fi、电池和声音控制集中在一处，方便�
 
 在 [GitHub Releases](https://github.com/fanglinwei/Combo/releases) 查看已发布的安装包和版本说明。
 
-**1.0.0 安装包正在准备，目前尚未发布可下载的 Release 资源。** 安装包发布前，请使用下方的[源码构建方式](#从源码构建)。下载时请查看对应版本说明中的架构支持和签名状态。
+**1.1.0 安装包正在准备，目前尚未发布可下载的 Release 资源。** 安装包发布前，请使用下方的[源码构建方式](#从源码构建)。下载时请查看对应版本说明中的架构支持和签名状态。
 
 ### 手动下载安装
 
