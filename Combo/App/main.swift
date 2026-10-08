@@ -44,6 +44,7 @@ final class ComboPanel: NSPanel {
     private var panelHighlight = PanelHighlightTransition()
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        AppUpdater.shared.start()
         let menu = NSMenu()
         let root = NSMenuItem(); menu.addItem(root)
         let submenu = NSMenu(); submenu.addItem(withTitle: L("设置…"), action: #selector(openSettings), keyEquivalent: ",").target = self

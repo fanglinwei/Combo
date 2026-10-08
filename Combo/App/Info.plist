@@ -7,8 +7,8 @@
 <key>CFBundleDisplayName</key><string>Combo</string>
 <key>CFBundleIconName</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>1.0.0</string>
-<key>CFBundleVersion</key><string>1.0.0</string>
+<key>CFBundleShortVersionString</key><string>1.1.0</string>
+<key>CFBundleVersion</key><string>101</string>
 <key>LSMinimumSystemVersion</key><string>26.0</string>
 <key>LSUIElement</key><true/>
 <key>NSHighResolutionCapable</key><true/>
@@ -17,4 +17,11 @@
 <key>NSBluetoothAlwaysUsageDescription</key><string>识别已连接蓝牙音频设备类别，显示支持的耳机电量和聆听模式，并在 Combo 中控制支持的聆听模式。</string>
 <key>NSLocalNetworkUsageDescription</key><string>发现本地网络中附近的 AirPlay 设备。Combo 不上传设备列表；连接由系统声音设置完成。</string>
 <key>NSBonjourServices</key><array><string>_airplay._tcp</string></array>
+<key>SUFeedURL</key><string>https://fanglinwei.github.io/Combo/updates/appcast.xml</string>
+<key>SUPublicEDKey</key><string>rkC8vw3kSwhJVSS5gKIH0ZeB/Kl8zubQlL5ktxXc9cI=</string>
+<key>SUEnableAutomaticChecks</key><true/>
+<key>SUScheduledCheckInterval</key><integer>86400</integer>
+<key>SUAutomaticallyUpdate</key><false/>
+<key>SUAllowsAutomaticUpdates</key><false/>
+<key>SUEnableSystemProfiling</key><false/>
 </dict></plist>

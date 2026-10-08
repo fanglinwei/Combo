@@ -304,7 +304,7 @@
 "曲目信息在播放结束后保留约 5 秒，切歌时不会闪空。" = "Track info is held for about 5 seconds after playback ends, so switching songs does not flash empty.";
 "结束演示，返回本机状态" = "End Demo and Return to Live Status";
 "在菜单栏演示播放" = "Demo Playback in Menu Bar";
-"1.0.0 · 三合一预览版" = "1.0.0 · Three-in-One Preview";
+"1.1.0 · 三合一预览版" = "1.1.0 · Three-in-One Preview";
 "电量、连接与音量，合在一个安静的图标里。" = "Battery, connection, and volume in one quiet icon.";
 "当前能力" = "Available Features";
 "本机电池、Wi‑Fi 与声音操作" = "Battery, Wi-Fi, and Sound Controls for This Mac";
@@ -651,3 +651,18 @@
 "这一步可以跳过" = "You can skip this step";
 
 "两项权限都可以跳过" = "Both permissions are optional";
+
+// Software updates
+"软件更新" = "Software Updates";
+"有新版本可用" = "Update Available";
+"保持 Combo 为最新版本" = "Keep Combo Up to Date";
+"开发版本已停用更新检查" = "Update checks are disabled in development builds";
+"更新检查未完成，请稍后重试。" = "The update check could not finish. Try again later.";
+"检查更新…" = "Check for Updates…";
+"查看更新…" = "View Update…";
+"自动检查更新" = "Automatically Check for Updates";
+"每天在后台检查。下载、安装和重启前会征求你的确认。" = "Checks in the background daily. Downloading, installing, and restarting require your confirmation.";
+"更新检查会连接 GitHub 获取版本信息；不上传本机状态，也不发送系统概况。" = "Update checks connect to GitHub for version information. Local status and system profiles are not sent.";
+"设置，有新版本可用" = "Settings, update available";
+"上次检查时间" = "Last Checked";
+"尚未检查" = "Not Checked Yet";

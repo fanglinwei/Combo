@@ -67,6 +67,7 @@ private struct MediaDots: View {
     }
 }
 struct SettingsView: View {
+    @ObservedObject private var updater = AppUpdater.shared
     @ObservedObject private var localization = Localization.shared
     @ObservedObject var store: Store
     @ObservedObject var battery: BatteryStore
@@ -228,7 +229,7 @@ struct SettingsView: View {
                     .accessibilityAddTraits(page == item ? .isSelected : [])
             }
             Spacer()
-            Text("PREVIEW \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0")")
+            Text("PREVIEW \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.0")")
                 .font(.system(size: 11)).foregroundStyle(palette.mutedText).padding(12)
         }.foregroundStyle(labelColor).padding(.horizontal, 8).padding(.bottom, 12).frame(width: 192)
             .modifier(SettingsSidebarSurface(solid: reduceTransparency, increasedContrast: contrast == .increased))
@@ -846,6 +847,53 @@ struct MediaPage: View {
     }
 }
 
+    private var updateSettings: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            groupHeader(L("软件更新"))
+            SettingsGroup {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            if let version = updater.availableVersion {
+                                Text(L("有新版本可用") + " · " + version)
+                            } else {
+                                Text(L("保持 Combo 为最新版本"))
+                            }
+                            if !updater.isEnabled {
+                                note(L("开发版本已停用更新检查"))
+                            } else if updater.hasCheckError {
+                                note(L("更新检查未完成，请稍后重试。"))
+                            }
+                        }
+                        Spacer()
+                        Button(L(updater.availableVersion == nil ? "检查更新…" : "查看更新…")) {
+                            updater.checkForUpdates()
+                        }.disabled(!updater.canCheckForUpdates)
+                            .buttonStyle(SettingsButtonStyle(isEmphasized: true))
+                    }
+                    Divider()
+                    Toggle(L("自动检查更新"), isOn: Binding(
+                        get: { updater.automaticallyChecksForUpdates },
+                        set: { updater.setAutomaticChecks($0) }))
+                        .disabled(!updater.isStarted)
+                    note(L("每天在后台检查。下载、安装和重启前会征求你的确认。"))
+                    note(L("更新检查会连接 GitHub 获取版本信息；不上传本机状态，也不发送系统概况。"))
+                    Divider()
+                    HStack {
+                        note(L("上次检查时间"))
+                        Spacer()
+                        if let date = updater.lastSuccessfulCheck {
+                            Text(date.formatted(date: .numeric, time: .shortened))
+                                .font(.system(size: 12)).foregroundStyle(palette.mutedText)
+                        } else {
+                            note(L("尚未检查"))
+                        }
+                    }
+                }.padding(16)
+            }
+        }
+    }
+
     var about: some View {
         VStack(alignment: .leading, spacing: 20) {
             SettingsGroup {
@@ -853,7 +901,7 @@ struct MediaPage: View {
                     Image(nsImage: brandImage).resizable().frame(width: 64, height: 64).accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Combo").font(.system(size: 24, weight: .semibold))
-                        note(L("\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0") · 三合一预览版"))
+                        note(L("\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.0") · 三合一预览版"))
                         note("macOS 26+ · MacBook")
                     }
                     Spacer()
@@ -861,6 +909,7 @@ struct MediaPage: View {
                 Divider()
                 note(L("电量、连接与音量，合在一个安静的图标里。")).padding(16)
             }
+            updateSettings
             HStack {
                 groupHeader(L("当前能力"))
                 Button(L("刷新本机状态")) { store.refresh() }

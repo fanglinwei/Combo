@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		07AC77614721507B247E230C /* HoverScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A453DCC82C729938A532C5 /* HoverScroller.swift */; };
+		0DD0C0DE0000000000000002 /* OutputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000001 /* OutputDevice.swift */; };
+		0DD0C0DE0000000000000004 /* AirPlayRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000003 /* AirPlayRoute.swift */; };
+		0DD0C0DE0000000000000006 /* AirPlayDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */; };
 		126858ABDF709C9A021EA8DC /* EnergyApps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89D8B2128427EB6D64D4651E /* EnergyApps.swift */; };
 		186320F179D22AB5DDE7273E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141C7E0B4B8033FEFD4E6E3 /* main.swift */; };
 		20AF98593CEC5902E72C031C /* State.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAD8F5DF85A5699BF4EF74DD /* State.swift */; };
@@ -17,9 +20,6 @@
 		5E00D0EE72AF68EB37B88EE6 /* WiFiControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */; };
 		5FD40C2AFE024D728E210C68 /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560A84B06FED44A09CBCC0AD /* PanelView.swift */; };
 		6C74CABA6CF5033FA7B8715C /* AudioVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */; };
-		0DD0C0DE0000000000000002 /* OutputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000001 /* OutputDevice.swift */; };
-		0DD0C0DE0000000000000004 /* AirPlayRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000003 /* AirPlayRoute.swift */; };
-		0DD0C0DE0000000000000006 /* AirPlayDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */; };
 		75532254095A42BA9DC365C5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D54D08915E2455AB5B921B3 /* SettingsView.swift */; };
 		766CEEF22B3A4665BFA9FFCE /* BatterySections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18CFAB0D2474FDBB947237D /* BatterySections.swift */; };
 		806396930CB40D61BD38E445 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45FEC6A6DB0E3328C1EB77 /* Store.swift */; };
@@ -32,11 +32,14 @@
 		A10100000000000000000002 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000001 /* Localization.swift */; };
 		A10100000000000000000005 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000004 /* Localizable.strings */; };
 		A10100000000000000000007 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000006 /* InfoPlist.strings */; };
+		A20200000000000000000001 /* AppUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20200000000000000000002 /* AppUpdater.swift */; };
+		A20200000000000000000011 /* Sparkle-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = A20200000000000000000012 /* Sparkle-LICENSE.txt */; };
 		A2B82EEA79E249D2AB69201A /* SoundSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 724FA7F8C78C449A93434865 /* SoundSections.swift */; };
 		ABCD12340000000000000001 /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000001 /* OnboardingState.swift */; };
 		ABCD12340000000000000002 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000002 /* OnboardingView.swift */; };
 		AFA2F91CCEE742DEAE9C0D76 /* WiFiIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */; };
 		B34AA0BB30701F2500429926 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B34AA0BA30701F2500429926 /* Media.xcassets */; };
+		B37C395930774797006B8A12 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B37C395830774797006B8A12 /* Sparkle */; };
 		B96F6D588719478F84969E4C /* WiFiSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76685DF749374187A6431997 /* WiFiSections.swift */; };
 		BBDFDCFDFA4043FEB1A05A4D /* IconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360D743C5A0F4A49B67622DA /* IconRenderer.swift */; };
 		D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */; };
@@ -51,6 +54,9 @@
 		0141C7E0B4B8033FEFD4E6E3 /* main.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		092B442EC711CC51B8749ADA /* Combo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Combo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B45FEC6A6DB0E3328C1EB77 /* Store.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		0DD0C0DE0000000000000001 /* OutputDevice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutputDevice.swift; sourceTree = "<group>"; };
+		0DD0C0DE0000000000000003 /* AirPlayRoute.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPlayRoute.swift; sourceTree = "<group>"; };
+		0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPlayDiscovery.swift; sourceTree = "<group>"; };
 		12994A42967FE55612E83F0C /* NetworkStatus.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NetworkStatus.swift; sourceTree = "<group>"; };
 		1D54D08915E2455AB5B921B3 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2F951B1AB68E4AC17144EF10 /* IconTransition.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IconTransition.swift; sourceTree = "<group>"; };
@@ -65,9 +71,6 @@
 		62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiControl.swift; sourceTree = "<group>"; };
 		63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiIcon.swift; sourceTree = "<group>"; };
 		65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioVolume.swift; sourceTree = "<group>"; };
-		0DD0C0DE0000000000000001 /* OutputDevice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutputDevice.swift; sourceTree = "<group>"; };
-		0DD0C0DE0000000000000003 /* AirPlayRoute.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPlayRoute.swift; sourceTree = "<group>"; };
-		0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPlayDiscovery.swift; sourceTree = "<group>"; };
 		682E6A0AC33379301D321FAB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		724FA7F8C78C449A93434865 /* SoundSections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SoundSections.swift; sourceTree = "<group>"; };
 		75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChargeControl.swift; sourceTree = "<group>"; };
@@ -83,6 +86,8 @@
 		A10100000000000000000009 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		A1010000000000000000000A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		A1010000000000000000000B /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		A20200000000000000000002 /* AppUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdater.swift; sourceTree = "<group>"; };
+		A20200000000000000000012 /* Sparkle-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Sparkle-LICENSE.txt"; sourceTree = "<group>"; };
 		A3A453DCC82C729938A532C5 /* HoverScroller.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HoverScroller.swift; sourceTree = "<group>"; };
 		A7C6E6FC3866A2286D6176F1 /* EnergyHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = EnergyHelper.m; sourceTree = "<group>"; };
 		B18CFAB0D2474FDBB947237D /* BatterySections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BatterySections.swift; sourceTree = "<group>"; };
@@ -103,6 +108,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				908640C6F77CB53C46879E70 /* Cocoa.framework in Frameworks */,
+				B37C395930774797006B8A12 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -167,6 +173,8 @@
 			isa = PBXGroup;
 			children = (
 				0141C7E0B4B8033FEFD4E6E3 /* main.swift */,
+				A20200000000000000000002 /* AppUpdater.swift */,
+				A20200000000000000000012 /* Sparkle-LICENSE.txt */,
 				A10100000000000000000001 /* Localization.swift */,
 				3ABDC3E82DEC91AD9967B5D2 /* Info.plist */,
 				CAD8F5DF85A5699BF4EF74DD /* State.swift */,
@@ -289,6 +297,9 @@
 			dependencies = (
 			);
 			name = Combo;
+			packageProductDependencies = (
+				B37C395830774797006B8A12 /* Sparkle */,
+			);
 			productName = Combo;
 			productReference = 092B442EC711CC51B8749ADA /* Combo.app */;
 			productType = "com.apple.product-type.application";
@@ -301,6 +312,12 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					BF3EB1ECE2EE2421FFF26086 = {
+						DevelopmentTeam = 34Z49UTC7S;
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 7323C5B6B7F13118886E6044 /* Build configuration list for PBXProject "Combo" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -312,6 +329,9 @@
 				"zh-Hans",
 			);
 			mainGroup = CD922D4D2A542514D8565DDF;
+			packageReferences = (
+				B37C395730774797006B8A12 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			productRefGroup = 3C58C0D3217474974257123A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -329,6 +349,7 @@
 				A10100000000000000000005 /* Localizable.strings in Resources */,
 				A10100000000000000000007 /* InfoPlist.strings in Resources */,
 				B34AA0BB30701F2500429926 /* Media.xcassets in Resources */,
+				A20200000000000000000011 /* Sparkle-LICENSE.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,6 +424,7 @@
 				B96F6D588719478F84969E4C /* WiFiSections.swift in Sources */,
 				5E00D0EE72AF68EB37B88EE6 /* WiFiControl.swift in Sources */,
 				186320F179D22AB5DDE7273E /* main.swift in Sources */,
+				A20200000000000000000001 /* AppUpdater.swift in Sources */,
 				07AC77614721507B247E230C /* HoverScroller.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -437,10 +459,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 34Z49UTC7S;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -452,6 +475,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				PRODUCT_BUNDLE_IDENTIFIER = local.combo.app;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -467,10 +491,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 34Z49UTC7S;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -482,6 +507,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				PRODUCT_BUNDLE_IDENTIFIER = local.combo.app;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_ENABLE_OPAQUE_TYPE_ERASURE = YES;
@@ -630,6 +656,24 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		B37C395730774797006B8A12 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B37C395830774797006B8A12 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B37C395730774797006B8A12 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E27AE2E768E52DF74108B4B1 /* Project object */;
 }

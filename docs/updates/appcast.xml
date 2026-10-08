@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Combo Updates</title>
+    <link>https://github.com/fanglinwei/Combo/releases</link>
+    <description>Stable updates for Combo on macOS.</description>
+    <language>en</language>
+    <!-- Initial feed skeleton. Add verified release items with Sparkle generate_appcast. -->
+  </channel>
+</rss>
