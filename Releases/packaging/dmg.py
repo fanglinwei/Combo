@@ -144,7 +144,10 @@ def prepare(stage, resources, dmg_name):
             with file.open("rb") as stream:
                 if stream.read(4) in MACH_MAGIC:
                     architectures = subprocess.check_output(["lipo", "-archs", str(file)], text=True).split()
-                    require(architectures == ["arm64"], f"需要纯 arm64 可执行文件：{file}（{architectures}）")
+                    is_sparkle = file.is_relative_to(app / "Contents/Frameworks/Sparkle.framework")
+                    # Keep the official universal Sparkle binaries intact; Combo remains arm64-only.
+                    require("arm64" in architectures if is_sparkle else architectures == ["arm64"],
+                            f"可执行文件架构不符合要求：{file}（{architectures}）")
                     binaries.append(file)
     require(main in binaries, "主程序不是有效的 arm64 Mach-O 文件")
     bundles = [file for file in app.rglob("*") if file.is_dir() and not file.is_symlink()

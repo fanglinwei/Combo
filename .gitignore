@@ -4,6 +4,7 @@ build/
 /Releases/*
 !/Releases/package-dmg.sh
 !/Releases/packaging/
+!/Releases/updates/
 xcuserdata/
 __pycache__/
 prototypes/menu-access/MenuProbe

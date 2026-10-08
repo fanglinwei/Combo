@@ -58,6 +58,7 @@ private struct VolumeScroll: NSViewRepresentable {
 }
 
 struct PanelView: View {
+    @ObservedObject private var updater = AppUpdater.shared
     @ObservedObject private var localization = Localization.shared
     static let width: CGFloat = 420
     @Environment(\.colorScheme) private var colorScheme
@@ -219,8 +220,15 @@ struct PanelView: View {
                 Button { NSApp.terminate(nil) } label: { Label(L("退出 Combo"), systemImage: "rectangle.portrait.and.arrow.right") }
                     .buttonStyle(.plain).frame(minHeight: 28).padding(.vertical, -5).help(L("退出 Combo"))
                 Spacer()
-                Button(action: showSettings) { Image(systemName: "gearshape.fill").font(.system(size: 17)) }
-                    .buttonStyle(PanelIconButtonStyle(size: CGSize(width: 32, height: 32))).padding(-7.5).help(L("设置…")).accessibilityLabel(L("设置"))
+                Button(action: showSettings) {
+                    Image(systemName: "gearshape.fill").font(.system(size: 17))
+                        .overlay(alignment: .topTrailing) {
+                            if updater.availableVersion != nil {
+                                Circle().fill(palette.accent).frame(width: 6, height: 6).offset(x: 3, y: -3)
+                            }
+                        }
+                }
+                    .buttonStyle(PanelIconButtonStyle(size: CGSize(width: 32, height: 32))).padding(-7.5).help(L("设置…")).accessibilityLabel(L(updater.availableVersion == nil ? "设置" : "设置，有新版本可用"))
             }.foregroundStyle(mutedText).font(.system(size: 13)).padding(.horizontal, 4)
         }
     }

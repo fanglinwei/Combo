@@ -76,7 +76,7 @@ fi
 if [[ -z "$dmg_app" ]]; then
   print -r -- '构建 Release（arm64），构建日志：build/dmg-release-build.log'
   if ! COMBO_CONFIGURATION=Release ./build.sh -derivedDataPath "$dmg_root/build/dmg-release" \
-      ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGN_IDENTITY=- \
+      ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= \
       > "$dmg_root/build/dmg-release-build.log" 2>&1; then
     tail -n 60 "$dmg_root/build/dmg-release-build.log" >&2
     exit 1
