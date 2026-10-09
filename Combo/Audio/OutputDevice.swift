@@ -2,7 +2,7 @@ import CoreAudio
 import Foundation
 
 /// 当前默认输出设备的类别。中央图标与声音面板的输出列表共用这一份分类结果，
-/// 避免两处各判一套（见 docs/bluetooth-audio-device-icon-research.md §5 的共用分类契约）。
+/// 避免两处各判一套（见 docs/engineering/audio.md「蓝牙设备分类」的共用分类契约）。
 enum OutputDeviceKind: Equatable {
     case bluetooth(BluetoothFamily)
     case airPlay(AirPlayFamily)
@@ -38,7 +38,7 @@ enum BluetoothFamily: CaseIterable {
 }
 
 /// AirPlay 路由的机型档位。信号来自 `AVOutputDevice.modelID`（如 `AppleTV14,1`），
-/// 由 helper 通过 AVRouting SPI 读出，见 docs/airplay-homepod-icon-research.md §5。
+/// 由 helper 通过 AVRouting SPI 读出，见 docs/engineering/audio.md「AirPlay 路由与附近发现」。
 ///
 /// 机型表来源：libirecovery 的 `irecv_devices[]`（LGPL，维护到 2026 代设备）。HomePod 全部
 /// ID 为 `AudioAccessory1,1` / `1,2`（1 代）、`5,1`（mini）、`6,1`（2 代），表中没有更新的

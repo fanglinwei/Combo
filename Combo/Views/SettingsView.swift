@@ -29,7 +29,7 @@ struct Card<Content: View>: View {
     @Environment(\.comboPalette) private var palette
     var body: some View { VStack(alignment: .leading, spacing: 16) { content }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(palette.surface, in: RoundedRectangle(cornerRadius: 14)).overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.primary.opacity(0.055))) }
 }
-/// 状态行里的四柱，规则和菜单栏图标底部是同一条（docs/combo-design.md 5.2）：
+/// 状态行里的四柱，规则和菜单栏图标底部是同一条（docs/product/behavior.md「固定播放动效」）：
 /// 播放中错峰起伏，减少动态效果时停在高低柱上、不做循环。暂停由 MediaDots 表达。
 private struct MediaBars: View {
     let animating: Bool
@@ -788,7 +788,7 @@ struct MediaPage: View {
         return NSWorkspace.shared.icon(forFile: url.path)
     }
 
-    /// 四个真实状态的对照。规则来自 docs/combo-design.md 第 5.2、5.3 节，示例数据用应用自己的 demo 场景。
+    /// 四个真实状态的对照。规则来自 docs/product/behavior.md「固定播放动效／显示优先级」，示例数据用应用自己的 demo 场景。
     private var menuBarSection: some View {
         let playing = Snapshot.demo(.music)
         let paused = Snapshot.demo(.paused)

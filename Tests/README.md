@@ -9,7 +9,7 @@
 | `RenderIcons.swift` | 图标圆头、颜色和原生尺寸断言，以及 16 个演示状态的对照图。 |
 | `RenderSettings.swift` | 全部设置页在不同语言、主题、尺寸与较大字号环境下的渲染。 |
 | `LiveState.swift` | 实机读取、观察器、音量提示续期及退出清理检查；历史直接编译命令已失效，使用时需按面板检查的方式导入并链接构建后的 Combo 模块。 |
-| `airpods-live-check.py` | 连接真实 AirPods 后检查 Helper；默认只读，显式 `--write` 才测试设置切换和恢复。命令见 `docs/airpods-audio-feasibility.md`。 |
+| `airpods-live-check.py` | 连接真实 AirPods 后检查 Helper；默认只读，显式 `--write` 才测试设置切换和恢复。命令见 [音频工程说明](../docs/engineering/audio.md#airpods)。 |
 
 已清理正式实现接入前的 `ChargeFullProbe.m`、不再参与构建的 `RenderBrand.swift`，以及被全设置页渲染工具覆盖的 `RenderMediaPage.swift`。
 

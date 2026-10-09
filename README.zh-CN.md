@@ -54,7 +54,7 @@ Combo 面板将 macOS 的 Wi-Fi、电池和声音控制集中在一处，方便�
 | :---: | :---: | :---: | :---: |
 | <img src="docs/assets/states/connecting.gif" width="120" alt="连接时 Wi-Fi 图形放大并持续脉冲"> | <img src="docs/assets/states/charging.gif" width="120" alt="绿色电量弧、充电标记与播放音柱同时显示"> | <img src="docs/assets/states/airpods.gif" width="120" alt="中央显示 AirPods 图形，底部音柱随固定播放动效循环变化"> | <img src="docs/assets/states/adjusting.gif" width="120" alt="临时音量数字显示后恢复 AirPods 图形"> |
 
-动图使用应用自身的图标绘制逻辑与演示数据合成。更多示例见[图标状态图集](docs/combo-current-states.md)。
+动图使用应用自身的图标绘制逻辑与演示数据合成。更多示例见[图标状态图集](docs/product/icon-gallery.md)。
 
 ## 功能
 
@@ -204,7 +204,7 @@ Release 安装包发布后，可按以下步骤安装：
 
 媒体播放、AirPods、AirPlay 路由详情、个人热点及部分电池功能使用私有系统接口，可能随 macOS 更新变化。无法取得信息或执行操作时，Combo 会显示不可用状态，或保留相关系统设置入口。
 
-实现和设备说明：[电池控制](docs/battery-controls.md)、[声音与 AirPods](docs/airpods-audio-feasibility.md)、[AirPlay](docs/airplay-homepod-icon-research.md)、[个人热点](docs/mobile-hotspot-api-feasibility.md)。
+实现和设备说明：[电池控制](docs/engineering/battery.md)、[声音与 AirPods](docs/engineering/audio.md#airpods)、[AirPlay](docs/engineering/audio.md#airplay)、[个人热点](docs/engineering/network.md#hotspot)。完整分类见[开发维护文档索引](docs/README.md)。
 
 ## 常见问题
 

@@ -1,10 +1,10 @@
 # 媒体播放：当前实现、数据来源与验证边界
 
-整理：2026-10-04。当前实现使用隔离 helper 读取系统注册媒体客户端；2026-09-22 的 Apple Events、播放器 AX 与浏览器扩展方案已不再是当前实施要求。
+整理：2026-10-09。当前实现使用隔离 helper 读取系统注册媒体客户端；未采用方案只用于解释选型。
 
 ## 数据链路
 
-[MediaPlayback.swift](../Combo/Audio/MediaPlayback.swift) 启动系统 `/usr/bin/perl`，经 DynaLoader 加载打包的 `ComboMediaPlayback.dylib`；[MediaPlaybackHelper.m](../Combo/Audio/MediaPlaybackHelper.m) 动态加载私有 MediaRemote 并流式输出 JSON。加载机制参考 [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)，不是 Apple 公开 API 或跨版本兼容承诺。
+[MediaPlayback.swift](../../Combo/Audio/MediaPlayback.swift) 启动系统 `/usr/bin/perl`，经 DynaLoader 加载打包的 `ComboMediaPlayback.dylib`；[MediaPlaybackHelper.m](../../Combo/Audio/MediaPlaybackHelper.m) 动态加载私有 MediaRemote 并流式输出 JSON。加载机制参考 [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter)，不是 Apple 公开 API 或跨版本兼容承诺。
 
 | 数据 / 操作 | 当前行为 | 边界 |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ helper 约每秒查询，单次客户端状态查询超时 2 秒；宿主每 5 �
 
 ## 显示与隐私
 
-底部显示顺序：系统静音/零音量 → 最近调整音量的约 2 秒提示 → 已确认播放且动效开启 → 普通音量点。固定四柱约 1.2 秒循环，系统减少动态效果时静态显示；具体规则见 [产品行为](combo-design.md#5-底部音量与播放) 与 [设置规格](combo-settings.md#5-媒体来源)。
+底部显示顺序：系统静音/零音量 → 最近调整音量的约 2 秒提示 → 已确认播放且动效开启 → 普通音量点。固定四柱约 1.2 秒循环，系统减少动态效果时静态显示；具体规则见 [产品行为](../product/behavior.md#media-display) 与 [设置规格](../product/behavior.md#settings)。
 
 不采集音频波形、不录音、不读取网页正文，动画帧不驱动媒体查询。当前方案不需要旧 Apple Events/浏览器扩展实施文档中的网站授权、native host 注册或 App Group 快照配置；这些流程不应作为当前用户操作要求。
 
@@ -36,8 +36,6 @@ helper 约每秒查询，单次客户端状态查询超时 2 秒；宿主每 5 �
 | CoreAudio 输出活动 | `kAudioProcessPropertyIsRunningOutput` 描述 I/O 与输出流 | 通知、会议、游戏等也可活跃，不能替代严格播放状态。[Apple 声明](https://developer.apple.com/documentation/coreaudio/kaudioprocesspropertyisrunningoutput) |
 | 播放器辅助功能 UI | 菜单“播放/暂停”可能只表达操作，缓冲与后台窗口需另验收 | 未作为当前正式检测路径；不要增加无用途的授权流程 |
 | Safari/Chrome 扩展 | 可观察获准网页的媒体元素，经原生消息桥接 | 当前没有交付这套扩展；不保留旧注册、通信和发布步骤作为首版要求。[Safari 原生消息](https://developer.apple.com/documentation/safariservices/messaging-between-the-app-and-javascript-in-a-safari-web-extension)、[Chrome Native Messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging) |
-
-2026-09-22 对网易云音乐 3.1.12 的包检查未找到公开播放状态脚本字典；当时未发现本机 QQ 音乐安装。这些历史结果不能推导为当前系统注册媒体路径必定支持或必定不支持这两款客户端。它们仍需按具体版本实测，未找到厂商 API 不是“绝对不存在”的证明。
 
 ## 验证入口与待验收
 

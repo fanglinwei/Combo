@@ -54,7 +54,7 @@ The Combo panel brings macOS Wi-Fi, battery, and sound controls together, so you
 | :---: | :---: | :---: | :---: |
 | <img src="docs/assets/states/connecting.gif" width="120" alt="The Wi-Fi symbol expands and pulses while connecting"> | <img src="docs/assets/states/charging.gif" width="120" alt="A green battery arc, charging indicator, and playback bars"> | <img src="docs/assets/states/airpods.gif" width="120" alt="The AirPods symbol in the center with playback bars following a fixed animation loop below"> | <img src="docs/assets/states/adjusting.gif" width="120" alt="A temporary volume number returns to the AirPods symbol"> |
 
-These GIFs use the app's own icon renderer and demo data. See the [icon gallery](docs/combo-current-states.md) for more examples (in Chinese).
+These GIFs use the app's own icon renderer and demo data. See the [icon gallery](docs/product/icon-gallery.md) for more examples (in Chinese).
 
 ## Features
 
@@ -204,7 +204,7 @@ The minimum macOS version describes the app's deployment target. Device controls
 
 Media playback, AirPods, AirPlay route details, hotspots, and some battery integrations use private system interfaces. These may change with macOS updates. When information or an operation is unavailable, Combo shows an unavailable state or keeps an entry point to the relevant system settings.
 
-Implementation and device notes: [Battery controls](docs/battery-controls.md), [Sound and AirPods](docs/airpods-audio-feasibility.md), [AirPlay](docs/airplay-homepod-icon-research.md), and [Personal Hotspot](docs/mobile-hotspot-api-feasibility.md). These detailed notes are currently in Chinese.
+Implementation and device notes: [Battery controls](docs/engineering/battery.md), [Sound and AirPods](docs/engineering/audio.md#airpods), [AirPlay](docs/engineering/audio.md#airplay), and [Personal Hotspot](docs/engineering/network.md#hotspot). These detailed notes are currently in Chinese. Start with the [developer documentation index](docs/README.md) for product specifications, implementation notes, research, and release maintenance.
 
 ## Troubleshooting
 
