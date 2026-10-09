@@ -39,6 +39,6 @@ helper 约每秒查询，单次客户端状态查询超时 2 秒；宿主每 5 �
 
 ## 验证入口与待验收
 
-`./verify.sh` 中的 `Tests/Audio/MediaPlaybackHelperCheck.m` 覆盖多客户端聚合、暂停/停止/中断、通讯来源排除及 JSON 布尔；`Tests/Audio/MediaPlaybackCheck.swift` 覆盖解码、helper 缺失与元数据/显示规则。自动检查不等于播放器硬件或系统版本验收，本次文档整理未重跑应用测试。
+`./verify.sh` 中的 `Tests/Audio/MediaPlaybackHelperCheck.m` 覆盖多客户端聚合、暂停/停止/中断、通讯来源排除及 JSON 布尔；`Tests/Audio/MediaPlaybackTests.swift` 覆盖解码、helper 缺失与元数据/显示规则。自动检查不等于播放器硬件或系统版本验收，本次文档整理未重跑应用测试。
 
 实机验收仍需覆盖目标播放器版本、浏览器媒体与通话、多个客户端和子会话、暂停/缓冲/结束、来源退出、helper 失效重连、睡眠唤醒、当前签名与 macOS 26。没有实测 CPU/能耗数字，不声明私有加载机制在 Developer ID、公证或沙盒下必定可用。

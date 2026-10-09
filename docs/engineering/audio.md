@@ -39,7 +39,7 @@ helper 用 `IOBluetoothDevice.outputAudioDeviceID` 匹配默认输出，通过 a
 
 未适配时共享音频 context 不可用；适配后可读模式与对话感知。降噪↔通透、降噪↔自适应、对话感知关闭↔开启经独立进程回读通过并恢复原状态。Normal 未确认，空间音频多种 setter 未确认持久变化，这些失败不计入通过项。
 
-日常检查用 `./verify.sh`；`Tests/Audio/AirPodsCheck.swift` 覆盖声道选择、异常字段、身份/旧设备、重复操作、未确认写入、损坏 JSON、进程失败、超时、取消、静默轮询、待确认与拖动几何。真实设备脚本默认只读，`--write` 会改变设置并逐项恢复，需在明确开展硬件验证时使用：
+日常检查用 `./verify.sh`；`Tests/Audio/AirPodsTests.swift` 覆盖声道选择、异常字段、身份/旧设备、重复操作、未确认写入、损坏 JSON、进程失败、超时、取消、静默轮询、待确认与拖动几何。真实设备脚本默认只读，`--write` 会改变设置并逐项恢复，需在明确开展硬件验证时使用：
 
 ```sh
 python3 Tests/Tools/airpods-live-check.py '<已构建 Combo.app 的路径>'
@@ -193,7 +193,7 @@ Info.plist 已加入 `NSLocalNetworkUsageDescription` 与 `_airplay._tcp` 的 `N
 
 路由查询在输出变化、手动重读、唤醒或活动面板触发；初始失败按 0.5/1/2 秒有限重试，真实活动面板默认每 3 秒重新确认路由，以覆盖 CoreAudio 身份未变而接收端切换的情况。每次为短进程；附近浏览只在用户 opt-in 后的活动真实面板运行，不是常驻扫描。共享绘图缓存固定的 16 个 SF Symbol 原图，每次绘制应用当前颜色；未知符号名不进入缓存。没有实测耗电数字，不宣称新增开销为零。
 
-`Tests/Audio/AirPlayRouteCheck.swift` 与 `Tests/Audio/AirPlayDiscoveryCheck.swift` 已接入 `./verify.sh`，覆盖异步取消、过期结果、路由切换、超时、权限拒绝与普通网络故障区分；`Tests/Views/PanelMotionCheck.swift` 与 `Tests/Views/PanelDismissCheck.swift` 覆盖不依赖 key 的外部点击、详情/图标内部点击、长时间授权保护、授权结束、应用/Space 切换、主动收起及动画。分类、符号回退与中央/列表一致性由现有输出设备及图标检查覆盖。检查结果以实际运行输出为准，历史 Apple TV 采集不代表当前功能已经实机通过。
+`Tests/Audio/AirPlayRouteTests.swift` 与 `Tests/Audio/AirPlayDiscoveryTests.swift` 已接入 `./verify.sh`，覆盖异步取消、过期结果、路由切换、超时、权限拒绝与普通网络故障区分；`Tests/Views/PanelMotionTests.swift` 与 `Tests/Views/PanelDismissTests.swift` 覆盖不依赖 key 的外部点击、详情/图标内部点击、长时间授权保护、授权结束、应用/Space 切换、主动收起及动画。分类、符号回退与中央/列表一致性由现有输出设备及图标检查覆盖。检查结果以实际运行输出为准，历史 Apple TV 采集不代表当前功能已经实机通过。
 
 待实机回归：首次本地网络弹窗与拒绝/重试、面板关闭/演示/睡眠及唤醒、快速切换与设备 ID 复用、HomePod 全尺寸/mini、多设备、AirPlay 1、蓝牙与 AirPlay 并存及 macOS 26。保留系统声音设置；不捆绑 pyatv/owntone 等运行时，不实现 HomePod 接收端播放控制或音频投送。
 

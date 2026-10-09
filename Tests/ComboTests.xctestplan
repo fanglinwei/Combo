@@ -1,0 +1,31 @@
+{
+  "configurations": [
+    {
+      "id": "a2903a6b-d2f0-4398-b3f7-393b3a711545",
+      "name": "Default",
+      "options": {
+      }
+    }
+  ],
+  "defaultOptions": {
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:Combo.xcodeproj",
+        "identifier": "F25D75947F4C86EFDD66A88D",
+        "name": "ComboTests"
+      },
+      "parallelizable": false
+    },
+    {
+      "target": {
+        "containerPath": "container:Combo.xcodeproj",
+        "identifier": "EF6AFA9CEDB31B8B568116FD",
+        "name": "ComboIntegrationTests"
+      },
+      "parallelizable": false
+    }
+  ],
+  "version": 1
+}

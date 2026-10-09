@@ -107,6 +107,7 @@ enum WiFiPasswordLookup: Equatable {
     private var scanAfterAuthorization = false
 
     init(defaults: UserDefaults = .standard,
+         observesLocationAuthorization: Bool = true,
          systemPassword: @escaping (Data) -> WiFiPasswordLookup = { WiFiPasswordLookup.find(ssid: $0) },
          associate: @escaping (CWNetwork, String?) throws -> Void = { network, password in
              guard let interface = CWWiFiClient.shared().interface(), interface.powerOn() else {
@@ -116,7 +117,8 @@ enum WiFiPasswordLookup: Equatable {
          }) {
         self.defaults = defaults; self.systemPassword = systemPassword; self.associate = associate
         useSystemPasswords = defaults.object(forKey: "wifiUseSystemPasswords") as? Bool ?? true
-        super.init(); location.delegate = self
+        super.init()
+        if observesLocationAuthorization { location.delegate = self }
         locationAuthorizationStatus = location.authorizationStatus
     }
 

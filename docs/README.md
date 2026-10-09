@@ -11,6 +11,7 @@
 | 工程实现 | [音频](engineering/audio.md) | 默认输出身份、AirPods 读写、蓝牙分类、AirPlay 路由和附近发现 |
 | 工程实现 | [媒体](engineering/media.md) | 系统媒体 helper、显示与隐私、未采用方案和兼容限制 |
 | 后续研究 | [路线图与研究](research/roadmap.md) | 关联电量来源、iPhone 查询、暂停的菜单栏自动折叠 |
+| 技术调研 | [Xcode 测试迁移](research/xcode-testing.md) | 现有检查迁入测试 target 的范围、隔离条件与迁移顺序 |
 | 发布维护 | [更新发布](release/updates.md) | Sparkle 行为、候选准备、发布顺序、签名备份恢复与验收 |
 
 ## 阅读与维护规则

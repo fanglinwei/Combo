@@ -168,7 +168,7 @@ Wi‑Fi 卡片提供“使用系统保存的 Wi‑Fi 密码”开关（默认开
 
 ### 8. 验收与验证边界
 
-`./verify.sh` 覆盖构建、状态规则、Helper、图标和签名。设置回归包含默认值、旧值迁移、阈值跨重启、完整基线、不覆盖记录、单项恢复规划和窗口关闭结束演示；`Tests/Tools/RenderSettings.swift` 用于离屏渲染，不代表真实授权或完整可访问性验收。
+`./verify.sh` 覆盖构建、状态规则、Helper、图标和签名。设置回归包含默认值、旧值迁移、阈值跨重启、完整基线、不覆盖记录、单项恢复规划和窗口关闭结束演示；`Tests/Views/SettingsLayoutTests.swift` 自动验证 150 组离屏设置布局与文字渲染，`Tests/Tools/RenderSettings.swift` 保留按需预览导出；这些检查不代表真实授权或完整可访问性验收。
 
 以下事项仍需实机检查：
 

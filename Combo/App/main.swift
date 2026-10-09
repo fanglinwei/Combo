@@ -9,8 +9,14 @@ final class ComboPanel: NSPanel {
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuItemValidation {
     let store: Store
 
-    init(store: Store? = nil) {
+    private let panelWorkspaceNotifications: NotificationCenter
+    private let monitorsGlobalPanelClicks: Bool
+
+    init(store: Store? = nil, panelWorkspaceNotifications: NotificationCenter = NSWorkspace.shared.notificationCenter,
+         monitorsGlobalPanelClicks: Bool = true) {
         self.store = store ?? Store()
+        self.panelWorkspaceNotifications = panelWorkspaceNotifications
+        self.monitorsGlobalPanelClicks = monitorsGlobalPanelClicks
         super.init()
     }
     var status: NSStatusItem!
@@ -410,14 +416,16 @@ final class ComboPanel: NSPanel {
             self?.handlePanelMouseDown(at: point, in: event.window)
             return event
         }
-        panelGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: clicks) { [weak self] _ in
-            MainActor.assumeIsolated { self?.handlePanelMouseDown(at: NSEvent.mouseLocation) }
+        if monitorsGlobalPanelClicks {
+            panelGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: clicks) { [weak self] _ in
+                MainActor.assumeIsolated { self?.handlePanelMouseDown(at: NSEvent.mouseLocation) }
+            }
         }
-        dismissalObservers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
+        dismissalObservers.append(panelWorkspaceNotifications.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
             MainActor.assumeIsolated { self?.handlePanelApplicationSwitch(to: app.processIdentifier, bundleIdentifier: app.bundleIdentifier) }
         })
-        dismissalObservers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+        dismissalObservers.append(panelWorkspaceNotifications.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.dismissPanelAutomatically(interactionInside: false) }
         })
     }
@@ -425,7 +433,7 @@ final class ComboPanel: NSPanel {
     private func stopPanelDismissalMonitoring() {
         if let panelLocalMonitor { NSEvent.removeMonitor(panelLocalMonitor); self.panelLocalMonitor = nil }
         if let panelGlobalMonitor { NSEvent.removeMonitor(panelGlobalMonitor); self.panelGlobalMonitor = nil }
-        dismissalObservers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
+        dismissalObservers.forEach { panelWorkspaceNotifications.removeObserver($0) }
         dismissalObservers.removeAll()
         permissionReturnPID = nil
     }
@@ -550,11 +558,31 @@ final class ComboPanel: NSPanel {
         store.scene = .live
         store.showMenuPermission = false
     }
-    func applicationWillTerminate(_ notification: Notification) { stopPanelDismissalMonitoring(); animator?.invalidate(); store.stop() }
+    func applicationWillTerminate(_ notification: Notification) {
+        languageChange?.cancel()
+        revealTask?.cancel()
+        detailTask?.cancel()
+        if let escapeMonitor { NSEvent.removeMonitor(escapeMonitor); self.escapeMonitor = nil }
+        stopPanelDismissalMonitoring()
+        if let activationObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(activationObserver)
+            self.activationObserver = nil
+        }
+        animator?.invalidate()
+        store.stop()
+    }
 }
+#if !COMBO_TEST_HOST
 MainActor.assumeIsolated {
     let app = NSApplication.shared
     let delegate = AppDelegate()
     app.delegate = delegate
     withExtendedLifetime(delegate) { app.run() }
 }
+#else
+MainActor.assumeIsolated {
+    let app = NSApplication.shared
+    app.setActivationPolicy(.prohibited)
+    app.run()
+}
+#endif

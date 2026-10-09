@@ -88,7 +88,7 @@ enum SystemPermissionAlert {
     private var lastVolumeChange: TimeInterval?
     private var observers: [NSObjectProtocol] = []
     private let network = NetworkStatus()
-    let wifi = WiFiControl()
+    let wifi: WiFiControl
     let menuSetup = MenuBarSetup()
     var snapshot: Snapshot {
         var result = snapshot(for: scene)
@@ -108,7 +108,10 @@ enum SystemPermissionAlert {
         }
         return result
     }
-    init(audio audioStore: AudioStore? = nil, isSystemPermissionAlertVisible: (() -> Bool)? = nil) {
+    private let monitorsSystem: Bool
+    init(audio audioStore: AudioStore? = nil, isSystemPermissionAlertVisible: (() -> Bool)? = nil, monitorsSystem: Bool = true) {
+        self.monitorsSystem = monitorsSystem
+        wifi = WiFiControl(observesLocationAuthorization: monitorsSystem)
         self.audio = audioStore ?? AudioStore()
         self.isSystemPermissionAlertVisible = isSystemPermissionAlertVisible ?? SystemPermissionAlert.isVisible
         animate = UserDefaults.standard.object(forKey: "animate") as? Bool ?? true
@@ -142,6 +145,7 @@ enum SystemPermissionAlert {
             self?.mediaVisible = state.visible
             self?.mediaControlsAvailable = state.controlsAvailable
         }
+        guard monitorsSystem else { return }
         mediaPlayback.setEnabled(true)
         wifiChange = wifi.$connecting.dropFirst().sink { [weak self] connecting in
             self?.live.wifiConnecting = connecting
@@ -181,6 +185,7 @@ enum SystemPermissionAlert {
         }
     }
     func refresh() {
+        guard monitorsSystem else { return }
         reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         login = SMAppService.mainApp.status == .enabled
         battery.refreshBattery(); audio.refreshAudio(); audio.refreshOutputs(); network.refresh(); wifi.refresh(); audio.bluetoothPermission.refresh()
