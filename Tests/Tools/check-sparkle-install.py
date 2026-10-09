@@ -1,6 +1,6 @@
 """Install an EdDSA-signed DMG into a disposable, ad-hoc Combo copy.
 
-Usage: python3 Tests/check-sparkle-install.py --app <Release/Combo.app>
+Usage: python3 Tests/Tools/check-sparkle-install.py --app <Release/Combo.app>
        --sparkle <directory containing Sparkle.framework and bin/sign_update>
 All update traffic stays on loopback; the real app and production feed are untouched.
 """
@@ -18,7 +18,7 @@ import threading
 import time
 import xml.etree.ElementTree as ET
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def run(*args, **kwargs):
@@ -92,7 +92,7 @@ def main():
             (runner / "Info.plist").write_bytes(plistlib.dumps(runner_info))
             run("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-F", args.sparkle,
                 "-framework", "Sparkle", "-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks",
-                ROOT / "Tests/SparkleInstallCheck.swift", "-o", runner / "MacOS/SparkleInstallCheck")
+                ROOT / "Tests/Tools/SparkleInstallCheck.swift", "-o", runner / "MacOS/SparkleInstallCheck")
             run("codesign", "--force", "--sign", "-", runner.parent)
             result_process = subprocess.run([str(runner / "MacOS/SparkleInstallCheck"), str(installed)],
                                             capture_output=True, text=True, timeout=90)

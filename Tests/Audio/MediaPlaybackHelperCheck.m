@@ -1,5 +1,5 @@
 #define COMBO_MEDIA_CHECK
-#import "../Combo/Audio/MediaPlaybackHelper.m"
+#import "../../Combo/Audio/MediaPlaybackHelper.m"
 #include <assert.h>
 
 @interface TestClient : NSObject

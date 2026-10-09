@@ -109,7 +109,7 @@ openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -md sha256 \
 
 ## 验证入口与剩余验收
 
-日常入口是 `./verify.sh`；更新状态测试、[更新准备检查](../../Releases/updates/test-prepare-update.py) 与 [安装检查脚本](../../Tests/check-sparkle-install.py) 以现有文件和运行结果为准。
+日常入口是 `./verify.sh`；更新状态测试、[更新准备检查](../../Releases/updates/test-prepare-update.py) 与 [安装检查脚本](../../Tests/Tools/check-sparkle-install.py) 以现有文件和运行结果为准。
 
 2026-10-08 的历史隔离测试使用回环源、真实 Release 副本与隔离 bundle ID：有效 EdDSA 的 DMG 从 build 1 替换到 2，嵌套签名通过；错误签名被拒绝，原版本保留。历史候选准备试验也验证了签名、清单字段与 DMG 字节不变。这些是本机测试，不代表正式用户网络、干净 Mac 或当前包完整验收；本次整理未重跑安装或应用测试。
 

@@ -88,7 +88,7 @@ static Class TestClassFromString(NSString *name) {
 #define NSClassFromString TestClassFromString
 #define IOBluetoothDevice TestBluetoothDevice
 #define main ComboAirPodsHelperMain
-#import "../Combo/Audio/AirPodsHelper.m"
+#import "../../Combo/Audio/AirPodsHelper.m"
 #undef main
 #undef NSClassFromString
 #undef AudioObjectGetPropertyData

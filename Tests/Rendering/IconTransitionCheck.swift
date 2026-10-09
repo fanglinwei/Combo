@@ -479,7 +479,7 @@ import SwiftUI
             .write(to: URL(fileURLWithPath: "build/combo-wifi-review.png"))
 
         // Compare the shared paths at the reference screenshot's native pixel size.
-        let reference = NSBitmapImageRep(data: try Data(contentsOf: URL(fileURLWithPath: "Tests/WiFiReference.png")))!
+        let reference = NSBitmapImageRep(data: try Data(contentsOf: URL(fileURLWithPath: "Tests/Fixtures/WiFiReference.png")))!
         let matched = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 84, pixelsHigh: 94,
             bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
             colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
@@ -613,6 +613,6 @@ import SwiftUI
             CGImageDestinationAddImage(gif, frame, [kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFDelayTime: 0.05]] as CFDictionary)
         }
         assert(CGImageDestinationFinalize(gif))
-        print("PASS: P4/P3/P2/P1 selection, event lifetime, direct downgrade, same-level animation, reduced motion and rendered frames")
+        print("PASS: P4/P3/P2/P1 selection, event lifetime, short downgrade crossfade, same-level animation, reduced motion and rendered frames")
     }
 }

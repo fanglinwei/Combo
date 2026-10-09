@@ -1,6 +1,7 @@
 import AppKit
 import ApplicationServices
 import Combine
+@testable import Combo
 
 @main struct LiveStateCheck {
     @MainActor static func main() async {
@@ -78,6 +79,6 @@ import Combine
             assert(store.battery.powerMode.policies[source] == policy)
         }
         store.stop()
-        print("PASS: live read-only state, observer registration, renewed volume hint and shutdown")
+        print("PASS: live state, observer registration, renewed volume hint, same-value power requests and shutdown")
     }
 }
