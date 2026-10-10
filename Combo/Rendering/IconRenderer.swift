@@ -228,8 +228,17 @@ enum IconRenderer {
             let bounds = CTLineGetImageBounds(line, NSGraphicsContext.current?.cgContext)
             // Fit actual glyph bounds within the canvas, preserving the content's aspect ratio.
             // Reserve top clearance for the upward shift, including plug stroke caps.
-            let expanded = numeric ? min(86 / max(1, bounds.width), 72 / max(1, bounds.height))
-                : (content.kind == .plugged || content.kind == .unplugged ? 2.1 : 2.3)
+            let expanded: Double
+            if numeric {
+                expanded = min(86 / max(1, bounds.width), 72 / max(1, bounds.height))
+            } else {
+                switch content.kind {
+                case .plugged, .unplugged: expanded = 2.1
+                case .headphones: expanded = 2.8 // Match ~17pt of visible ink despite SF Symbol padding.
+                case .unavailable: expanded = 4.1
+                default: expanded = 2.3
+                }
+            }
             let resting = content.kind == .headphones ? restingScale(content.glyph) : 1.05
             beginLayer(scale: (resting + (expanded-resting) * layer.emphasis) * layer.scale, opacity: layer.opacity)
             if content.kind == .plugged || content.kind == .unplugged {

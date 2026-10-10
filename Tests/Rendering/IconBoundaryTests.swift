@@ -4,6 +4,59 @@ import AppKit
 struct IconBoundaryTests {
     @Test
     @MainActor
+    func testExpandedCenterGlyphSizes() throws {
+        _ = NSApplication.shared
+        let devices = BluetoothFamily.allCases.map { OutputDeviceKind.bluetooth($0) } + [
+            .airPlay(.appleTV), .airPlay(.homePod), .airPlay(.homePodMini), .airPlay(.other)
+        ]
+        let contents = devices.map { device in
+            var content = IconContent(kind: .headphones)
+            content.glyph = OutputDeviceClassifier.glyph(for: device)
+            return content
+        } + [
+            IconContent(kind: .wifi), IconContent(kind: .wifiOff), IconContent(kind: .warning),
+            IconContent(kind: .connecting), IconContent(kind: .plugged), IconContent(kind: .unplugged),
+            IconContent(kind: .unavailable), IconContent(kind: .battery, text: "9"),
+            IconContent(kind: .battery, text: "82"), IconContent(kind: .battery, text: "100")
+        ]
+        for content in contents {
+            for dark in [false, true] {
+                for scale in [1, 2] {
+                    let pixels = 22 * scale
+                    let bitmap = try #require(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels,
+                        bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                        colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+                    let context = try #require(NSGraphicsContext(bitmapImageRep: bitmap))
+                    NSGraphicsContext.saveGraphicsState()
+                    NSGraphicsContext.current = context
+                    context.cgContext.scaleBy(x: CGFloat(scale), y: CGFloat(scale))
+                    let frame = IconTransition.Frame(layers: [.init(content: content, emphasis: 1)], peripheral: 0, ringOpacity: 0)
+                    IconRenderer.image(Snapshot(), animate: false, size: 22, dark: dark, transition: frame)
+                        .draw(in: NSRect(x: 0, y: 0, width: 22, height: 22))
+                    NSGraphicsContext.restoreGraphicsState()
+                    var minX = pixels, minY = pixels, maxX = -1, maxY = -1
+                    for y in 0..<pixels {
+                        for x in 0..<pixels where (try #require(bitmap.colorAt(x: x, y: y))).alphaComponent > 0.05 {
+                            minX = min(minX, x); maxX = max(maxX, x)
+                            minY = min(minY, y); maxY = max(maxY, y)
+                        }
+                    }
+                    let longest = Double(max(maxX - minX + 1, maxY - minY + 1)) / Double(scale)
+                    #expect(maxX - minX + 1 < pixels && maxY - minY + 1 < pixels,
+                           "Expanded artwork must fit within the canvas: \(content), \(scale)x")
+                    if content.kind == .headphones || content.kind == .unavailable {
+                        #expect(minX > 0 && minY > 0 && maxX < pixels - 1 && maxY < pixels - 1,
+                               "Enlarged device artwork must leave clearance on every edge: \(content), \(scale)x")
+                        // The supplied system AirPods reference is about 34px wide on a 2x menu bar.
+                        #expect((16...18).contains(longest), "Expanded device ink must match the system's 17pt size: \(content), \(scale)x")
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    @MainActor
     func testChargingGapHasRoundedCaps() throws {
         _ = NSApplication.shared
         // Both sides of the charging gap retain semicircular caps, on track and progress.
