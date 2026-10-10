@@ -12,7 +12,11 @@ final class ComboPanel: NSPanel {
     private let panelWorkspaceNotifications: NotificationCenter
     private let monitorsGlobalPanelClicks: Bool
 
-    init(store: Store? = nil, panelWorkspaceNotifications: NotificationCenter = NSWorkspace.shared.notificationCenter,
+    override convenience init() {
+        self.init(store: nil)
+    }
+
+    init(store: Store?, panelWorkspaceNotifications: NotificationCenter = NSWorkspace.shared.notificationCenter,
          monitorsGlobalPanelClicks: Bool = true) {
         self.store = store ?? Store()
         self.panelWorkspaceNotifications = panelWorkspaceNotifications
@@ -37,6 +41,9 @@ final class ComboPanel: NSPanel {
     private var detailTask: Task<Void, Never>?
     private var revealTask: Task<Void, Never>?
     var settings: NSWindow?
+    private var settingsAction: (() -> Void)?
+    private var settingsRequested = false
+    private var settingsClose: AnyCancellable?
     /// 引导这一步要不要压在别人上面；真正的层级由 applyGuideLevel 结合前台应用决定。
     private var guideWantsTop = false
     private var settingsFrameBeforeGuide: NSRect?
@@ -51,7 +58,9 @@ final class ComboPanel: NSPanel {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         AppUpdater.shared.start()
+        #if COMBO_TEST_HOST
         buildApplicationMenu()
+        #endif
         status = NSStatusBar.system.statusItem(withLength: 30)
         status.button?.target = self; status.button?.action = #selector(togglePanel)
         status.button?.wantsLayer = true
@@ -88,30 +97,10 @@ final class ComboPanel: NSPanel {
         panel?.appearance = appearance
         detailWindow?.appearance = appearance
     }
-    func buildApplicationMenu() {
-        let menu = NSMenu()
-        let root = menu.addItem(withTitle: "Combo", action: nil, keyEquivalent: "")
-        let submenu = NSMenu(title: "Combo")
-        submenu.addItem(withTitle: L("关于 Combo"), action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "").target = NSApp
-        submenu.addItem(.separator())
-        submenu.addItem(withTitle: L("设置…"), action: #selector(openSettings), keyEquivalent: ",").target = self
-        submenu.addItem(withTitle: L("检查更新…"), action: #selector(checkForUpdates), keyEquivalent: "").target = self
-        submenu.addItem(.separator())
-        let services = NSApp.servicesMenu ?? NSMenu()
-        services.supermenu?.items.first(where: { $0.submenu === services })?.submenu = nil
+    func localizeServicesMenu() {
+        guard let services = NSApp.servicesMenu else { return }
         services.title = L("服务")
-        submenu.addItem(withTitle: L("服务"), action: nil, keyEquivalent: "").submenu = services
-        submenu.addItem(.separator())
-        submenu.addItem(withTitle: L("隐藏 Combo"), action: #selector(NSApplication.hide(_:)), keyEquivalent: "h").target = NSApp
-        let hideOthers = submenu.addItem(withTitle: L("隐藏其他"), action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
-        hideOthers.target = NSApp
-        hideOthers.keyEquivalentModifierMask = [.command, .option]
-        submenu.addItem(withTitle: L("显示全部"), action: #selector(NSApplication.unhideAllApplications(_:)), keyEquivalent: "").target = NSApp
-        submenu.addItem(.separator())
-        submenu.addItem(withTitle: L("退出 Combo"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q").target = NSApp
-        root.submenu = submenu
-        NSApp.mainMenu = menu
-        NSApp.servicesMenu = services
+        services.supermenu?.items.first(where: { $0.submenu === services })?.title = services.title
     }
 
     @objc func checkForUpdates() { AppUpdater.shared.checkForUpdates() }
@@ -121,7 +110,9 @@ final class ComboPanel: NSPanel {
     }
 
     private func updateLanguage() {
+        #if COMBO_TEST_HOST
         buildApplicationMenu()
+        #endif
         settings?.title = L("Combo 设置")
         drawIcon()
     }
@@ -509,37 +500,79 @@ final class ComboPanel: NSPanel {
             }
         }
     }
+    func installSettingsAction(_ action: @escaping () -> Void) {
+        settingsAction = action
+        if settingsRequested { openSettings() }
+    }
+
     @objc func openSettings() {
         NSApp.setActivationPolicy(.regular)
-        if settings == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 850, height: 690), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-            window.appearance = selectedAppearance
-            window.delegate = self
-            window.title = L("Combo 设置"); window.titlebarAppearsTransparent = true
-            window.contentView = NSHostingView(rootView: SettingsView(store: store, closeGuide: { [weak window] in
-                window?.close()
-            }) { [weak self, weak window] onTop in
-                guard let self, let window else { return }
-                self.guideWantsTop = onTop
-                if onTop {
-                    if self.settingsFrameBeforeGuide == nil { self.settingsFrameBeforeGuide = window.frame }
-                    var frame = window.frame
-                    frame.origin.y += frame.height - 620
-                    frame.size.height = 620
-                    window.setFrame(frame, display: true)
-                } else if let frame = self.settingsFrameBeforeGuide {
-                    window.setFrame(frame, display: true)
-                    self.settingsFrameBeforeGuide = nil
-                }
-                self.applyGuideLevel(window)
-            })
-            window.minSize = NSSize(width: 780, height: 620)
-            window.setFrame(NSRect(x: 0, y: 0, width: 850, height: 690), display: false)
-            window.isReleasedWhenClosed = false; window.center(); settings = window
+        #if COMBO_TEST_HOST
+        // The isolated AppKit host has no product Settings scene.
+        if settingsAction == nil && settings == nil {
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 850, height: 690),
+                                  styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            window.contentView = NSHostingView(rootView: settingsView())
+            configureSettingsWindow(window)
+        }
+        #endif
+        if let settingsAction {
+            settingsRequested = false
+            settingsAction()
+        } else if settings == nil {
+            settingsRequested = true
+            return
         }
         NSApp.activate(ignoringOtherApps: true)
         if settings?.isMiniaturized == true { settings?.deminiaturize(nil) }
         settings?.makeKeyAndOrderFront(nil)
+    }
+
+    func settingsView() -> SettingsView {
+        SettingsView(store: store, closeGuide: { [weak self] in
+            self?.settings?.close()
+        }) { [weak self] onTop in
+            self?.setGuideOnTop(onTop)
+        }
+    }
+
+    private func setGuideOnTop(_ onTop: Bool) {
+        guideWantsTop = onTop
+        updateSettingsLayout()
+    }
+
+    func updateSettingsLayout() {
+        guard let window = settings else { return }
+        window.minSize = NSSize(width: 780, height: 620)
+        if guideWantsTop {
+            if settingsFrameBeforeGuide == nil { settingsFrameBeforeGuide = window.frame }
+            var frame = window.frame
+            frame.origin.y += frame.height - 620
+            frame.size.height = 620
+            window.setFrame(frame, display: true)
+        } else if let frame = settingsFrameBeforeGuide {
+            window.setFrame(frame, display: true)
+            settingsFrameBeforeGuide = nil
+        }
+        applyGuideLevel(window)
+    }
+
+    func configureSettingsWindow(_ window: NSWindow) {
+        guard settings !== window else { return }
+        settings = window
+        window.appearance = selectedAppearance
+        window.title = L("Combo 设置")
+        window.titlebarAppearsTransparent = true
+        window.styleMask.insert([.miniaturizable, .resizable])
+        window.minSize = NSSize(width: 780, height: 620)
+        window.setFrame(NSRect(x: 0, y: 0, width: 850, height: 690), display: false)
+        window.center()
+        // Keep SwiftUI's window delegate; observe closing without replacing it.
+        settingsClose = NotificationCenter.default.publisher(for: NSWindow.willCloseNotification, object: window)
+            .sink { [weak self] notification in self?.windowWillClose(notification) }
+        NSApp.setActivationPolicy(.regular)
+        updateSettingsLayout()
     }
     func applicationDidBecomeActive(_ notification: Notification) { Localization.shared.refresh(); store.refresh(); applyGuideLevel() }
 
@@ -560,6 +593,9 @@ final class ComboPanel: NSPanel {
     }
     func applicationWillTerminate(_ notification: Notification) {
         languageChange?.cancel()
+        settingsAction = nil
+        settingsRequested = false
+        settingsClose?.cancel()
         revealTask?.cancel()
         detailTask?.cancel()
         if let escapeMonitor { NSEvent.removeMonitor(escapeMonitor); self.escapeMonitor = nil }
@@ -572,17 +608,3 @@ final class ComboPanel: NSPanel {
         store.stop()
     }
 }
-#if !COMBO_TEST_HOST
-MainActor.assumeIsolated {
-    let app = NSApplication.shared
-    let delegate = AppDelegate()
-    app.delegate = delegate
-    withExtendedLifetime(delegate) { app.run() }
-}
-#else
-MainActor.assumeIsolated {
-    let app = NSApplication.shared
-    app.setActivationPolicy(.prohibited)
-    app.run()
-}
-#endif

@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E1A000000000000000000005 /* TestHostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A000000000000000000006 /* TestHostApp.swift */; };
+		E1A000000000000000000003 /* ComboCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A000000000000000000004 /* ComboCommands.swift */; };
+		E1A000000000000000000001 /* ComboApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A000000000000000000002 /* ComboApp.swift */; };
 		0213332583AC48C8F9020263 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 682E6A0AC33379301D321FAB /* Cocoa.framework */; };
 		03385503102379DEAB3E028D /* WiFiIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */; };
 		047A70630E0AC1C4183D3DEF /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000004 /* Localizable.strings */; };
@@ -20,7 +23,7 @@
 		1306BF56F984F54722594A95 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B37C395830774797006B8A12 /* Sparkle */; };
 		13425DCC84666C4F75BD7E88 /* PanelMotionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA94D6E8F52C473080BEE59 /* PanelMotionTests.swift */; };
 		17F19E2BDFE4C5B192DE4A04 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B34AA0BA30701F2500429926 /* Media.xcassets */; };
-		186320F179D22AB5DDE7273E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141C7E0B4B8033FEFD4E6E3 /* main.swift */; };
+		186320F179D22AB5DDE7273E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141C7E0B4B8033FEFD4E6E3 /* AppDelegate.swift */; };
 		19E4769D45D3871AB2A2B3B6 /* AppUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20200000000000000000002 /* AppUpdater.swift */; };
 		1D35BA1853BDC19A3C5D8B74 /* HotspotControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0761E92A852EF53B66972DA /* HotspotControl.swift */; };
 		1D4951E3F9399F20F2FC7DA3 /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000001 /* OnboardingState.swift */; };
@@ -41,7 +44,7 @@
 		405580DCBF87D1A853347670 /* IconTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F951B1AB68E4AC17144EF10 /* IconTransition.swift */; };
 		43D8A9F71BF7CD4BB195E2DF /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560A84B06FED44A09CBCC0AD /* PanelView.swift */; };
 		45CFFB8532F11C6781D65183 /* AirPlayRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000003 /* AirPlayRoute.swift */; };
-		4634697A7BB45AE6166FC383 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141C7E0B4B8033FEFD4E6E3 /* main.swift */; };
+		4634697A7BB45AE6166FC383 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141C7E0B4B8033FEFD4E6E3 /* AppDelegate.swift */; };
 		5538E5409277AB883C705760 /* StoreIsolationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B7FC8BA17BA7CF84C81E370 /* StoreIsolationTests.swift */; };
 		55485259EB6825FC7421F109 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 682E6A0AC33379301D321FAB /* Cocoa.framework */; };
 		56680FA17BFE538B2225A824 /* PanelDesignTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4388C57A71C206398AE55B8E /* PanelDesignTests.swift */; };
@@ -191,7 +194,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0141C7E0B4B8033FEFD4E6E3 /* main.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		E1A000000000000000000006 /* TestHostApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHostApp.swift; sourceTree = "<group>"; };
+		E1A000000000000000000004 /* ComboCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComboCommands.swift; sourceTree = "<group>"; };
+		E1A000000000000000000002 /* ComboApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComboApp.swift; sourceTree = "<group>"; };
+		0141C7E0B4B8033FEFD4E6E3 /* AppDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0237AAB7B96B93E53A766CC0 /* OnboardingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingTests.swift; sourceTree = "<group>"; };
 		04EB105D62837F47C7A677E0 /* AirPodsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirPodsTests.swift; sourceTree = "<group>"; };
 		092B442EC711CC51B8749ADA /* Combo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Combo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -372,6 +378,7 @@
 		28FB1FBEB17338F68E3F3F64 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				E1A000000000000000000006 /* TestHostApp.swift */,
 				FB27557A01FB08CA924E932C /* IntegrationTestCase.swift */,
 				4DBC8D262B60CD9F33E58A0B /* PanelTestCase.swift */,
 			);
@@ -422,7 +429,9 @@
 		477A1BE9857448B78B2C3D65 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				0141C7E0B4B8033FEFD4E6E3 /* main.swift */,
+				E1A000000000000000000002 /* ComboApp.swift */,
+				E1A000000000000000000004 /* ComboCommands.swift */,
+				0141C7E0B4B8033FEFD4E6E3 /* AppDelegate.swift */,
 				A20200000000000000000002 /* AppUpdater.swift */,
 				A20200000000000000000012 /* Sparkle-LICENSE.txt */,
 				A10100000000000000000001 /* Localization.swift */,
@@ -973,7 +982,9 @@
 				766CEEF22B3A4665BFA9FFCE /* BatterySections.swift in Sources */,
 				B96F6D588719478F84969E4C /* WiFiSections.swift in Sources */,
 				5E00D0EE72AF68EB37B88EE6 /* WiFiControl.swift in Sources */,
-				186320F179D22AB5DDE7273E /* main.swift in Sources */,
+				E1A000000000000000000001 /* ComboApp.swift in Sources */,
+				E1A000000000000000000003 /* ComboCommands.swift in Sources */,
+				186320F179D22AB5DDE7273E /* AppDelegate.swift in Sources */,
 				A20200000000000000000001 /* AppUpdater.swift in Sources */,
 				07AC77614721507B247E230C /* HoverScroller.swift in Sources */,
 			);
@@ -1015,7 +1026,8 @@
 				F78FC4582475D1974EF19A1A /* BatterySections.swift in Sources */,
 				B88A5AFC8B4B875AF506ED74 /* WiFiSections.swift in Sources */,
 				A1995AFDB8883374740F862B /* WiFiControl.swift in Sources */,
-				4634697A7BB45AE6166FC383 /* main.swift in Sources */,
+				E1A000000000000000000005 /* TestHostApp.swift in Sources */,
+				4634697A7BB45AE6166FC383 /* AppDelegate.swift in Sources */,
 				F5437EC2ABC2C2E8D4795B83 /* AppUpdater.swift in Sources */,
 				8C9E5A355DE71EB25061A754 /* HoverScroller.swift in Sources */,
 			);

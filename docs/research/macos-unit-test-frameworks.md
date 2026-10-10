@@ -47,7 +47,7 @@ SwiftPM 的官方 `swift test` 文档提供 `--enable/disable-xctest`、`--enabl
 - 测试计划关闭并行；验证脚本也使用 `-parallel-testing-enabled NO`。因此现有问题不能直接归因于 XCTest 并行 worker。
 - 已有调研记录显示：DerivedData 放在 Documents 下时，测试宿主曾停在 dyld 的 `open`；改到 `TMPDIR` 后成功。权限或文件系统机制尚未被证实，不能将其描述为已经确定的 XCTest 缺陷。
 
-本地证据：[Tests README](../../Tests/README.md)、[Xcode 测试问题记录](./xcode-testing.md)、[测试 target 配置](../../Combo.xcodeproj/project.pbxproj)、[宿主入口](../../Combo/App/main.swift)、[测试计划](../../Tests/ComboTests.xctestplan)、[验证脚本](../../verify.sh)。
+本地证据：[Tests README](../../Tests/README.md)、[Xcode 测试问题记录](./xcode-testing.md)、[测试 target 配置](../../Combo.xcodeproj/project.pbxproj)、[宿主入口](../../Tests/Support/TestHostApp.swift)、[测试计划](../../Tests/ComboTests.xctestplan)、[验证脚本](../../verify.sh)。
 
 基于这些观察，最小完整方案是保留无宿主 XCTest 和轻量集成宿主，优先确认当前启动问题是否已经由临时目录构建路径解决。需要减少测试运行链路时，可选择少量没有全局系统副作用的纯逻辑模块试用 SwiftPM + 内置 Swift Testing，并比较冷启动、增量构建和测试执行耗时；在有真实结果前，不建议整体迁移。
 

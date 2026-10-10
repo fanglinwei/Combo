@@ -46,6 +46,45 @@ extension IntegrationTests {
 
         @Test
         @MainActor
+        func testSettingsSceneActionPreservesWindowDelegateAndCloseBehavior() throws {
+            let store = Store(monitorsSystem: false)
+            defer { store.stop() }
+            let delegate = AppDelegate(store: store)
+            let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            final class WindowDelegate: NSObject, NSWindowDelegate {}
+            let windowDelegate = WindowDelegate()
+            window.delegate = windowDelegate
+            defer { window.close(); window.contentView = nil }
+            var openings = 0
+            delegate.installSettingsAction {
+                openings += 1
+                delegate.configureSettingsWindow(window)
+            }
+            delegate.openSettings()
+            #expect(openings == 1 && delegate.settings === window)
+            #expect(window.delegate === windowDelegate, "The bridge must preserve SwiftUI's window delegate")
+            #expect(window.styleMask.contains([.miniaturizable, .resizable]))
+            #expect(window.frame.size == NSSize(width: 850, height: 690))
+            #expect(window.minSize == NSSize(width: 780, height: 620))
+            window.setFrame(NSRect(x: -9000, y: -9000, width: 900, height: 720), display: false)
+            delegate.openSettings()
+            #expect(openings == 2 && window.frame.size == NSSize(width: 900, height: 720),
+                    "Reattaching the same scene window must preserve the user's size")
+            store.scene = .music
+            store.showMenuPermission = true
+            window.close()
+            #expect(NSApp.activationPolicy() == .accessory && store.scene == .live && !store.showMenuPermission)
+            delegate.openSettings()
+            #expect(openings == 3 && window.isVisible && NSApp.activationPolicy() == .regular)
+            delegate.applicationWillTerminate(Notification(name: NSApplication.willTerminateNotification))
+            store.scene = .music
+            window.close()
+            #expect(store.scene == .music, "Termination must remove the scene-window close observer")
+        }
+
+        @Test
+        @MainActor
         func testSettingsDockLifecycleAndMinimizedWindowReopen() async throws {
             let store = Store(monitorsSystem: false)
             defer { store.stop() }

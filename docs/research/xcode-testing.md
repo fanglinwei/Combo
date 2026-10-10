@@ -12,7 +12,7 @@
 
 第二次完整收尾验收退出 0：应用构建、98 个 Swift Testing、本地化扫描、打包充电 helper、签名和品牌检查全部通过，摘要为 98 passed / 0 failed / 0 skipped，结果包 build/checks/xctest.xXz8ia/ComboTests.xcresult。每 0.5 秒采样观察到 ComboTestHost 峰值 1、xctest 峰值 1；两轮完整结果和采样均保留。此次复测通过不代表首次两项失败的根因已经解决；没有修改它们的断言、等待、并发设置或生产行为。
 
-七批共迁移 24 个原自动入口，另将 RenderIcons 的独立断言和 RenderSettings 的全部渲染矩阵纳入自动回归。共享 `ComboTests` scheme 当前包含 98 个测试案例（全部使用 Swift Testing），串行执行无宿主的 `ComboTests`（61 例）和隔离宿主的 `ComboIntegrationTests`（37 例，全部使用 Swift Testing）。前者编译 18 个生产源码文件；后者的宿主编译与应用相同的 35 个 Swift 文件并复用资源。第四批增加最小启动 / 监听隔离接口，默认生产行为保持不变。
+七批共迁移 24 个原自动入口，另将 RenderIcons 的独立断言和 RenderSettings 的全部渲染矩阵纳入自动回归。共享 `ComboTests` scheme 在测试框架迁移收尾时包含 98 个测试案例（全部使用 Swift Testing），串行执行无宿主的 `ComboTests`（61 例）和隔离宿主的 `ComboIntegrationTests`（37 例，全部使用 Swift Testing）。前者编译 18 个生产源码文件；后者的宿主编译与应用相同的 35 个 Swift 文件并复用资源。第四批增加最小启动 / 监听隔离接口，默认生产行为保持不变。
 
 
 Swift Testing 第五批迁移了宿主中的本地化 4 例、菜单 2 例、设置偏好 3 例、启动隔离 1 例，并新增 scope 抛错后的清理回归。两种框架共用原偏好 / AppKit 恢复逻辑，Swift Testing 子 suite 放在共同的串行 `IntegrationTests` 下，递归 scope 逐案例用 defer 清理。故障注入验证原生断言能正常失败、窗口能关闭、状态能恢复；撤去注入后的完整 95 例全部通过，采样宿主峰值 1。详细记录及下一批范围见 [测试入口与 Swift Testing 进度](../../Tests/README.md)。
@@ -143,7 +143,7 @@ PanelMotion 的 19 处原行为断言迁入 1 个连续交互案例，PanelDismi
 - `verify.sh` 同时构建应用、单独编译检查程序、创建带资源的临时 `.app`、运行 Python 检查、校验签名与品牌产物。替换可执行程序部分后仍需要统一脚本协调剩余检查。
 - `Combo/App/main.swift` 入口会创建 `AppDelegate` 和 `Store`，然后进入 `app.run()`；不能假定选择 Combo 为 Test Host 后只加载类型、不触发应用启动。
 
-源码依据：[`Tests/README.md`](../../Tests/README.md)、[`verify.sh`](../../verify.sh)、[`Combo.xcodeproj/project.pbxproj`](../../Combo.xcodeproj/project.pbxproj)、[`Combo/App/main.swift`](../../Combo/App/main.swift)、[`Localization.swift`](../../Combo/App/Localization.swift)。
+源码依据：[`Tests/README.md`](../../Tests/README.md)、[`verify.sh`](../../verify.sh)、[`Combo.xcodeproj/project.pbxproj`](../../Combo.xcodeproj/project.pbxproj)、[`Combo/App/ComboApp.swift`](../../Combo/App/ComboApp.swift)、[`AppDelegate.swift`](../../Combo/App/AppDelegate.swift)、[`Localization.swift`](../../Combo/App/Localization.swift)。
 
 ## 每类自动检查如何迁移
 
@@ -232,3 +232,11 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 ## 尚未验证
 
 无应用宿主的源码子集、Sparkle 加载、测试 bundle 图标资源和隔离 helper 子进程已验证。独立应用宿主的启动 / 监听隔离、真实资源和偏好恢复已验证。直接使用发行 Combo 作为宿主、无宿主链接完整 Combo 模块、Objective-C 同 bundle 链接及宏导入后的符号冲突未验证。没有运行 UI 自动化、真实硬件、线上 feed 或隔离安装。分类为“可迁移”代表能力与源码结构支持，不能当作工程已可运行的证明。
+
+## SwiftUI 应用入口迁移（2026-10-09）
+
+产品改用 `ComboApp: App` 与 `@NSApplicationDelegateAdaptor`；设置由 SwiftUI Settings scene 创建，菜单由 Commands 声明。AppDelegate 保留菜单栏、面板、引导窗口行为和系统监听清理。旧 `main.swift` 已拆分为产品 [ComboApp.swift](../../Combo/App/ComboApp.swift)、共享 [AppDelegate.swift](../../Combo/App/AppDelegate.swift) 和独立 [TestHostApp.swift](../../Tests/Support/TestHostApp.swift)，旧基线章节中的入口说明是历史记录。
+
+宿主继续运行纯 AppKit 事件循环，不加入产品 SwiftUI 入口。应用菜单测试新增 1 例 Scene 窗口桥接、delegate 保留及关闭 / 退出清理，当前共 99 例（61 无宿主、38 隔离宿主）。产品 Scene 与 Commands 的真实启动检查使用临时独立 App 和偏好域，运行方法见 [测试入口](../../Tests/README.md#swiftui-app-入口检查)。
+
+本次验证：最终 Debug / Release 构建及三条真实 SwiftUI 启动路径通过，菜单 / 设置 / 引导定向 9 例通过。完整 suite 为 97 passed / 2 failed / 0 skipped，失败为 PanelDismiss 的关闭位移和 PanelMotion 的进场 / 高度 / 反转采样；当时 CoreGraphics 返回 CGSSessionScreenIsLocked=1。使用迁移前 main.swift 和工程配置的临时副本，在同一锁屏会话下复测这 2 例，同样失败并记录相同的 11 条断言失败；未放宽断言或修改面板动画。解锁后的正常桌面动画验收仍待完成，不能将本次完整 suite 记为通过。日志与摘要保存在 build/checks/swiftui-migration/。

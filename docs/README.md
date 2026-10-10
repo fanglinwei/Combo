@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | 产品规格 | [产品行为与设置](product/behavior.md) | 图标语义、优先级与时序、设置默认值、持久化、权限与恢复 |
 | 产品规格 | [图标状态示例](product/icon-gallery.md) | 历史演示 GIF、当前规则入口与重绘命令 |
+| 工程实现 | [应用入口与窗口](engineering/app.md) | SwiftUI App / Settings / Commands、AppKit 面板和测试宿主隔离 |
 | 工程实现 | [电池](engineering/battery.md) | 电源模式、临时充满、高耗能应用、私有 ABI 与验证边界 |
 | 工程实现 | [网络](engineering/network.md) | 默认路径、Wi-Fi 扫描与连接、密码与权限、个人热点 |
 | 工程实现 | [音频](engineering/audio.md) | 默认输出身份、AirPods 读写、蓝牙分类、AirPlay 路由和附近发现 |
