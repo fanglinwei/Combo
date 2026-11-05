@@ -393,9 +393,8 @@ struct MenuBarCallout: View {
     let reduceMotion: Bool
     @ObservedObject private var localization = Localization.shared
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
-    @AppStorage("themeFamily") private var themeFamily: ComboTheme = .blue
     @Environment(\.colorScheme) private var colorScheme
-    private var palette: ComboPalette { themeFamily.palette(isDark: colorScheme == .dark) }
+    private var palette: ComboPalette { ComboPalette.standard(isDark: colorScheme == .dark) }
 
     var body: some View {
         VStack(spacing: 0) {

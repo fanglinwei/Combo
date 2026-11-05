@@ -10,37 +10,33 @@ extension IntegrationTests {
         @MainActor
         func testArtworkTintAndContrastAcrossPalettes() async throws {
             var combinations = 0
-            for theme in ComboTheme.allCases {
-                for dark in [false, true] {
-                    let palette = theme.palette(isDark: dark)
-                    let samples: [(NSColor, NSColor?)] = [(.black, nil), (.white, nil), (.gray, nil), (.red, nil), (.green, nil), (.blue, nil),
-                        (NSColor(srgbRed: 0.7, green: 0.55, blue: 0.45, alpha: 1), nil),
-                        (NSColor(srgbRed: 0.31, green: 0.19, blue: 0.42, alpha: 1), nil), (.black, .yellow), (.white, .systemPurple)]
-                    for (index, item) in samples.enumerated() {
-                        let data = try artwork(item.0, patch: item.1)
-                        let sample = MediaArtworkTint.sample(data)
-                        if index < 3 { #expect(sample == nil, "Grayscale artwork must fall back to the theme accent") }
-                        for increased in [false, true] {
-                            let tint = MediaArtworkTint.resolved(sample, palette: palette, increasedContrast: increased)
-                            let background = MediaArtworkTint.mixed(tint.color, over: NSColor(palette.surface), alpha: tint.alpha * 2)
-                            #expect(MediaArtworkTint.contrast(NSColor(palette.mutedText), background) >= 4.5 - 0.001,
-                                   "Artwork tint must preserve readable secondary text")
-                            #expect(tint.alpha * 2 <= (dark ? 0.15 : 0.12))
-                        }
-                        combinations += 1
+            for dark in [false, true] {
+                let palette = ComboPalette.standard(isDark: dark)
+                let samples: [(NSColor, NSColor?)] = [(.black, nil), (.white, nil), (.gray, nil), (.red, nil), (.green, nil), (.blue, nil),
+                    (NSColor(srgbRed: 0.7, green: 0.55, blue: 0.45, alpha: 1), nil),
+                    (NSColor(srgbRed: 0.31, green: 0.19, blue: 0.42, alpha: 1), nil), (.black, .yellow), (.white, .systemPurple)]
+                for (index, item) in samples.enumerated() {
+                    let data = try artwork(item.0, patch: item.1)
+                    let sample = MediaArtworkTint.sample(data)
+                    if index < 3 { #expect(sample == nil, "Grayscale artwork must fall back to the theme accent") }
+                    for increased in [false, true] {
+                        let tint = MediaArtworkTint.resolved(sample, palette: palette, increasedContrast: increased)
+                        let background = MediaArtworkTint.mixed(tint.color, over: NSColor(palette.surface), alpha: tint.alpha * 2)
+                        #expect(MediaArtworkTint.contrast(NSColor(palette.mutedText), background) >= 4.5 - 0.001,
+                               "Artwork tint must preserve readable secondary text")
+                        #expect(tint.alpha * 2 <= (dark ? 0.15 : 0.12))
                     }
+                    combinations += 1
                 }
             }
-            #expect(combinations == 60)
+            #expect(combinations == 20)
         }
 
         @Test
         @MainActor
         func testRowHoverPressAndDisabledPixelsAcrossPalettes() async throws {
-            for theme in ComboTheme.allCases {
-                for dark in [false, true] {
-                    try await checkRowHover(palette: theme.palette(isDark: dark), name: "\(theme.rawValue)-\(dark ? "dark" : "light")")
-                }
+            for dark in [false, true] {
+                try await checkRowHover(palette: ComboPalette.standard(isDark: dark), name: "\(dark ? "dark" : "light")")
             }
         }
 
@@ -53,42 +49,39 @@ extension IntegrationTests {
             let store = makeStore(defaults: defaults, cover: try artwork(.systemPurple))
             defer { store.stop() }
             var renders = 0
-            for theme in ComboTheme.allCases {
-                for dark in [false, true] {
-                    defaults.set(theme.rawValue, forKey: "themeFamily")
-                    for section in [PanelSection?.none, .battery, .wifi, .sound] {
-                        store.panelRevealed = false
-                        store.detailSection = section
-                        var measured: CGFloat = 0
-                        let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: store.audio.airpods, bluetoothPermission: store.audio.bluetoothPermission,
-                                             mode: section == nil ? .overview : .detail, showSettings: {}, maxHeight: 900, reportHeight: { measured = $0 })
-                            .defaultAppStorage(defaults).environment(\.colorScheme, dark ? .dark : .light)
-                        let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: 420, height: 900), styleMask: .borderless, backing: .buffered, defer: false)
-                        window.isReleasedWhenClosed = false
-                        defer { window.close(); window.contentView = nil }
-                        window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
-                        let hosting = NSHostingView(rootView: view)
-                        hosting.sizingOptions = []
-                        window.contentView = hosting
-                        window.orderFrontRegardless()
-                        try await Task.sleep(for: .milliseconds(20))
-                        store.panelRevealed = true
-                        try await Task.sleep(for: .milliseconds(200))
-                        hosting.layoutSubtreeIfNeeded()
-                        #expect(measured > 100 && measured < 900, "Default content must fit without internal scrolling: \(measured)")
-                        guard measured > 100 && measured < 900 else { return }
-                        let frame = NSRect(x: 0, y: 0, width: 420, height: measured)
-                        let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: frame), "Missing bitmap prerequisite")
-                        hosting.cacheDisplay(in: frame, to: bitmap)
-                        let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing png prerequisite")
-                        let name = "\(theme.rawValue)-\(dark ? "dark" : "light")-\(section?.rawValue ?? "overview")"
-                        attachPNG(png, name: name)
-                        window.orderOut(nil)
-                        renders += 1
-                    }
+            for dark in [false, true] {
+                for section in [PanelSection?.none, .battery, .wifi, .sound] {
+                    store.panelRevealed = false
+                    store.detailSection = section
+                    var measured: CGFloat = 0
+                    let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: store.audio.airpods, bluetoothPermission: store.audio.bluetoothPermission,
+                                         mode: section == nil ? .overview : .detail, showSettings: {}, maxHeight: 900, reportHeight: { measured = $0 })
+                        .defaultAppStorage(defaults).environment(\.colorScheme, dark ? .dark : .light)
+                    let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: 420, height: 900), styleMask: .borderless, backing: .buffered, defer: false)
+                    window.isReleasedWhenClosed = false
+                    defer { window.close(); window.contentView = nil }
+                    window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+                    let hosting = NSHostingView(rootView: view)
+                    hosting.sizingOptions = []
+                    window.contentView = hosting
+                    window.orderFrontRegardless()
+                    try await Task.sleep(for: .milliseconds(20))
+                    store.panelRevealed = true
+                    try await Task.sleep(for: .milliseconds(200))
+                    hosting.layoutSubtreeIfNeeded()
+                    #expect(measured > 100 && measured < 900, "Default content must fit without internal scrolling: \(measured)")
+                    guard measured > 100 && measured < 900 else { return }
+                    let frame = NSRect(x: 0, y: 0, width: 420, height: measured)
+                    let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: frame), "Missing bitmap prerequisite")
+                    hosting.cacheDisplay(in: frame, to: bitmap)
+                    let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing png prerequisite")
+                    let name = "\(dark ? "dark" : "light")-\(section?.rawValue ?? "overview")"
+                    attachPNG(png, name: name)
+                    window.orderOut(nil)
+                    renders += 1
                 }
             }
-            #expect(renders == 24)
+            #expect(renders == 8)
         }
 
         @Test

@@ -56,10 +56,9 @@ struct SettingsView: View {
     @AppStorage(OnboardingState.postponedKey) private var onboardingPostponed = false
     @AppStorage(OnboardingState.stepKey) private var onboardingStep = 0
     @AppStorage("appearanceMode") private var appearanceMode: ComboAppearance = .system
-    @AppStorage("themeFamily") private var themeFamily: ComboTheme = .blue
     @Environment(\.colorScheme) private var colorScheme
     private var palette: ComboPalette {
-        themeFamily.palette(isDark: colorScheme == .dark)
+        ComboPalette.standard(isDark: colorScheme == .dark)
     }
     private var colors: SettingsColors { SettingsColors(isDark: palette.isDark) }
     private var labelColor: Color { colors.label }
@@ -179,14 +178,6 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 20) {
             groupHeader(L("外观"))
             SettingsGroup {
-                HStack {
-                    Text(L("主题色"))
-                    Spacer(minLength: 12)
-                    Picker(L("主题色"), selection: $themeFamily) {
-                        ForEach(ComboTheme.allCases) { Text($0.title).tag($0) }
-                    }.labelsHidden()
-                }.padding(16)
-                Divider()
                 HStack(spacing: 16) {
                     Text(L("外观模式"))
                     Spacer(minLength: 12)

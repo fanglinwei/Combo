@@ -97,7 +97,7 @@ LiveState 删除已迁移的控制器检查和 ApplicationServices import，保�
 
 音柱案例保留每轮 6 帧、4 次减弱动态切换的真实渲染采样，将 24 张采样 PNG 保存为结果附件；应用菜单检查通过宿主菜单覆盖共享 action / target、快捷键、Services、更新可用性和最小化窗口重新打开；新增案例覆盖 Scene 动作桥接、保留窗口 delegate、尺寸重用、关闭及退出清理。真实产品 SwiftUI 菜单和入口由下述隔离启动工具单独验证。图标边界检查加入无宿主 bundle，保留原像素阈值和采样坐标。
 
-面板案例保留 60 组封面 / 主题与对比度检查、24 组面板 / 详情渲染、6 套调色板的 4 种行交互状态，以及 AirPods 提前 / 晚到数据的高度变化。引导案例分别验证实际 AppDelegate 启动路径、设置窗口恢复、96 组双语 / 主题 / 外观 / 较窄尺寸渲染和前进 / 返回 / Return / Escape 行为。149 张页面与导航 PNG 保存为结果附件。所有窗口在抛错时也关闭并释放内容；临时 AirPods helper 结束后清理。
+面板案例保留 20 组封面 / 深浅外观与对比度检查、8 组面板 / 详情渲染、2 套深浅调色板的 4 种行交互状态，以及 AirPods 提前 / 晚到数据的高度变化。引导案例分别验证实际 AppDelegate 启动路径、设置窗口恢复、32 组双语 / 外观 / 较窄尺寸渲染和前进 / 返回 / Return / Escape 行为。53 张页面与导航 PNG 保存为结果附件。所有窗口在抛错时也关闭并释放内容；临时 AirPods helper 结束后清理。
 
 AirPods 渲染使用固定输出身份和原临时 helper，不读取真实音频设备；AudioStore 的初始输出身份默认仍为 0。引导启动案例仍调用生产启动方法，Debug 更新驱动保持禁用、Store 不监听系统；结束时显式调用退出清理，移除工作区观察器并停止定时器 / Store。
 
@@ -105,7 +105,7 @@ AirPods 渲染使用固定输出身份和原临时 helper，不读取真实音�
 
 动画案例保留 20 次定时高度采样并补充原生 resize 通知记录，验证首次测量、快速反转和减弱动态效果的原等待与容差；帧数据保存为文本附件。关闭案例保留详情增长 / 收缩、超过 5 秒的权限保护、内部点击与外部关闭、应用切换、整组移动，以及 Wi-Fi 表单 Escape 优先级；新增实际应用激活观察器和退出期间任务 / 监听清理的案例。历史详情收缩偶发失败没有确认根因，不将隔离后的测试通过视为产品问题已修复。
 
-设置布局案例覆盖三页设置的 72 组常规矩阵与 3 组大字体 / 高对比环境，保存 75 张 PNG 附件。检查窗口尺寸、滚动视口边界、正文水平宽度、三行导航文字与页标题像素、选中导航文字 4.5:1 对比度断言。像素读取保留位图颜色配置后转换至 sRGB；不使用整个截图的固定哈希。当前离屏宿主没有暴露 SwiftUI 可访问性子节点，因此这些检查属于布局 / 文字渲染覆盖，不代表完整可访问性树或 VoiceOver 验收。
+设置布局案例覆盖三页设置的 24 组常规矩阵与 3 组大字体 / 高对比环境，保存 27 张 PNG 附件；保留旧主题色偏好时仍按统一蓝色检查。检查窗口尺寸、滚动视口边界、正文水平宽度、三行导航文字与页标题像素、选中导航文字 4.5:1 对比度断言。像素读取保留位图颜色配置后转换至 sRGB；不使用整个截图的固定哈希。当前离屏宿主没有暴露 SwiftUI 可访问性子节点，因此这些检查属于布局 / 文字渲染覆盖，不代表完整可访问性树或 VoiceOver 验收。
 
 命令行默认把测试 DerivedData 放在系统临时目录，避免从 Documents 内启动测试宿主时出现的加载阻塞；可用 `COMBO_TEST_DERIVED_DATA` 指定另一个目录。测试结果仍保存在仓库的 `build/checks/`。
 
@@ -122,7 +122,7 @@ AirPods 渲染使用固定输出身份和原临时 helper，不读取真实音�
 | 文件 | 用途与操作范围 |
 | --- | --- |
 | [RenderIcons.swift](Tools/RenderIcons.swift) | 演示状态对照图生成；原边界断言已迁入 IconBoundaryTests。直接编译时需带入 Localization、State、OutputDevice、IconTransition、WiFiIcon 和 IconRenderer 源码 |
-| [RenderSettings.swift](Tools/RenderSettings.swift) | 按需导出三页设置预览；全部 75 组矩阵及布局 / 像素断言已纳入 SettingsLayoutTests。链接 Debug Combo 模块，在独立测试 Bundle 内复制本地化与品牌资源 |
+| [RenderSettings.swift](Tools/RenderSettings.swift) | 按需导出三页设置预览；全部 27 组矩阵及布局 / 像素断言已纳入 SettingsLayoutTests。链接 Debug Combo 模块，在独立测试 Bundle 内复制本地化与品牌资源 |
 | [check-app-lifecycle.py](Tools/check-app-lifecycle.py) / [AppLifecycleCheck.swift](Tools/AppLifecycleCheck.swift) | 复制 Debug App 到临时独立 bundle，执行真实 `ComboApp.main()`，检查完成引导、首次引导及 `--settings` 启动，菜单、尺寸、Dock 激活策略、最小化、重新打开回调和即时语言切换；只修改临时包及其独立偏好域，不操作系统音量 / 网络控制 |
 | [LiveState.swift](Tools/LiveState.swift) | 实机读取、观察器、真实启动时不显示权限指引、真实设备静音变化与退出清理，以及真实能耗模式的同值请求；阈值通知、模拟音量提示和菜单权限刷新 / 拒绝访问控制器检查已迁入 StoreIsolationTests，不能当作纯只读工具自动运行 |
 | [MediaPlaybackWatch.swift](Tools/MediaPlaybackWatch.swift) | 真实媒体 helper 的 12 秒轮询观察；与 `Combo/Audio/MediaPlayback.swift` 一起编译，运行参数为 `--watch <helper路径>`，不进入默认回归 |

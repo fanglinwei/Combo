@@ -62,9 +62,8 @@ struct PanelView: View {
     @ObservedObject private var localization = Localization.shared
     static let width: CGFloat = 420
     @Environment(\.colorScheme) private var colorScheme
-    @AppStorage("themeFamily") private var themeFamily: ComboTheme = .blue
     private var palette: ComboPalette {
-        themeFamily.palette(isDark: colorScheme == .dark)
+        ComboPalette.standard(isDark: colorScheme == .dark)
     }
     private var mutedText: Color { palette.mutedText }
     /// `.overview` is the menu-bar panel; `.detail` is the section window that opens beside it.

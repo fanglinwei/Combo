@@ -25,103 +25,100 @@ extension IntegrationTests {
             var renders = 0
             for language in [AppLanguage.simplifiedChinese, .english] {
                 Localization.shared.selection = language
-                for theme in ComboTheme.allCases {
-                    defaults.set(theme.rawValue, forKey: "themeFamily")
-                    for dark in [false, true] {
-                        for accessible in [false, true] {
-                            var footerBounds: ClosedRange<Int>?
-                            for step in 0...OnboardingState.stepCount {
-                                store.reduceMotion = !(language == .simplifiedChinese && theme == .blue && dark && !accessible)
-                                defaults.set(false, forKey: OnboardingState.completedKey)
-                                defaults.set(false, forKey: OnboardingState.postponedKey)
-                                defaults.set(step, forKey: OnboardingState.stepKey)
-                                let view = SettingsView(store: store) { _ in }
-                                    .defaultAppStorage(defaults)
-                                    .environment(\.colorScheme, dark ? .dark : .light)
-                                let hosting = NSHostingView(rootView: view)
-                                hosting.sizingOptions = []
-                                let size = NSSize(width: accessible ? 780 : 850, height: 598)
-                                let window = NSWindow(contentRect: NSRect(origin: NSPoint(x: -9000, y: -9000), size: size),
-                                                      styleMask: .borderless, backing: .buffered, defer: false)
-                                window.isReleasedWhenClosed = false
-                                defer { window.contentView = nil; window.close() }
-                                window.appearance = NSAppearance(named: accessible ? (dark ? .accessibilityHighContrastDarkAqua : .accessibilityHighContrastAqua) : (dark ? .darkAqua : .aqua))
-                                window.contentView = hosting
-                                window.orderFrontRegardless()
-                                try await settle()
-                                hosting.layoutSubtreeIfNeeded()
-                                #expect(window.frame.size == size, "The guide must not enlarge the settings window")
-                                let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds), "Missing bitmap prerequisite")
-                                hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-                                let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing png prerequisite")
-                                let name = "\(language.rawValue)-\(theme.rawValue)-\(dark ? "dark" : "light")-\(accessible ? "accessible" : "standard")-step\(step + 1).png"
-                                attachPNG(png, name: name)
-                                let screenshot = try #require(NSBitmapImageRep(data: png), "Missing screenshot prerequisite")
-                                let bounds = try primaryVerticalBounds(in: screenshot, palette: theme.palette(isDark: dark))
-                                if let footerBounds {
-                                    #expect(bounds == footerBounds, "All four pages must keep the primary action at the same height")
-                                } else { footerBounds = bounds }
-                                if language == .simplifiedChinese && theme == .blue && dark && !accessible {
-                                    store.scene = .music
+                for dark in [false, true] {
+                    for accessible in [false, true] {
+                        var footerBounds: ClosedRange<Int>?
+                        for step in 0...OnboardingState.stepCount {
+                            store.reduceMotion = !(language == .simplifiedChinese && dark && !accessible)
+                            defaults.set(false, forKey: OnboardingState.completedKey)
+                            defaults.set(false, forKey: OnboardingState.postponedKey)
+                            defaults.set(step, forKey: OnboardingState.stepKey)
+                            let view = SettingsView(store: store) { _ in }
+                                .defaultAppStorage(defaults)
+                                .environment(\.colorScheme, dark ? .dark : .light)
+                            let hosting = NSHostingView(rootView: view)
+                            hosting.sizingOptions = []
+                            let size = NSSize(width: accessible ? 780 : 850, height: 598)
+                            let window = NSWindow(contentRect: NSRect(origin: NSPoint(x: -9000, y: -9000), size: size),
+                                                  styleMask: .borderless, backing: .buffered, defer: false)
+                            window.isReleasedWhenClosed = false
+                            defer { window.contentView = nil; window.close() }
+                            window.appearance = NSAppearance(named: accessible ? (dark ? .accessibilityHighContrastDarkAqua : .accessibilityHighContrastAqua) : (dark ? .darkAqua : .aqua))
+                            window.contentView = hosting
+                            window.orderFrontRegardless()
+                            try await settle()
+                            hosting.layoutSubtreeIfNeeded()
+                            #expect(window.frame.size == size, "The guide must not enlarge the settings window")
+                            let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds), "Missing bitmap prerequisite")
+                            hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+                            let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing png prerequisite")
+                            let name = "\(language.rawValue)-\(dark ? "dark" : "light")-\(accessible ? "accessible" : "standard")-step\(step + 1).png"
+                            attachPNG(png, name: name)
+                            let screenshot = try #require(NSBitmapImageRep(data: png), "Missing screenshot prerequisite")
+                            let bounds = try primaryVerticalBounds(in: screenshot, palette: ComboPalette.standard(isDark: dark))
+                            if let footerBounds {
+                                #expect(bounds == footerBounds, "All four pages must keep the primary action at the same height")
+                            } else { footerBounds = bounds }
+                            if language == .simplifiedChinese && dark && !accessible {
+                                store.scene = .music
+                                try pressKey("\r", code: 36, in: hosting)
+                                try await Task.sleep(for: .milliseconds(90))
+                                if step < OnboardingState.stepCount {
+                                    hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+                                    let motionPNG = try #require(bitmap.representation(using: .png, properties: [:]), "Missing navigation PNG")
+                                    let motionScreenshot = try #require(NSBitmapImageRep(data: motionPNG), "Missing navigation bitmap")
+                                    attachPNG(motionPNG, name: "slide-step\(step + 1).png")
+                                    let motionBounds = try primaryVerticalBounds(in: motionScreenshot, palette: ComboPalette.standard(isDark: dark))
+                                    #expect(motionBounds == bounds,
+                                           "The footer must stay fixed during the slide")
+                                }
+                                try await Task.sleep(for: .milliseconds(300))
+                                #expect(store.scene == .live, "Navigation and completion must restore the live demo")
+                                if step == 1 {
+                                    try pressPrevious(in: hosting)
+                                    try await Task.sleep(for: .milliseconds(90))
+                                    #expect(defaults.integer(forKey: OnboardingState.stepKey) == step, "Previous must restore saved progress")
+                                    hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+                                    let reversePNG = try #require(bitmap.representation(using: .png, properties: [:]), "Missing navigation PNG")
+                                    let reverseScreenshot = try #require(NSBitmapImageRep(data: reversePNG), "Missing navigation bitmap")
+                                    attachPNG(reversePNG, name: "slide-back.png")
+                                    #expect(outgoingHeadingOnRight(in: reverseScreenshot, palette: ComboPalette.standard(isDark: dark)),
+                                           "The outgoing permission page must slide right when returning to menu setup")
+                                    let reverseBounds = try primaryVerticalBounds(in: reverseScreenshot, palette: ComboPalette.standard(isDark: dark))
+                                    #expect(reverseBounds == bounds, "Previous must keep the footer fixed")
+                                    try await Task.sleep(for: .milliseconds(300))
                                     try pressKey("\r", code: 36, in: hosting)
                                     try await Task.sleep(for: .milliseconds(90))
-                                    if step < OnboardingState.stepCount {
-                                        hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-                                        let motionPNG = try #require(bitmap.representation(using: .png, properties: [:]), "Missing navigation PNG")
-                                        let motionScreenshot = try #require(NSBitmapImageRep(data: motionPNG), "Missing navigation bitmap")
-                                        attachPNG(motionPNG, name: "slide-step\(step + 1).png")
-                                        let motionBounds = try primaryVerticalBounds(in: motionScreenshot, palette: theme.palette(isDark: dark))
-                                        #expect(motionBounds == bounds,
-                                               "The footer must stay fixed during the slide")
-                                    }
+                                    hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+                                    let resumedPNG = try #require(bitmap.representation(using: .png, properties: [:]), "Missing resumedPNG prerequisite")
+                                    attachPNG(resumedPNG, name: "slide-forward-after-back.png")
                                     try await Task.sleep(for: .milliseconds(300))
-                                    #expect(store.scene == .live, "Navigation and completion must restore the live demo")
-                                    if step == 1 {
-                                        try pressPrevious(in: hosting)
-                                        try await Task.sleep(for: .milliseconds(90))
-                                        #expect(defaults.integer(forKey: OnboardingState.stepKey) == step, "Previous must restore saved progress")
-                                        hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-                                        let reversePNG = try #require(bitmap.representation(using: .png, properties: [:]), "Missing navigation PNG")
-                                        let reverseScreenshot = try #require(NSBitmapImageRep(data: reversePNG), "Missing navigation bitmap")
-                                        attachPNG(reversePNG, name: "slide-back.png")
-                                        #expect(outgoingHeadingOnRight(in: reverseScreenshot, palette: theme.palette(isDark: dark)),
-                                               "The outgoing permission page must slide right when returning to menu setup")
-                                        let reverseBounds = try primaryVerticalBounds(in: reverseScreenshot, palette: theme.palette(isDark: dark))
-                                        #expect(reverseBounds == bounds, "Previous must keep the footer fixed")
-                                        try await Task.sleep(for: .milliseconds(300))
-                                        try pressKey("\r", code: 36, in: hosting)
-                                        try await Task.sleep(for: .milliseconds(90))
-                                        hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-                                        let resumedPNG = try #require(bitmap.representation(using: .png, properties: [:]), "Missing resumedPNG prerequisite")
-                                        attachPNG(resumedPNG, name: "slide-forward-after-back.png")
-                                        try await Task.sleep(for: .milliseconds(300))
-                                    }
-                                    if step < OnboardingState.stepCount {
-                                        #expect(defaults.integer(forKey: OnboardingState.stepKey) == step + 1)
-                                        if step < OnboardingState.stepCount - 1 {
-                                            try pressKey("\u{1b}", code: 53, in: hosting, handled: false)
-                                            try await settle()
-                                            #expect(!defaults.bool(forKey: OnboardingState.postponedKey) && !defaults.bool(forKey: OnboardingState.completedKey),
-                                                   "Escape must not postpone the guide after removing Not Now")
-                                            #expect(defaults.integer(forKey: OnboardingState.stepKey) == step + 1, "Escape must preserve progress")
-                                        }
-                                    } else {
-                                        #expect(defaults.bool(forKey: OnboardingState.completedKey) && !defaults.bool(forKey: OnboardingState.postponedKey))
-                                        #expect(defaults.integer(forKey: OnboardingState.stepKey) == 0)
-                                    }
                                 }
-                                renders += 1
-                                window.contentView = nil
-                                window.close()
-                                try await settle()
+                                if step < OnboardingState.stepCount {
+                                    #expect(defaults.integer(forKey: OnboardingState.stepKey) == step + 1)
+                                    if step < OnboardingState.stepCount - 1 {
+                                        try pressKey("\u{1b}", code: 53, in: hosting, handled: false)
+                                        try await settle()
+                                        #expect(!defaults.bool(forKey: OnboardingState.postponedKey) && !defaults.bool(forKey: OnboardingState.completedKey),
+                                               "Escape must not postpone the guide after removing Not Now")
+                                        #expect(defaults.integer(forKey: OnboardingState.stepKey) == step + 1, "Escape must preserve progress")
+                                    }
+                                } else {
+                                    #expect(defaults.bool(forKey: OnboardingState.completedKey) && !defaults.bool(forKey: OnboardingState.postponedKey))
+                                    #expect(defaults.integer(forKey: OnboardingState.stepKey) == 0)
+                                }
                             }
+                            renders += 1
+                            window.contentView = nil
+                            window.close()
+                            try await settle()
                         }
                     }
                 }
             }
             #expect(store.audio.bluetoothPermission.askedAt == nil,
                    "Showing and navigating the guide must not request permissions")
-            #expect(renders == 96)
+            #expect(renders == 32)
         }
 
         /// Exercise the actual launch path with fresh and completed installation preferences.

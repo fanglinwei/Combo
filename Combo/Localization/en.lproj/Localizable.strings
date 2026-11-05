@@ -163,7 +163,6 @@
 "尝试恢复" = "Try to Restore";
 "稍后检查" = "Check Later";
 "请检查三枚系统图标；Combo 只能在读到原始状态时尝试恢复。" = "Check the three system icons. Combo can only attempt restoration when the original states have been recorded.";
-"主题色" = "Theme Color";
 "外观模式" = "Appearance";
 "跟随系统时，Combo 会随 macOS 的外观设置切换。" = "When following the system, Combo switches with macOS appearance settings.";
 "效果预览" = "Preview";
@@ -335,9 +334,6 @@
 "正在切换" = "Switching";
 "已选中" = "Selected";
 "未选中" = "Not Selected";
-"蓝色" = "Blue";
-"紫色" = "Purple";
-"暖金色" = "Warm Gold";
 "浅色" = "Light";
 "深色" = "Dark";
 "高耗能应用" = "Apps Using Significant Energy";

@@ -28,6 +28,8 @@ extension IntegrationTests {
             let defaults = try #require(UserDefaults(suiteName: suite))
             defer { defaults.removePersistentDomain(forName: suite) }
             defaults.set(true, forKey: OnboardingState.completedKey)
+            // Saved legacy colors must not change the standard palette.
+            defaults.set("purple", forKey: "themeFamily")
             let language = Localization.shared.selection
             defer { Localization.shared.selection = language }
             let store = Store(audio: AudioStore(discovery: AirPlayDiscovery(defaults: defaults, startBrowser: { _ in })), monitorsSystem: false)
@@ -37,43 +39,40 @@ extension IntegrationTests {
             var count = 0
             for language in (accessible ? [.english] : [AppLanguage.simplifiedChinese, .english]) {
                 Localization.shared.selection = language
-                for theme in (accessible ? [.blue] : ComboTheme.allCases) {
-                    defaults.set(theme.rawValue, forKey: "themeFamily")
-                    for dark in (accessible ? [true] : [false, true]) {
-                        for frameSize in (accessible ? [NSSize(width: 780, height: 620)] : [NSSize(width: 850, height: 690), NSSize(width: 780, height: 620)]) {
-                            let size = NSWindow.contentRect(forFrameRect: NSRect(origin: .zero, size: frameSize),
-                                                           styleMask: [.titled, .closable, .miniaturizable, .resizable]).size
-                            for page in Page.allCases {
-                                let name = "\(language.rawValue)-\(theme.rawValue)-\(dark ? "dark" : "light")-\(Int(size.width))-\(page.id)\(accessible ? "-large-text-contrast" : "")"
-                                let view = SettingsView(store: store, page: page) { _ in }
-                                    .defaultAppStorage(defaults)
-                                    .environment(\.colorScheme, dark ? .dark : .light)
-                                    .environment(\.dynamicTypeSize, accessible ? .accessibility3 : .large)
-                                let hosting = NSHostingView(rootView: view)
-                                hosting.sizingOptions = []
-                                let window = NSWindow(contentRect: NSRect(origin: NSPoint(x: -9000, y: -9000), size: size),
-                                                      styleMask: .borderless, backing: .buffered, defer: false)
-                                window.isReleasedWhenClosed = false
-                                defer { window.close(); window.contentView = nil }
-                                window.appearance = NSAppearance(named: accessible ? .accessibilityHighContrastDarkAqua : dark ? .darkAqua : .aqua)
-                                window.contentView = hosting
-                                window.orderFrontRegardless()
-                                try await Task.sleep(for: .milliseconds(80))
-                                hosting.layoutSubtreeIfNeeded()
-                                #expect(window.frame.size == size, "Settings must fit the requested window: \(name)")
-                                #expect(hosting.frame.size == size, "Settings must not enlarge the content view: \(name)")
-                                let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds), "Missing settings bitmap: \(name)")
-                                hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-                                let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing settings PNG: \(name)")
-                                Attachment.record(png, named: "\(name).png")
-                                try checkNavigationAndContent(hosting, bitmap: bitmap, page: page, window: window, palette: theme.palette(isDark: dark), name: name)
-                                count += 1
-                            }
+                for dark in (accessible ? [true] : [false, true]) {
+                    for frameSize in (accessible ? [NSSize(width: 780, height: 620)] : [NSSize(width: 850, height: 690), NSSize(width: 780, height: 620)]) {
+                        let size = NSWindow.contentRect(forFrameRect: NSRect(origin: .zero, size: frameSize),
+                                                       styleMask: [.titled, .closable, .miniaturizable, .resizable]).size
+                        for page in Page.allCases {
+                            let name = "\(language.rawValue)-\(dark ? "dark" : "light")-\(Int(size.width))-\(page.id)\(accessible ? "-large-text-contrast" : "")"
+                            let view = SettingsView(store: store, page: page) { _ in }
+                                .defaultAppStorage(defaults)
+                                .environment(\.colorScheme, dark ? .dark : .light)
+                                .environment(\.dynamicTypeSize, accessible ? .accessibility3 : .large)
+                            let hosting = NSHostingView(rootView: view)
+                            hosting.sizingOptions = []
+                            let window = NSWindow(contentRect: NSRect(origin: NSPoint(x: -9000, y: -9000), size: size),
+                                                  styleMask: .borderless, backing: .buffered, defer: false)
+                            window.isReleasedWhenClosed = false
+                            defer { window.close(); window.contentView = nil }
+                            window.appearance = NSAppearance(named: accessible ? .accessibilityHighContrastDarkAqua : dark ? .darkAqua : .aqua)
+                            window.contentView = hosting
+                            window.orderFrontRegardless()
+                            try await Task.sleep(for: .milliseconds(80))
+                            hosting.layoutSubtreeIfNeeded()
+                            #expect(window.frame.size == size, "Settings must fit the requested window: \(name)")
+                            #expect(hosting.frame.size == size, "Settings must not enlarge the content view: \(name)")
+                            let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds), "Missing settings bitmap: \(name)")
+                            hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+                            let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing settings PNG: \(name)")
+                            Attachment.record(png, named: "\(name).png")
+                            try checkNavigationAndContent(hosting, bitmap: bitmap, page: page, window: window, palette: ComboPalette.standard(isDark: dark), name: name)
+                            count += 1
                         }
                     }
                 }
             }
-            #expect(count == (accessible ? 3 : 72), "Every settings variant must be exercised")
+            #expect(count == (accessible ? 3 : 24), "Every settings variant must be exercised")
         }
 
         @MainActor

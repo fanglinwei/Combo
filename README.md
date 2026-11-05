@@ -63,7 +63,7 @@ These GIFs use the app's own icon renderer and demo data. See the [icon gallery]
 - **Wi-Fi**: Toggle Wi-Fi, browse and join networks, use saved passwords, or choose to remember a password locally. Personal Hotspot and enterprise authentication continue in macOS Wi-Fi settings.
 - **Sound and AirPods**: Switch outputs, adjust volume, and mute. On supported devices, check AirPods battery levels and change noise control modes. Find nearby AirPlay devices and connect through macOS Sound settings.
 - **Media controls**: View the track, artwork, and source app; use previous, play/pause, and next, or open the source app. The player must provide media information and the relevant controls to macOS.
-- **Personalization**: Three theme colors, light and dark appearances, English and Simplified Chinese, and launch at login. Playback bars follow a fixed loop; animations can be disabled and respect Reduce Motion. Settings includes one live status preview that reflects your display preferences.
+- **Personalization**: Light and dark appearances, English and Simplified Chinese, and launch at login. Playback bars follow a fixed loop; animations can be disabled and respect Reduce Motion. Settings includes one live status preview that reflects your display preferences.
 
 Some features depend on your device and macOS version. See [Compatibility](#compatibility) for support details and [Permissions and privacy](#permissions-and-privacy) for access and password storage.
 
