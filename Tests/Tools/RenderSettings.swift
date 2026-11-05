@@ -12,7 +12,7 @@ import SwiftUI
             icon.setName(NSImage.applicationIconName)
         }
         let defaults = UserDefaults.standard
-        let keys = [OnboardingState.completedKey, OnboardingState.postponedKey, "appearanceMode", Localization.preferenceKey]
+        let keys = [OnboardingState.completedKey, "appearanceMode", Localization.preferenceKey]
         let saved = keys.map { ($0, defaults.object(forKey: $0)) }
         defer { for (key, value) in saved { defaults.set(value, forKey: key) }; Localization.shared.refresh() }
         defaults.set(true, forKey: OnboardingState.completedKey)

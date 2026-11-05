@@ -8,7 +8,7 @@
 ./verify.sh CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=
 ```
 
-当前迁移状态：**原计划中可直接迁移的 Swift 检查已完成迁移**。25 个测试文件共 96 个案例全部注册到共享 scheme 的两个 target，测试源码及 fixture 中没有遗留 XCTest 案例。原 Swift 自动入口、图标 / 设置预览工具中的可自动化断言，以及 LiveState 的阈值通知和模拟音量提示已有对应 Swift Testing 覆盖；系统图标记录、检测、恢复及辅助功能授权相关案例已随功能移除。
+当前迁移状态：**原计划中可直接迁移的 Swift 检查已完成迁移**。25 个测试文件共 96 个案例全部注册到共享 scheme 的两个 target，测试源码及 fixture 中没有遗留 XCTest 案例。原 Swift 自动入口、图标 / 设置预览工具中的可自动化断言，以及 LiveState 的电量显示偏好通知和模拟音量提示已有对应 Swift Testing 覆盖；系统图标记录、检测、恢复及辅助功能授权相关案例已随功能移除。
 
 后续按既定边界保留独立入口：LiveState 的 8 处断言验证真实启动、系统监测、设备和能耗状态；真实 AirPods、媒体观察、线上清单和安装工具继续按需执行；充电 helper 产物、本地化扫描、签名和品牌检查继续由 verify.sh 调用；两组共 14 个 Python 发布案例保留 unittest。两个 Objective-C helper 已由 Swift Testing 案例协调执行，继续保留子进程隔离。下一阶段为维护与验收，不再按旧的迁移批次表重复新增框架迁移案例。
 
@@ -89,7 +89,7 @@ LiveState 删除已迁移的控制器检查和 ApplicationServices import，保�
 
 设置窗口的 Dock 生命周期检查仍会短暂显示一个宿主图标，以验证打开、最小化、重开与关闭的真实行为。直接运行 `xcodebuild` 或 Xcode 的 ⌘U 不经过此文件锁，避免与命令行检查同时执行。
 
-[ComboTests.xctestplan](ComboTests.xctestplan) 默认串行执行两个测试 bundle。`ComboTests` 无应用宿主，编译所需的 18 个现有生产源码文件，不启动 Combo 的 Store、权限监听或更新流程。Onboarding 使用独立随机偏好域；EnergyApps 沿用临时 helper，保留失败、取消和超时覆盖；OutputDevice 保留系统图标存在性检查。这些 Swift 测试只加入 `ComboTests` target。AppUpdater 链接并随测试 bundle 嵌入 Sparkle，保持禁用真实更新；图标基准 PNG 从测试 bundle 读取，图像与 GIF 保存为结果附件。Network、AirPlay、AirPods 沿用注入和临时 helper；Wi-Fi 凭据持久化仍使用随机测试账户并清理，不连接真实网络。充电的模拟案例使用 Swift Testing，打包 helper 的只读 `--status` 由 `ChargeHelperCheck.swift` 继续独立执行。
+[ComboTests.xctestplan](ComboTests.xctestplan) 默认串行执行两个测试 bundle。`ComboTests` 无应用宿主，编译所需的 18 个现有生产源码文件，不启动 Combo 的 Store、权限监听或更新流程。Onboarding 使用独立随机偏好域验证首次显示与完成状态；EnergyApps 沿用临时 helper，保留失败、取消和超时覆盖；OutputDevice 保留系统图标存在性检查。这些 Swift 测试只加入 `ComboTests` target。AppUpdater 链接并随测试 bundle 嵌入 Sparkle，保持禁用真实更新；图标基准 PNG 从测试 bundle 读取，图像与 GIF 保存为结果附件。Network、AirPlay、AirPods 沿用注入和临时 helper；Wi-Fi 凭据持久化仍使用随机测试账户并清理，不连接真实网络。充电的模拟案例使用 Swift Testing，打包 helper 的只读 `--status` 由 `ChargeHelperCheck.swift` 继续独立执行。
 
 `ComboIntegrationTests` 通过独立 `ComboTestHost` 承接本地化 4 例、设置 2 例、详情反馈 3 例、应用菜单 3 例、面板设计 4 例、引导设计 3 例、面板动画 1 例、面板关闭与退出清理 9 例、设置布局 2 例及 Store 通知 / 音量提示 / 启动隔离 / scope 清理 4 例。宿主编译 32 个共享生产 Swift 文件并复用本地化、权限描述和品牌资源；独立入口 [TestHostApp.swift](Support/TestHostApp.swift) 运行 AppKit 事件循环，不创建产品 AppDelegate / Store。`COMBO_TEST_HOST` 只用于宿主，启用测试用菜单及设置窗口；产品入口 [ComboApp.swift](../Combo/App/ComboApp.swift) 和 SwiftUI commands 不加入宿主。案例使用 `Store(monitorsSystem: false)`，Wi-Fi 替身禁用位置授权回调，避免真实系统变化覆盖测试状态；生产默认行为保持开启。设置案例关闭窗口并释放 SwiftUI 内容，所有 Store 在退出时停止。
 
@@ -97,7 +97,7 @@ LiveState 删除已迁移的控制器检查和 ApplicationServices import，保�
 
 音柱案例保留每轮 6 帧、4 次减弱动态切换的真实渲染采样，将 24 张采样 PNG 保存为结果附件；应用菜单检查通过宿主菜单覆盖共享 action / target、快捷键、Services、更新可用性和最小化窗口重新打开；新增案例覆盖 Scene 动作桥接、保留窗口 delegate、尺寸重用、关闭及退出清理。真实产品 SwiftUI 菜单和入口由下述隔离启动工具单独验证。图标边界检查加入无宿主 bundle，保留原像素阈值和采样坐标。
 
-面板案例保留 20 组封面 / 深浅外观与对比度检查、8 组面板 / 详情渲染、2 套深浅调色板的 4 种行交互状态，以及 AirPods 提前 / 晚到数据的高度变化。引导案例分别验证实际 AppDelegate 启动路径、设置窗口恢复、32 组双语 / 外观 / 较窄尺寸渲染和前进 / 返回 / Return / Escape 行为。53 张页面与导航 PNG 保存为结果附件。所有窗口在抛错时也关闭并释放内容；临时 AirPods helper 结束后清理。
+面板案例保留 20 组封面 / 深浅外观与对比度检查、8 组面板 / 详情渲染、2 套深浅调色板的 4 种行交互状态，以及 AirPods 提前 / 晚到数据的高度变化。引导案例分别验证实际 AppDelegate 启动路径、设置窗口恢复、8 组双语 / 外观 / 较窄尺寸欢迎页渲染，以及单次 Return 完成、Escape 保持未完成、真实图标浮层与面板联动行为。24 张页面 PNG 保存为结果附件；旧多步引导及导航动画附件不再生成。所有窗口在抛错时也关闭并释放内容；临时 AirPods helper 结束后清理。
 
 AirPods 渲染使用固定输出身份和原临时 helper，不读取真实音频设备；AudioStore 的初始输出身份默认仍为 0。引导启动案例仍调用生产启动方法，Debug 更新驱动保持禁用、Store 不监听系统；结束时显式调用退出清理，移除工作区观察器并停止定时器 / Store。
 

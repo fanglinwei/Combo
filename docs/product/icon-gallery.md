@@ -7,7 +7,7 @@
 | 区域 | 当前规则 |
 | --- | --- |
 | 外圈 | Mac 电量决定弧长；低于 20% 时红色；正在充电时绿色并显示闪电。仅接通电源不等于正在充电。 |
-| 中央 | 临时插拔电或音量提示（P4）→ Wi-Fi 连接中（P3）→ Wi-Fi 关闭、网络异常、未知、电量或 AirPods（P2）→ 普通 Wi-Fi（P1）。普通常驻内容按低电量数字 → 当前输出设备图标 → 充电电量数字 → 普通 Wi-Fi 或电量选择。低电量优先受开关控制且严格低于阈值才触发；设备图标在播放与暂停时均显示。新用户默认阈值是 20%，滑块范围 20%–80%，旧值超出范围时调整到最近边界。 |
+| 中央 | 临时插拔电或音量提示（P4）→ Wi-Fi 连接中（P3）→ Wi-Fi 关闭、网络异常、未知、电量或 AirPods（P2）→ 普通 Wi-Fi（P1）。普通常驻内容按低电量数字 → 当前输出设备图标 → 充电电量数字 → 普通 Wi-Fi 或电量选择。低电量优先默认开启，受开关控制且严格低于固定的 20% 才触发；设备图标在播放与暂停时均显示。 |
 | 底部 | 静音符号 → 调音量时的音量点 → 播放音柱 → 普通音量点。音量未知时显示短横线；音量为 0 也按静音显示。 |
 | 动效 | 普通播放音柱按 1.2 秒循环；开启“减少动态效果”后停在固定形态。关闭 Combo 的播放动效后，播放时保留音量点。 |
 
@@ -59,7 +59,7 @@ Wi-Fi → 有线默认内容：中央显示本机电量 `82`，不显示网口�
 
 ### 低电量
 
-`82%` → `12%`：外圈变短并变红，中央数字同步变化。演示值低于当前新用户默认的 20% 中央电量阈值。
+`82%` → `12%`：外圈变短并变红，中央数字同步变化。演示值低于固定的 20% 中央电量显示边界。
 
 ![低电量进入](../assets/states/low.gif)
 
@@ -145,7 +145,7 @@ AirPods 播放中调到 75%：中央临时显示 `75`，底部显示三颗亮点
 
 - 场景与演示数据：[State.swift](../../Combo/App/State.swift)。
 - 中央选择、优先级、转场、绘制：[IconTransition.swift](../../Combo/Rendering/IconTransition.swift) 与 [IconRenderer.swift](../../Combo/Rendering/IconRenderer.swift)。
-- 实时场景、阈值与提示到期：[Store.swift](../../Combo/Stores/Store.swift) 与 [BatteryStore.swift](../../Combo/Stores/BatteryStore.swift)。
+- 实时场景、低电量显示开关与提示到期：[Store.swift](../../Combo/Stores/Store.swift) 与 [BatteryStore.swift](../../Combo/Stores/BatteryStore.swift)。
 - GIF 生成脚本：[render_current_states.swift](../assets/render_current_states.swift)。它只生成文档资源，不修改应用或系统状态。
 
 在仓库根目录重绘（命令使用当前 `xcrun` 选中的 SDK，最低目标为 macOS 26）：

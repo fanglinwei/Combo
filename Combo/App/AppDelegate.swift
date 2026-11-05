@@ -82,10 +82,9 @@ final class ComboPanel: NSPanel {
             Task { @MainActor in self?.applyGuideLevel(active: active) }
         }
         updateIcon()
-        OnboardingState.migrate()
         let showSettings = OnboardingState.showsGuide() || CommandLine.arguments.contains("--settings")
         if showSettings {
-            openSettings(); UserDefaults.standard.set(true, forKey: "hasOpened")
+            openSettings()
         }
     }
     private var selectedAppearance: NSAppearance? {
@@ -267,7 +266,7 @@ final class ComboPanel: NSPanel {
         window.setFrame(detailFrame(), display: window.isVisible)
     }
 
-    /// 引导第 1 步的贴边浮层：落在真实状态栏图标正下方，忽略鼠标事件、不抢焦点，只负责指路。
+    /// 欢迎页的贴边浮层：落在真实状态栏图标正下方，忽略鼠标事件、不抢焦点，只负责指路。
     /// 状态栏窗口在启动后一拍才落位，太早读到的是零高度占位 frame，所以要等它有效再放。
     private func updatePointer(_ show: Bool, attempt: Int = 0) {
         guard show else {

@@ -8,7 +8,7 @@ extension IntegrationTests {
     struct OnboardingDesignTests {
         @Test
         @MainActor
-        func testBilingualGuideLayoutsAndNavigationAcrossPalettes() async throws {
+        func testBilingualWelcomeLayoutsAndCompletion() async throws {
             let iconURL = try #require(Bundle.main.url(forResource: "AppIcon", withExtension: "icns"))
             let icon = try #require(NSImage(contentsOf: iconURL))
             NSApp.applicationIconImage = icon
@@ -27,98 +27,53 @@ extension IntegrationTests {
                 Localization.shared.selection = language
                 for dark in [false, true] {
                     for accessible in [false, true] {
-                        var footerBounds: ClosedRange<Int>?
-                        for step in 0...OnboardingState.stepCount {
-                            store.reduceMotion = !(language == .simplifiedChinese && dark && !accessible)
-                            defaults.set(false, forKey: OnboardingState.completedKey)
-                            defaults.set(false, forKey: OnboardingState.postponedKey)
-                            defaults.set(step, forKey: OnboardingState.stepKey)
-                            let view = SettingsView(store: store) { _ in }
-                                .defaultAppStorage(defaults)
-                                .environment(\.colorScheme, dark ? .dark : .light)
-                            let hosting = NSHostingView(rootView: view)
-                            hosting.sizingOptions = []
-                            let size = NSSize(width: accessible ? 780 : 850, height: 598)
-                            let window = NSWindow(contentRect: NSRect(origin: NSPoint(x: -9000, y: -9000), size: size),
-                                                  styleMask: .borderless, backing: .buffered, defer: false)
-                            window.isReleasedWhenClosed = false
-                            defer { window.contentView = nil; window.close() }
-                            window.appearance = NSAppearance(named: accessible ? (dark ? .accessibilityHighContrastDarkAqua : .accessibilityHighContrastAqua) : (dark ? .darkAqua : .aqua))
-                            window.contentView = hosting
-                            window.orderFrontRegardless()
+                        defaults.set(false, forKey: OnboardingState.completedKey)
+                        let view = SettingsView(store: store) { _ in }
+                            .defaultAppStorage(defaults)
+                            .environment(\.colorScheme, dark ? .dark : .light)
+                            .environment(\.dynamicTypeSize, accessible ? .accessibility3 : .large)
+                        let hosting = NSHostingView(rootView: view)
+                        hosting.sizingOptions = []
+                        let size = NSSize(width: accessible ? 780 : 850, height: 598)
+                        let window = NSWindow(contentRect: NSRect(origin: NSPoint(x: -9000, y: -9000), size: size),
+                                              styleMask: .borderless, backing: .buffered, defer: false)
+                        window.isReleasedWhenClosed = false
+                        defer { window.contentView = nil; window.close() }
+                        window.appearance = NSAppearance(named: accessible ? (dark ? .accessibilityHighContrastDarkAqua : .accessibilityHighContrastAqua) : (dark ? .darkAqua : .aqua))
+                        window.contentView = hosting
+                        window.orderFrontRegardless()
+                        try await settle()
+                        hosting.layoutSubtreeIfNeeded()
+                        #expect(window.frame.size == size, "The welcome page must fit the settings window")
+                        #expect(store.menuBarPointer, "The welcome page must point to the real menu-bar icon")
+                        let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds), "Missing welcome bitmap")
+                        hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+                        let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing welcome PNG")
+                        attachPNG(png, name: "\(language.rawValue)-\(dark ? "dark" : "light")-\(accessible ? "accessible" : "standard")-welcome.png")
+                        _ = try primaryVerticalBounds(in: bitmap, palette: ComboPalette.standard(isDark: dark))
+                        if language == .simplifiedChinese && dark && accessible {
+                            store.panelVisible = true
                             try await settle()
-                            hosting.layoutSubtreeIfNeeded()
-                            #expect(window.frame.size == size, "The guide must not enlarge the settings window")
-                            let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds), "Missing bitmap prerequisite")
-                            hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-                            let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing png prerequisite")
-                            let name = "\(language.rawValue)-\(dark ? "dark" : "light")-\(accessible ? "accessible" : "standard")-step\(step + 1).png"
-                            attachPNG(png, name: name)
-                            let screenshot = try #require(NSBitmapImageRep(data: png), "Missing screenshot prerequisite")
-                            let bounds = try primaryVerticalBounds(in: screenshot, palette: ComboPalette.standard(isDark: dark))
-                            if let footerBounds {
-                                #expect(bounds == footerBounds, "All four pages must keep the primary action at the same height")
-                            } else { footerBounds = bounds }
-                            if language == .simplifiedChinese && dark && !accessible {
-                                store.scene = .music
-                                try pressKey("\r", code: 36, in: hosting)
-                                try await Task.sleep(for: .milliseconds(90))
-                                if step < OnboardingState.stepCount {
-                                    hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-                                    let motionPNG = try #require(bitmap.representation(using: .png, properties: [:]), "Missing navigation PNG")
-                                    let motionScreenshot = try #require(NSBitmapImageRep(data: motionPNG), "Missing navigation bitmap")
-                                    attachPNG(motionPNG, name: "slide-step\(step + 1).png")
-                                    let motionBounds = try primaryVerticalBounds(in: motionScreenshot, palette: ComboPalette.standard(isDark: dark))
-                                    #expect(motionBounds == bounds,
-                                           "The footer must stay fixed during the slide")
-                                }
-                                try await Task.sleep(for: .milliseconds(300))
-                                #expect(store.scene == .live, "Navigation and completion must restore the live demo")
-                                if step == 1 {
-                                    try pressPrevious(in: hosting)
-                                    try await Task.sleep(for: .milliseconds(90))
-                                    #expect(defaults.integer(forKey: OnboardingState.stepKey) == step, "Previous must restore saved progress")
-                                    hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-                                    let reversePNG = try #require(bitmap.representation(using: .png, properties: [:]), "Missing navigation PNG")
-                                    let reverseScreenshot = try #require(NSBitmapImageRep(data: reversePNG), "Missing navigation bitmap")
-                                    attachPNG(reversePNG, name: "slide-back.png")
-                                    #expect(outgoingHeadingOnRight(in: reverseScreenshot, palette: ComboPalette.standard(isDark: dark)),
-                                           "The outgoing permission page must slide right when returning to menu setup")
-                                    let reverseBounds = try primaryVerticalBounds(in: reverseScreenshot, palette: ComboPalette.standard(isDark: dark))
-                                    #expect(reverseBounds == bounds, "Previous must keep the footer fixed")
-                                    try await Task.sleep(for: .milliseconds(300))
-                                    try pressKey("\r", code: 36, in: hosting)
-                                    try await Task.sleep(for: .milliseconds(90))
-                                    hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
-                                    let resumedPNG = try #require(bitmap.representation(using: .png, properties: [:]), "Missing resumedPNG prerequisite")
-                                    attachPNG(resumedPNG, name: "slide-forward-after-back.png")
-                                    try await Task.sleep(for: .milliseconds(300))
-                                }
-                                if step < OnboardingState.stepCount {
-                                    #expect(defaults.integer(forKey: OnboardingState.stepKey) == step + 1)
-                                    if step < OnboardingState.stepCount - 1 {
-                                        try pressKey("\u{1b}", code: 53, in: hosting, handled: false)
-                                        try await settle()
-                                        #expect(!defaults.bool(forKey: OnboardingState.postponedKey) && !defaults.bool(forKey: OnboardingState.completedKey),
-                                               "Escape must not postpone the guide after removing Not Now")
-                                        #expect(defaults.integer(forKey: OnboardingState.stepKey) == step + 1, "Escape must preserve progress")
-                                    }
-                                } else {
-                                    #expect(defaults.bool(forKey: OnboardingState.completedKey) && !defaults.bool(forKey: OnboardingState.postponedKey))
-                                    #expect(defaults.integer(forKey: OnboardingState.stepKey) == 0)
-                                }
-                            }
-                            renders += 1
-                            window.contentView = nil
-                            window.close()
+                            #expect(!store.menuBarPointer, "Opening the panel must hide the pointer")
+                            store.panelVisible = false
                             try await settle()
+                            #expect(store.menuBarPointer)
                         }
+                        try pressKey("\u{1b}", code: 53, in: hosting, handled: false)
+                        #expect(!defaults.bool(forKey: OnboardingState.completedKey), "Escape must not silently complete the welcome page")
+                        try pressKey("\r", code: 36, in: hosting)
+                        try await settle()
+                        #expect(defaults.bool(forKey: OnboardingState.completedKey), "One Return must finish first use")
+                        #expect(!store.menuBarPointer, "Completing first use must dismiss the pointer")
+                        renders += 1
+                        window.contentView = nil
+                        window.close()
                     }
                 }
             }
-            #expect(store.audio.bluetoothPermission.askedAt == nil,
-                   "Showing and navigating the guide must not request permissions")
-            #expect(renders == 32)
+            #expect(store.audio.bluetoothPermission.askedAt == nil && !store.wifi.isRequestingLocation,
+                   "The welcome page must not request permissions")
+            #expect(renders == 8)
         }
 
         /// Exercise the actual launch path with fresh and completed installation preferences.
@@ -129,7 +84,7 @@ extension IntegrationTests {
             defer { store.stop() }
             #expect(Bundle.main.bundleIdentifier == "local.combo.integration-host", "Startup checks must run in the isolated test app")
             let defaults = UserDefaults.standard
-            let keys = [OnboardingState.completedKey, OnboardingState.postponedKey, OnboardingState.stepKey, "hasOpened"]
+            let keys = [OnboardingState.completedKey]
             let saved = keys.map { defaults.object(forKey: $0) }
             defer { for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) } }
             for key in keys { defaults.removeObject(forKey: key) }
@@ -145,10 +100,9 @@ extension IntegrationTests {
             try await settle()
             let window = try #require(firstLaunch.settings, "Missing window prerequisite")
             #expect(window.isVisible && OnboardingState.showsGuide(), "A fresh installation must show the guide")
-            defaults.set(1, forKey: OnboardingState.stepKey)
             window.close()
-            #expect(OnboardingState.showsGuide() && defaults.integer(forKey: OnboardingState.stepKey) == 1,
-                   "Closing an unfinished guide must preserve progress and show it on the next launch")
+            #expect(OnboardingState.showsGuide(),
+                   "Closing an unfinished welcome page must show it on the next launch")
 
             defaults.set(true, forKey: OnboardingState.completedKey)
             let completedLaunch = AppDelegate(store: store)
@@ -181,12 +135,10 @@ extension IntegrationTests {
             defer { store.stop() }
             #expect(Bundle.main.bundleIdentifier == "local.combo.integration-host", "Preference checks must run in the isolated test app")
             let defaults = UserDefaults.standard
-            let keys = [OnboardingState.completedKey, OnboardingState.postponedKey, OnboardingState.stepKey]
+            let keys = [OnboardingState.completedKey]
             let saved = keys.map { defaults.object(forKey: $0) }
             defer { for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) } }
             defaults.set(true, forKey: OnboardingState.completedKey)
-            defaults.set(false, forKey: OnboardingState.postponedKey)
-            defaults.set(0, forKey: OnboardingState.stepKey)
             let delegate = AppDelegate(store: store)
             delegate.openSettings()
             defer { delegate.settings?.contentView = nil; delegate.settings?.close() }
@@ -207,10 +159,8 @@ extension IntegrationTests {
                 delegate.openSettings()
                 window.orderOut(nil)
                 try await settle()
-                for _ in 0...OnboardingState.stepCount {
-                    try pressKey("\r", code: 36, in: hosting)
-                    try await settle()
-                }
+                try pressKey("\r", code: 36, in: hosting)
+                try await settle()
                 #expect(defaults.bool(forKey: OnboardingState.completedKey))
                 #expect(!window.isVisible, "Completing the guide must close the window without showing settings")
                 #expect(window.frame == original, "Completing the guide must restore the previous settings frame while hidden")
@@ -222,35 +172,6 @@ extension IntegrationTests {
             }
             window.contentView = nil
             window.close()
-        }
-
-        /// In the fixed Chinese/blue/dark fixture, only the outgoing permission heading can be here.
-        @MainActor
-        private func outgoingHeadingOnRight(in bitmap: NSBitmapImageRep, palette: ComboPalette) -> Bool {
-            guard let expected = NSColor(palette.primaryText).usingColorSpace(bitmap.colorSpace) else { return false }
-            let scale = Double(bitmap.pixelsWide) / 850
-            var matches = 0
-            for y in Int(90 * scale)..<Int(114 * scale) {
-                for x in bitmap.pixelsWide / 2..<Int(759 * scale) {
-                    guard let color = bitmap.colorAt(x: x, y: y) else { continue }
-                    if abs(color.redComponent - expected.redComponent) < 0.03 &&
-                        abs(color.greenComponent - expected.greenComponent) < 0.03 &&
-                        abs(color.blueComponent - expected.blueComponent) < 0.03 { matches += 1 }
-                }
-            }
-            return matches > 20
-        }
-
-        @MainActor
-        private func pressPrevious(in view: NSView) throws {
-            let window = try #require(view.window, "Missing window prerequisite")
-            window.makeKeyAndOrderFront(nil)
-            for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
-                let event = try #require(NSEvent.mouseEvent(with: type, location: NSPoint(x: 120, y: 38), modifierFlags: [],
-                                                    timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
-                                                    context: nil, eventNumber: 0, clickCount: 1, pressure: type == .leftMouseDown ? 1 : 0), "Missing mouse event")
-                window.sendEvent(event)
-            }
         }
 
         /// Compare the real primary-button pixels to catch content-dependent page height changes.
@@ -280,7 +201,7 @@ extension IntegrationTests {
             let event = try #require(NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
                                                windowNumber: window.windowNumber, context: nil, characters: characters,
                                                charactersIgnoringModifiers: characters, isARepeat: false, keyCode: code), "Missing key event")
-            #expect(view.performKeyEquivalent(with: event) == handled, "Return advances the guide; Escape has no postpone action")
+            #expect(view.performKeyEquivalent(with: event) == handled, "Return completes the welcome page; Escape leaves it unfinished")
         }
 
         @MainActor

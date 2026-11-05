@@ -8,50 +8,23 @@ extension IntegrationTests {
     struct SettingsPreferencesTests {
         @Test
         @MainActor
-        func testThresholdDefaultsMigrationAndRememberedValue() throws {
+        func testLowBatteryDisplayDefaultsAndPersistence() throws {
             let suite = "Combo.SettingsPreferencesCheck.\(UUID().uuidString)"
             let defaults = try #require(UserDefaults(suiteName: suite))
             defer { defaults.removePersistentDomain(forName: suite) }
 
             let fresh = BatteryStore(defaults: defaults)
-            #expect(fresh.displayEnabled && fresh.displayThreshold == 20)
-            for threshold in [-1, 0, 1, 20, 50, 80, 100] {
-                defaults.removePersistentDomain(forName: suite)
-                defaults.set(threshold, forKey: "batteryDisplayThreshold")
-                let battery = BatteryStore(defaults: defaults)
-                let normalized = threshold == 0 ? 0 : min(80, max(20, threshold))
-                #expect(battery.displayThreshold == normalized, "Existing thresholds must fit the slider range; zero stays disabled")
-                #expect(defaults.integer(forKey: "batteryDisplayThreshold") == normalized)
-                let expected = normalized == 0 ? 20 : normalized
-                battery.displayEnabled = false
-                let reopened = BatteryStore(defaults: defaults)
-                #expect(!reopened.displayEnabled && reopened.lastDisplayThreshold == expected)
-                reopened.displayEnabled = true
-                #expect(reopened.displayThreshold == expected, "Re-enabling must restore the last positive threshold")
-                reopened.displayThreshold = 37
-                reopened.displayEnabled = false
-                let later = BatteryStore(defaults: defaults)
-                later.displayEnabled = true
-                #expect(later.displayThreshold == 37)
-            }
-
-            for remembered in [1, 20, 50, 80, 100] {
-                defaults.set(0, forKey: "batteryDisplayThreshold")
-                defaults.set(remembered, forKey: "batteryLastDisplayThreshold")
-                let battery = BatteryStore(defaults: defaults)
-                #expect(!battery.displayEnabled)
-                battery.displayEnabled = true
-                #expect(battery.displayThreshold == min(80, max(20, remembered)))
-            }
-            for (requested, expected) in [(1, 20), (100, 80), (0, 0)] {
-                fresh.displayThreshold = requested
-                #expect(fresh.displayThreshold == expected && defaults.integer(forKey: "batteryDisplayThreshold") == expected)
+            #expect(fresh.displayEnabled)
+            for enabled in [false, true] {
+                fresh.displayEnabled = enabled
+                #expect(defaults.bool(forKey: "batteryDisplayEnabled") == enabled)
+                #expect(BatteryStore(defaults: defaults).displayEnabled == enabled)
             }
         }
 
         @Test
         @MainActor
-        func testSettingsWindowLifecycleAndThresholdBinding() throws {
+        func testSettingsWindowLifecycleAndDisplayReset() throws {
             _ = NSApplication.shared
             NSApp.setActivationPolicy(.prohibited)
             let previousGuide = UserDefaults.standard.object(forKey: OnboardingState.completedKey)
@@ -76,20 +49,11 @@ extension IntegrationTests {
             #expect(store.scene == .live, "Reopening Settings must keep live data")
             window.close()
             store.stop()
-            let thresholdKeys = ["batteryDisplayThreshold", "batteryLastDisplayThreshold"]
-            let savedThresholds = thresholdKeys.map { ($0, UserDefaults.standard.object(forKey: $0)) }
-            defer { for (key, value) in savedThresholds { UserDefaults.standard.set(value, forKey: key) } }
-            let settings = SettingsView(store: store, page: .appearance) { _ in }
-            for (input, expected) in [(0.0, 20), (19.4, 20), (20.0, 20), (20.6, 21), (80.0, 80), (100.0, 80)] {
-                store.battery.displayThreshold = 50
-                settings.thresholdBinding.wrappedValue = input
-                #expect(store.battery.displayEnabled, "Dragging the threshold slider must never turn off low-battery display")
-                #expect(store.battery.displayThreshold == expected && store.battery.lastDisplayThreshold == expected)
-                #expect(UserDefaults.standard.integer(forKey: "batteryDisplayThreshold") == expected)
-            }
+            store.animate = false
             store.battery.displayEnabled = false
-            #expect(!store.battery.displayEnabled && store.battery.lastDisplayThreshold == 80,
-                   "Only the toggle should disable display while remembering the slider value")
+            store.resetDisplay()
+            #expect(store.animate && store.battery.displayEnabled)
+            #expect(BatteryStore().displayEnabled, "Resetting display must persist the enabled preference")
         }
     }
 }

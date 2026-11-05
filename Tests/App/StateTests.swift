@@ -144,22 +144,22 @@ struct StateTests {
         #expect(!missing)
         let restored = powerChange.update(onAC: true)
         #expect(!restored) // Missing data is not a transition.
-        for symbol in ["wifi", "", "minus", "exclamationmark"] {
-            for charging in [false, true] {
-                    for battery: Double? in [nil, 0, 0.49, 0.50, 0.51, 1, .nan] {
+        for enabled in [false, true] {
+            for symbol in ["wifi", "", "minus", "exclamationmark", "wifi.slash"] {
+                for charging in [false, true] {
+                    for battery: Double? in [nil, -0.1, 0, 0.19, 0.20, 0.21, 1, 1.1, .nan, .infinity] {
                         let original = Snapshot(battery: battery, charging: charging, symbol: symbol)
-                        let result = original.preferringBattery(threshold: 50)
-                        let expected = (symbol == "wifi" || symbol.isEmpty) && battery.map { $0.isFinite && $0 < 0.5 } == true
+                        let result = original.preferringBattery(enabled: enabled)
+                        let expected = enabled && (symbol == "wifi" || symbol.isEmpty)
+                            && battery.map { $0.isFinite && (0..<0.2).contains($0) } == true
                         #expect(result.symbol == (expected ? "" : symbol))
                         #expect(result.batteryPreferred == expected)
+                        #expect(result.networkSymbol == (expected ? symbol : nil))
                         #expect(result.network == original.network && result.charging == charging)
                     }
+                }
             }
         }
-        #expect(Snapshot(battery: 0, symbol: "wifi").preferringBattery(threshold: 0).symbol == "wifi")
-        #expect(Snapshot(battery: 1, symbol: "wifi").preferringBattery(threshold: 100).symbol == "wifi")
-        #expect(Snapshot(battery: 0.99, symbol: "wifi").preferringBattery(threshold: 100).symbol == "")
-        #expect(Snapshot(battery: 1, charging: true, symbol: "wifi").preferringBattery(threshold: 0).symbol == "wifi")
     }
 
     @Test

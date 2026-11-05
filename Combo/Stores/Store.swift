@@ -57,7 +57,7 @@ enum SystemPermissionAlert {
             || isSystemPermissionAlertVisible()
     }
     private let isSystemPermissionAlertVisible: () -> Bool
-    /// 引导第 1 步把浮层指向真实菜单栏图标；面板打开或离开该步即收起。
+    /// 欢迎页把浮层指向真实菜单栏图标；面板打开或离开欢迎页即收起。
     @Published var menuBarPointer = false
     /// 面板窗口真正上屏后才置真。内容入场必须等它，不能用 panelVisible：
     /// 后者在 hosting view 安装前就翻真，新视图首帧即已是真值，onChange 不会触发（卡片会一直不出现）。
@@ -93,7 +93,7 @@ enum SystemPermissionAlert {
         return result
     }
     func snapshot(for scene: Scene) -> Snapshot {
-        var result = (scene == .live ? live : Snapshot.demo(scene)).preferringBattery(threshold: battery.displayThreshold)
+        var result = (scene == .live ? live : Snapshot.demo(scene)).preferringBattery(enabled: battery.displayEnabled)
         if scene == .live {
             result.centerEvent = centerHint.active(at: ProcessInfo.processInfo.systemUptime)
             result.eventSerial = centerHint.serial
@@ -115,7 +115,7 @@ enum SystemPermissionAlert {
             self.updateObservation()
         }
         battery.onPowerChange = { [weak self] in self?.showCenterHint(.power) }
-        battery.onDisplayThresholdChange = { [weak self] in self?.objectWillChange.send() }
+        battery.onDisplayChange = { [weak self] in self?.objectWillChange.send() }
         audio.onUpdate = { [weak self] in
             guard let self else { return }
             self.live.volume = self.audio.volume
@@ -245,7 +245,7 @@ enum SystemPermissionAlert {
         catch { message = "登录项设置未完成：\(error.localizedDescription)" }
         login = SMAppService.mainApp.status == .enabled
     }
-    func resetDisplay() { animate = true; battery.displayThreshold = 20 }
+    func resetDisplay() { animate = true; battery.displayEnabled = true }
     func stop() {
         mediaPlayback.stop()
         centerHintTask?.cancel(); sceneExpiry?.cancel(); wifiChange?.cancel()

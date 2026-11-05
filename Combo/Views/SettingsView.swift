@@ -40,14 +40,11 @@ struct SettingsView: View {
     @State private var hoveredPage: Page?
     @State private var reset = false
     @State private var showingOnboarding = false
-    @State private var showingIconGuide = false
     @State private var loginFeedback: LocalizedText = ""
     @State private var settingsErrors: [String: LocalizedText] = [:]
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var contrast
     @AppStorage(OnboardingState.completedKey) private var onboardingCompleted = false
-    @AppStorage(OnboardingState.postponedKey) private var onboardingPostponed = false
-    @AppStorage(OnboardingState.stepKey) private var onboardingStep = 0
     @AppStorage("appearanceMode") private var appearanceMode: ComboAppearance = .system
     @Environment(\.colorScheme) private var colorScheme
     private var palette: ComboPalette {
@@ -55,17 +52,15 @@ struct SettingsView: View {
     }
     private var colors: SettingsColors { SettingsColors(isDark: palette.isDark) }
     private var labelColor: Color { colors.label }
-    /// 引导在屏幕上：首次没走完也没被“稍后再说”放行，或从“通用”里重新打开。
-    private var guideVisible: Bool { (!onboardingCompleted && !onboardingPostponed) || showingOnboarding }
+    /// 首次使用显示欢迎页，也可从“关于与帮助”重新打开。
+    private var guideVisible: Bool { !onboardingCompleted || showingOnboarding }
 
     var body: some View {
         Group {
             if guideVisible {
-                OnboardingView(store: store, step: $onboardingStep) { completed in
+                OnboardingView(store: store) {
                     closeGuide()
-                    onboardingCompleted = completed
-                    onboardingPostponed = !completed
-                    if completed { onboardingStep = 0; page = .general }
+                    onboardingCompleted = true
                     showingOnboarding = false
                 }
             } else {
@@ -99,9 +94,8 @@ struct SettingsView: View {
                 Button(L("取消"), role: .cancel) {}
                 Button(L("恢复")) { store.resetDisplay() }
             } message: {
-                Text(L("播放动效开启，低电量显示开启且阈值恢复为 20%。其他偏好保持不变。"))
+                Text(L("将开启播放动效与低电量显示。其他偏好保持不变。"))
             }
-            .sheet(isPresented: $showingIconGuide) { iconGuide }
             .environment(\.comboPalette, palette)
     }
 
@@ -208,8 +202,6 @@ struct SettingsView: View {
             note(L("更改立即生效。"))
             if !loginFeedback.isEmpty { note(loginFeedback.string) }
             connectionSettings
-            groupHeader(L("使用帮助"))
-            SettingsGroup { helpRow }
             Divider()
             DisclosureGroup(L("恢复偏好")) {
                 VStack(alignment: .leading, spacing: 12) {
@@ -229,7 +221,7 @@ struct SettingsView: View {
         HStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L("重新查看使用引导"))
-                note(L("回顾功能与操作步骤。"))
+                note(L("回顾菜单栏图标的基本操作。"))
             }
             Spacer()
             Button(L("查看引导")) { store.scene = .live; showingOnboarding = true }
@@ -241,26 +233,8 @@ struct SettingsView: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
-    var thresholdBinding: Binding<Double> {
-        Binding(
-            get: { Double(battery.lastDisplayThreshold) },
-            set: { battery.displayThreshold = min(80, max(20, Int($0.rounded()))) }
-        )
-    }
-
     private var connectionSettings: some View {
         VStack(alignment: .leading, spacing: 20) {
-            groupHeader(L("系统菜单栏图标"))
-            SettingsGroup {
-                HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(L("手动隐藏系统图标"))
-                        note(L("对照图片，在系统设置中手动取消勾选。"))
-                    }
-                    Spacer()
-                    Button(L("查看指引")) { showingIconGuide = true }.buttonStyle(SettingsButtonStyle(isEmphasized: true))
-                }.padding(16)
-            }
             groupHeader(L("Wi‑Fi 连接"), systemSection: "wifi")
             SettingsGroup { WiFiPasswordSettings(wifi: store.wifi).padding(16) }
             if let error = settingsErrors["wifi"] { note(error.string) }
@@ -275,89 +249,27 @@ struct SettingsView: View {
                     get: { battery.displayEnabled },
                     set: { battery.displayEnabled = $0 }
                 )).padding(16)
-                Divider()
-                HStack(spacing: 8) {
-                    Text(L("显示阈值"))
-                    Spacer()
-                    Text(L("低于"))
-                    Slider(value: thresholdBinding, in: 0...100, enabledBounds: 20...80) { Text(L("显示阈值")) }
-                        .labelsHidden()
-                        .controlSize(.small)
-                        .frame(width: 140)
-                        .overlay {
-                            GeometryReader { geometry in
-                                let trackWidth = geometry.size.width - 16
-                                let centerY = geometry.size.height / 2
-                                let lowerX = 8 + trackWidth * 0.2
-                                let upperX = 8 + trackWidth * 0.8
-                                let thumbX = 8 + trackWidth * Double(battery.lastDisplayThreshold) / 100
-                                ZStack {
-                                    Path { path in
-                                        path.move(to: CGPoint(x: 0, y: centerY))
-                                        path.addLine(to: CGPoint(x: lowerX, y: centerY))
-                                        path.move(to: CGPoint(x: upperX, y: centerY))
-                                        path.addLine(to: CGPoint(x: geometry.size.width, y: centerY))
-                                    }.stroke(Color(nsColor: .disabledControlTextColor), style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                                    Path { path in
-                                        path.move(to: CGPoint(x: lowerX, y: centerY))
-                                        path.addLine(to: CGPoint(x: upperX, y: centerY))
-                                    }.stroke(battery.displayEnabled ? palette.accent : Color(nsColor: .disabledControlTextColor), lineWidth: 4)
-                                    Path { path in
-                                        path.move(to: CGPoint(x: lowerX, y: centerY - 12))
-                                        path.addLine(to: CGPoint(x: lowerX, y: centerY + 12))
-                                        path.move(to: CGPoint(x: upperX, y: centerY - 12))
-                                        path.addLine(to: CGPoint(x: upperX, y: centerY + 12))
-                                    }.stroke(palette.mutedText, lineWidth: 1)
-                                }
-                                .mask {
-                                    Path { path in
-                                        path.addRect(CGRect(x: 0, y: centerY - 13, width: geometry.size.width, height: 26))
-                                        path.addRoundedRect(in: CGRect(x: thumbX - 10, y: centerY - 7, width: 20, height: 14), cornerSize: CGSize(width: 7, height: 7))
-                                    }.fill(style: FillStyle(eoFill: true))
-                                }
-                            }.allowsHitTesting(false).accessibilityHidden(true)
-                        }
-                        .accessibilityValue("\(battery.lastDisplayThreshold)%")
-                    Text("\(battery.lastDisplayThreshold)%").monospacedDigit().frame(width: 40, alignment: .trailing)
-                }.padding(16).disabled(!battery.displayEnabled)
-                Divider()
-                HStack {
-                    Text(L("电池详情的高耗能应用"))
-                    Spacer(minLength: 12)
-                    Picker(L("电池详情的高耗能应用"), selection: $battery.energyAppLimit) {
-                        ForEach(1...3, id: \.self) { Text(L("最多 \($0) 个")).tag($0) }
-                    }.labelsHidden()
-                }.padding(16)
             }
-            note(L("Wi‑Fi 正常连接时生效。充电显示与电源变化提示不受此开关影响。"))
-            note(L("高耗能应用按系统结果显示，数量不足时不补齐。"))
+            note(L("电量低于 20% 时，优先显示电量百分比。"))
             if let error = settingsErrors["battery"] { note(error.string) }
         }
     }
 
     private var iconGuide: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(L("手动隐藏系统图标")).font(.system(size: 20, weight: .semibold))
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(L("1 · 在系统设置中手动隐藏")).font(.headline)
-                    HStack(alignment: .top, spacing: 12) {
-                        guideScreenshot(L("隐藏前 · 左侧为蓝色勾选"), image: "MenuBarBefore")
-                        guideScreenshot(L("隐藏后 · 左侧取消勾选"), image: "MenuBarAfter")
-                    }
-                    note(battery.hasInternalBattery ? L("取消 Wi‑Fi、电池、声音左侧的勾选。") : L("此 Mac 无内置电池，只需处理 Wi‑Fi 与声音；图片中的电池项目仅作参照。"))
-                    note(L("不同 macOS 版本的排列可能不同，以项目名称和左侧勾选为准。"))
-                    Button(L("打开菜单栏设置")) {
-                        if !store.openSystemSettings("menu") { settingsErrors["menu"] = "无法打开菜单栏设置，请手动进入系统设置。" }
-                        else { settingsErrors["menu"] = nil }
-                    }
-                    if let error = settingsErrors["menu"] { note(error.string) }
-                    Text(L("2 · 手动核对菜单栏")).font(.headline)
-                    note(L("请确认系统图标已隐藏，Combo 图标仍在。如需重新显示，请在系统设置中重新勾选。"))
-                }.frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 16)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                guideScreenshot(L("隐藏前 · 左侧为蓝色勾选"), image: "MenuBarBefore")
+                guideScreenshot(L("隐藏后 · 左侧取消勾选"), image: "MenuBarAfter")
             }
-            HStack { Spacer(); Button(L("关闭指引")) { showingIconGuide = false }.keyboardShortcut(.cancelAction) }
-        }.padding(24).frame(width: 590, height: 540).buttonStyle(SettingsButtonStyle()).foregroundStyle(labelColor).tint(palette.accent)
+            note(battery.hasInternalBattery ? L("取消 Wi‑Fi、电池、声音左侧的勾选。") : L("此 Mac 无内置电池，只需处理 Wi‑Fi 与声音；图片中的电池项目仅作参照。"))
+            note(L("不同 macOS 版本的排列可能不同，以项目名称和左侧勾选为准。"))
+            Button(L("打开菜单栏设置")) {
+                if !store.openSystemSettings("menu") { settingsErrors["menu"] = "无法打开菜单栏设置，请手动进入系统设置。" }
+                else { settingsErrors["menu"] = nil }
+            }
+            if let error = settingsErrors["menu"] { note(error.string) }
+            note(L("请确认系统图标已隐藏，Combo 图标仍在。如需重新显示，请在系统设置中重新勾选。"))
+        }.padding(.top, 12)
     }
 
     private func guideScreenshot(_ title: String, image: String) -> some View {
@@ -446,14 +358,7 @@ struct SettingsView: View {
             SettingsGroup {
                 helpRow
                 Divider()
-                HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(L("系统图标隐藏指引"))
-                        note(L("对照图片，在系统设置中手动取消勾选。"))
-                    }
-                    Spacer()
-                    Button(L("查看指引")) { showingIconGuide = true }.buttonStyle(SettingsButtonStyle(isEmphasized: true))
-                }.padding(16)
+                DisclosureGroup(L("系统图标隐藏指引")) { iconGuide }.padding(16)
             }
             Divider()
             DisclosureGroup(L("媒体播放说明")) {

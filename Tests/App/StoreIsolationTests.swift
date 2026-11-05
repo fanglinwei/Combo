@@ -8,16 +8,21 @@ extension IntegrationTests {
     struct StoreIsolationTests {
         @Test
         @MainActor
-        func testBatteryThresholdNotifiesStore() {
+        func testBatteryDisplayNotifiesStore() {
             let store = Store(monitorsSystem: false)
             defer { store.stop() }
             var iconUpdates = 0
             let observer = store.objectWillChange.sink { iconUpdates += 1 }
             defer { observer.cancel() }
-            let originalThreshold = store.battery.displayThreshold
-            defer { store.battery.displayThreshold = originalThreshold }
-            store.battery.displayThreshold = originalThreshold == 50 ? 49 : 50
-            #expect(iconUpdates > 0, "Changing the battery threshold must redraw the menu bar icon")
+            let originalDisplayEnabled = store.battery.displayEnabled
+            defer { store.battery.displayEnabled = originalDisplayEnabled }
+            store.live = Snapshot(battery: 0.19, symbol: "wifi", deviceKind: .bluetooth(.airPodsPro))
+            for enabled in [false, true] {
+                iconUpdates = 0
+                store.battery.displayEnabled = enabled
+                #expect(iconUpdates > 0, "Toggling low-battery display must redraw the menu bar icon")
+                #expect(IconContent(store.snapshot).kind == (enabled ? .battery : .headphones))
+            }
         }
 
         @Test

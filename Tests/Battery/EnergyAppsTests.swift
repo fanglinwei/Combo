@@ -11,14 +11,14 @@ struct EnergyAppsTests {
         }
         let resolve: (String) -> EnergyApp? = { $0 == "unknown" ? nil : EnergyApp(id: $0, name: $0, icon: nil) }
         #expect(reply([]).apps(resolve: resolve)?.isEmpty == true)
-        let apps = try #require(reply(["b", "helper", "b", "c"], responsible: ["", "a", "", ""]).apps(resolve: resolve))
-        #expect(apps.map(\.id) == ["b", "a", "c"])
+        let apps = try #require(reply(["b", "helper", "b", "c", "d"], responsible: ["", "a", "", "", ""]).apps(resolve: resolve))
+        #expect(apps.map(\.id) == ["b", "a", "c", "d"])
         #expect(reply(["unknown"]).apps(resolve: resolve) == nil)
         #expect(reply([""]).apps(resolve: resolve) == nil)
         #expect(reply(["a"], responsible: []).apps(resolve: resolve) == nil)
         #expect(reply([], duration: 0).apps(resolve: resolve) == nil)
-        #expect(EnergyApps.displayLimit(0) == 1 && EnergyApps.displayLimit(5) == 3)
-        for limit in 1...3 { #expect(apps.prefix(EnergyApps.displayLimit(limit)).count == limit) }
+        #expect(EnergyApps.displayLimit == 3)
+        #expect(apps.prefix(EnergyApps.displayLimit).map(\.id) == ["b", "a", "c"])
         #expect((try? JSONDecoder().decode(EnergyReply.self, from: Data("{}".utf8))) == nil)
     }
 

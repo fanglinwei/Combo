@@ -12,7 +12,7 @@ import AppKit
         for (i, scene) in scenes.enumerated() {
             let x = CGFloat(i % 4)*220
             let y = height-CGFloat(i / 4+1)*220
-            let s = Snapshot.demo(scene).preferringBattery(threshold: 50)
+            let s = Snapshot.demo(scene).preferringBattery(enabled: true)
             IconRenderer.image(s, animate: true, size: 140).draw(in: NSRect(x:x+40,y:y+42,width:140,height:140))
             let label = NSAttributedString(string: scene.rawValue, attributes: [.font:NSFont.systemFont(ofSize:16), .foregroundColor:NSColor.white])
             label.draw(at:NSPoint(x:x+(220-label.size().width)/2,y:y+12))

@@ -4,7 +4,6 @@ import AppKit
 struct EnergyAppsSection: View {
     @ObservedObject private var localization = Localization.shared
     @ObservedObject var control: EnergyApps
-    let limit: Int
     let openActivityMonitor: () -> Void
     @Environment(\.comboPalette) private var palette
     var body: some View {
@@ -23,7 +22,7 @@ struct EnergyAppsSection: View {
                 if apps.isEmpty {
                     Text(L("没有使用大量能耗的 App")).foregroundStyle(palette.mutedText)
                 } else {
-                    ForEach(Array(apps.prefix(EnergyApps.displayLimit(limit)))) { app in
+                    ForEach(Array(apps.prefix(EnergyApps.displayLimit))) { app in
                         HStack(spacing: 8) {
                             if let icon = app.icon {
                                 Image(nsImage: icon).resizable().frame(width: 20, height: 20).accessibilityHidden(true)
@@ -133,7 +132,7 @@ struct BatteryDetail: View {
                                       expectedLimit: battery.chargeLimit, action: { battery.requestFullCharge(scene: store.scene) })
                     PowerModeSection(control: power, source: battery.onAC.map { $0 ? .adapter : .battery }) { battery.refreshBattery() }
                 }
-                EnergyAppsSection(control: battery.energyApps, limit: battery.energyAppLimit, openActivityMonitor: { store.openActivityMonitor() })
+                EnergyAppsSection(control: battery.energyApps, openActivityMonitor: { store.openActivityMonitor() })
             }
             DetailMore {
                 Button(L("电池设置…")) { store.openSystemSettings("battery") }.buttonStyle(.plain)

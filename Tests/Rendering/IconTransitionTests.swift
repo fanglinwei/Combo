@@ -75,8 +75,8 @@ final class IconTransitionTests {
         resident.update(content(.wifi), at: 0, reducedMotion: false)
         resident.update(content(.wired), at: 1, reducedMotion: false)
         #expect(resident.isAnimating(at: 1.1), "P1 to P2 must animate")
-        var lowBattery = Snapshot.demo(.wifi); lowBattery.battery = 0.2
-        resident.update(IconContent(lowBattery.preferringBattery(threshold: 50)), at: 7, reducedMotion: false)
+        var lowBattery = Snapshot.demo(.wifi); lowBattery.battery = 0.19
+        resident.update(IconContent(lowBattery.preferringBattery(enabled: true)), at: 7, reducedMotion: false)
         #expect(resident.isAnimating(at: 7.1), "Different P2 resident states must animate")
         resident.update(content(.wifi), at: 8, reducedMotion: false)
         var cancelled = Snapshot.demo(.connecting); cancelled.symbol = "wifi.slash"
@@ -109,15 +109,15 @@ final class IconTransitionTests {
         #expect(!reducedNetwork.isAnimating(at: 11), "Sleeping must stop loading frames")
         reducedNetwork.update(content(.connecting), at: 12, reducedMotion: false)
         #expect(reducedNetwork.frame(at: 20).layers.last?.emphasis == 1, "Wake must resume an active connection")
-        var preferred = Snapshot.demo(.wifi); preferred.battery = 0.2
+        var preferred = Snapshot.demo(.wifi); preferred.battery = 0.19
         var completion = IconTransition()
         completion.update(content(.connecting), at: 0, reducedMotion: false)
-        completion.update(IconContent(preferred.preferringBattery(threshold: 50)), at: 1, reducedMotion: false)
+        completion.update(IconContent(preferred.preferringBattery(enabled: true)), at: 1, reducedMotion: false)
         #expect(completion.isAnimating(at: 1.1) && !completion.isAnimating(at: 1.231))
         #expect(completion.frame(at: 1.3).layers.last?.content.kind == .battery)
         var reducedCompletion = IconTransition()
         reducedCompletion.update(content(.connecting), at: 0, reducedMotion: true)
-        reducedCompletion.update(IconContent(preferred.preferringBattery(threshold: 50)), at: 1, reducedMotion: true)
+        reducedCompletion.update(IconContent(preferred.preferringBattery(enabled: true)), at: 1, reducedMotion: true)
         let reducedMiddle = reducedCompletion.frame(at: 1.08)
         #expect(reducedMiddle.layers.count == 2 && reducedMiddle.layers.allSatisfy { $0.opacity > 0 && $0.scale == 1 },
                "Reduced-motion center transitions must crossfade without scaling")
@@ -134,32 +134,35 @@ final class IconTransitionTests {
         media.charging = true
         for playing in [true, false] {
             media.playing = playing
-            for level in [0.5, 0.6, 0.8, 1.0] {
+            for level in [0.2, 0.5, 0.6, 0.8, 1.0] {
                 media.battery = level
-                #expect(IconContent(media.preferringBattery(threshold: 50)).kind == .headphones,
-                       "Active output takes precedence over charging at or above the threshold, including paused playback")
+                #expect(IconContent(media.preferringBattery(enabled: true)).kind == .headphones,
+                       "Active output takes precedence over charging at or above 20%, including paused playback")
             }
-            media.battery = 0.49
-            #expect(IconContent(media.preferringBattery(threshold: 50)).kind == .battery,
+            media.battery = 0.19
+            #expect(IconContent(media.preferringBattery(enabled: true)).kind == .battery,
                    "Low battery takes precedence over the active output even while charging")
-            #expect(IconContent(media.preferringBattery(threshold: 0)).kind == .headphones,
+            #expect(IconContent(media.preferringBattery(enabled: false)).kind == .headphones,
                    "Disabling low-battery display restores the active output")
         }
         var chargingWithoutDevice = media
         chargingWithoutDevice.battery = 0.6
         chargingWithoutDevice.deviceKind = .other
-        #expect(IconContent(chargingWithoutDevice.preferringBattery(threshold: 50)).kind == .battery,
+        #expect(IconContent(chargingWithoutDevice.preferringBattery(enabled: true)).kind == .battery,
                "Charging without a device glyph still shows battery")
-        media.charging = false; media.battery = 0.2
-        #expect(IconContent(media.preferringBattery(threshold: 50)).kind == .battery)
+        media.charging = false; media.battery = 0.19
+        #expect(IconContent(media.preferringBattery(enabled: true)).kind == .battery)
         media.battery = 0.82; media.playing = false
         #expect(IconContent(media).kind == .headphones, "AirPods stay resident even when playback is paused")
+        media.battery = 0.19; media.wifiConnecting = true
+        #expect(IconContent(media.preferringBattery(enabled: true)).kind == .connecting)
+        media.wifiConnecting = false
         for (symbol, expected) in [("wifi.slash", IconContent.Kind.wifiOff), ("exclamationmark", .warning), ("minus", .unavailable)] {
             media.symbol = symbol
-            #expect(IconContent(media.preferringBattery(threshold: 50)).kind == expected)
+            #expect(IconContent(media.preferringBattery(enabled: true)).kind == expected)
         }
-        media.symbol = ""; media.battery = 0.2
-        #expect(IconContent(media.preferringBattery(threshold: 50)).kind == .battery, "Wired low battery also takes precedence over AirPods")
+        media.symbol = ""; media.battery = 0.19
+        #expect(IconContent(media.preferringBattery(enabled: true)).kind == .battery, "Wired low battery also takes precedence over AirPods")
         media.centerEvent = .power; media.symbol = "exclamationmark"
         #expect(IconContent(media).priority == 4, "Events temporarily cover network errors")
         var switched = Snapshot.demo(.airpods)
@@ -690,7 +693,7 @@ final class IconTransitionTests {
     private var battery: IconContent { IconContent(kind: .battery, text: "82") }
 
     private func content(_ scene: Scene) -> IconContent {
-        IconContent(Snapshot.demo(scene).preferringBattery(threshold: 50))
+        IconContent(Snapshot.demo(scene).preferringBattery(enabled: true))
     }
 
     private func artifact(_ name: String) throws -> URL {

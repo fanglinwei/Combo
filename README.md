@@ -163,9 +163,9 @@ Local re-signing may require granting Location or Bluetooth access again. It doe
 
 ## Getting started
 
-1. **Open the panel.** Launch Combo and click its menu bar icon. The first-launch guide helps you get started; you can revisit it in Settings → General.
+1. **Open the panel.** Launch Combo and click its menu bar icon. The one-page welcome shows the basic interaction; click Get Started to finish. Revisit it in Settings → About & Help.
 2. **Use what you need.** Choose Battery, Wi-Fi, or Sound, or control the current media session. Grant the permissions required for the features you use.
-3. **Set your preferences.** Click the gear button to choose appearance, language, and launch at login. General includes connection preferences and a guide to manually hiding the system icons; Appearance & Animation includes battery display preferences.
+3. **Set your preferences.** Click the gear button to choose appearance, language, and launch at login. General includes connection preferences; Appearance & Animation includes battery display preferences. System icon hiding instructions and other help are in About & Help.
 
 Closing settings keeps Combo running. System icons are managed manually in macOS settings.
 
