@@ -77,7 +77,7 @@ extension IntegrationTests {
                     }
                 }
             }
-            #expect(count == (accessible ? 6 : 144), "Every settings variant must be exercised")
+            #expect(count == (accessible ? 5 : 120), "Every settings variant must be exercised")
         }
 
         @MainActor

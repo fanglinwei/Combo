@@ -10,7 +10,6 @@ import AppKit
         if let battery = store.live.battery { assert((0...1).contains(battery)) }
         if let volume = store.live.volume { assert((0...1).contains(volume)) }
         assert(!store.observation.isEmpty)
-        assert(!store.checkingMenus)
         print("Battery: \(store.live.battery == nil ? "unavailable" : "valid")")
         print("Volume: \(store.live.volume == nil ? "unavailable" : "valid")")
         print("Network: \(store.live.network)")

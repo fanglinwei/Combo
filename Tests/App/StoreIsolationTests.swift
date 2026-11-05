@@ -9,21 +9,13 @@ extension IntegrationTests {
     struct StoreIsolationTests {
         @Test
         @MainActor
-        func testMenuPermissionRefreshAndDeniedAccessGuidance() {
+        func testMenuPermissionRefreshDoesNotShowGuidance() {
             let store = Store(monitorsSystem: false)
             defer { store.stop() }
-            #expect(!store.checkingMenus)
             #expect(!store.showMenuPermission, "permission guide must not interrupt startup")
             store.refreshMenuAccess()
             #expect(store.menuAccessGranted == AXIsProcessTrusted())
-            if !store.menuAccessGranted {
-                store.checkMenus()
-                #expect(store.showMenuPermission, "denied menu check must show permission guide")
-                #expect(!store.checkingMenus, "denied menu check must not start an AX scan")
-                Attachment.record(Data("Denied-access branch exercised. guidanceVisible=\(store.showMenuPermission), scanning=\(store.checkingMenus)".utf8), named: "menu-permission-coverage.txt")
-            } else {
-                Attachment.record(Data("Current host is authorized; permission refresh exercised, denied-access branch not exercised".utf8), named: "menu-permission-coverage.txt")
-            }
+            #expect(!store.showMenuPermission, "refreshing access must not request permission")
         }
 
         @Test

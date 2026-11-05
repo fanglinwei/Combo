@@ -3,10 +3,10 @@ import AppKit
 
 enum Page: String, CaseIterable, Identifiable {
     var title: String { LKey(rawValue) }
-    case general = "通用", appearance = "外观与动效", integration = "菜单栏与控制", media = "媒体来源", experimental = "实验性项目", about = "关于与帮助"
+    case general = "通用", appearance = "外观与动效", integration = "菜单栏与控制", media = "媒体来源", about = "关于与帮助"
     var id: String { rawValue }
     var symbol: String {
-        switch self { case .general: "slider.horizontal.3"; case .appearance: "circle.dotted.circle"; case .integration: "menubar.rectangle"; case .media: "waveform"; case .experimental: "flask"; case .about: "info.circle" }
+        switch self { case .general: "slider.horizontal.3"; case .appearance: "circle.dotted.circle"; case .integration: "menubar.rectangle"; case .media: "waveform"; case .about: "info.circle" }
     }
     var subtitle: String {
         switch self {
@@ -14,15 +14,9 @@ enum Page: String, CaseIterable, Identifiable {
         case .appearance: L("选择外观，预览图标与播放效果。")
         case .integration: L("设置 Combo 的显示与连接偏好。")
         case .media: L("只看现在在播什么。")
-        case .experimental: L("尚在验证中的菜单栏功能。")
         case .about: L("轻一点的菜单栏，清楚一点的状态。")
         }
     }
-}
-struct Tag: View {
-    let text: String
-    @Environment(\.comboPalette) private var palette
-    var body: some View { Text(text).font(.system(size: 10, weight: .medium)).padding(.horizontal, 8).padding(.vertical, 4).foregroundStyle(palette.accent).background(palette.accent.opacity(0.1), in: Capsule()) }
 }
 struct Card<Content: View>: View {
     @ViewBuilder var content: Content
@@ -95,15 +89,12 @@ struct SettingsView: View {
     @State private var pendingMenuAction: MenuAction?
     @State private var loginFeedback: LocalizedText = ""
     @State private var settingsErrors: [String: LocalizedText] = [:]
-    private enum MenuAction { case record, check, restore, retry, inspect }
+    private enum MenuAction { case record, check, restore, retry }
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var contrast
     @AppStorage(OnboardingState.completedKey) private var onboardingCompleted = false
     @AppStorage(OnboardingState.postponedKey) private var onboardingPostponed = false
     @AppStorage(OnboardingState.stepKey) private var onboardingStep = 0
-    @AppStorage("foldWifi") var foldWifi = true
-    @AppStorage("foldSound") var foldSound = true
-    @AppStorage("foldBattery") var foldBattery = true
     @AppStorage("appearanceMode") private var appearanceMode: ComboAppearance = .system
     @AppStorage("themeFamily") private var themeFamily: ComboTheme = .blue
     @Environment(\.colorScheme) private var colorScheme
@@ -149,7 +140,6 @@ struct SettingsView: View {
                                 case .general: general
                                 case .integration: integration
                                 case .media: media
-                                case .experimental: experimental
                                 case .about: about
                                 }
                             }.padding(28).frame(maxWidth: 650, alignment: .leading).frame(maxWidth: .infinity)
@@ -472,59 +462,6 @@ struct SettingsView: View {
         }
     }
 
-    var experimental: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack { groupHeader(L("系统菜单整合")); Tag(text: L("已暂停 · macOS 27 实验")) }
-            SettingsGroup {
-                VStack(alignment: .leading, spacing: 8) {
-                    SettingsToggleRow(title: L("自动折叠系统图标"), isOn: .constant(false)).disabled(true)
-                    note(L("现有方式会同时隐藏 Combo 图标。恢复入口的可见性确认前暂停启用。"))
-                }.padding(16)
-                Divider()
-                DisclosureGroup(L("准备折叠的项目")) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        note(L("仅保存选择，当前不执行折叠。系统日期尚未纳入。"))
-                        SettingsToggleRow(title: "Wi‑Fi", isOn: $foldWifi)
-                        SettingsToggleRow(title: L("声音 / AirPods"), isOn: $foldSound)
-                        SettingsToggleRow(title: L("电池"), isOn: $foldBattery)
-                    }.toggleStyle(.switch).padding(.top, 12)
-                }.padding(16)
-            }
-            groupHeader(L("原生菜单访问"))
-            SettingsGroup {
-                HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(L("检查菜单访问"))
-                        note(L("只读取菜单栏，不启用自动折叠，不触发系统菜单。"))
-                    }
-                    Spacer()
-                    Button(L("开始检查")) { requestMenuAction(.inspect) }.disabled(store.checkingMenus)
-                    if store.checkingMenus { ProgressView().controlSize(.small) }
-                }.padding(16)
-                Divider()
-                DisclosureGroup(L("检查结果与权限说明")) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        note(L("读到项目不代表图标实际可见或原生菜单可以打开；不按缓存坐标触发菜单。"))
-                        note(store.menuDiagnostic.string).textSelection(.enabled)
-                    }.padding(.top, 12)
-                }.padding(16)
-            }
-            Divider()
-            DisclosureGroup(L("8 秒单项折叠实验 · 已暂停")) {
-                VStack(alignment: .leading, spacing: 12) {
-                    note(L("原实验一次仅折叠一项，8 秒后释放。目前三个试验入口均不可用。"))
-                    HStack {
-                        Button(L("试 Wi-Fi")) {}.disabled(true)
-                        Button(L("试声音")) {}.disabled(true)
-                        Button(L("试电池")) {}.disabled(true)
-                    }
-                    Button(L("立即释放限制")) { store.foldExperiment.release(); store.foldExperimentMessage = "实验限制已释放。" }
-                    note(store.foldExperimentMessage.string)
-                }.padding(.top, 12)
-            }
-        }
-    }
-
     private func recordedSummary(retryOnly: Bool = false) -> String {
         let rows = setup.supportedKeys.filter { !retryOnly || setup.failedKeys.contains($0) }.map { key in
             let title = key == "wifi" ? "Wi‑Fi" : key == "sound" ? L("声音") : L("电池")
@@ -549,7 +486,6 @@ struct SettingsView: View {
         switch action {
         case .record: setup.openAndCapture()
         case .check: setup.check()
-        case .inspect: store.checkMenus()
         case .restore, .retry:
             retryRestore = action == .retry
             if wasShowingPermission { confirmAfterPermission = true }
@@ -606,7 +542,7 @@ struct SettingsView: View {
     }
 
     private var permissionExplanation: some View {
-        note(L("读取图标显示设置需要辅助功能权限。恢复记录时，Combo 会修改这些设置；实验检查仅读取菜单栏。授权本身不会修改图标，你可以随时撤销权限。"))
+        note(L("读取图标显示设置需要辅助功能权限。恢复记录时，Combo 会修改这些设置。授权本身不会修改图标，你可以随时撤销权限。"))
     }
     private var inlineMenuPermission: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -936,9 +872,8 @@ struct MediaPage: View {
             SettingsGroup {
                 VStack(alignment: .leading, spacing: 12) {
                     Label(L("本机电池、Wi‑Fi 与声音操作"), systemImage: "checkmark.circle")
-                    Label(L("菜单栏图标、点击面板与六组设置"), systemImage: "checkmark.circle")
+                    Label(L("菜单栏图标、点击面板与设置"), systemImage: "checkmark.circle")
                     Label(L("媒体播放状态与音柱动画"), systemImage: "checkmark.circle")
-                    Label(L("自动折叠：尚未启用"), systemImage: "clock")
                 }.padding(16)
             }
             note(store.observation.string)

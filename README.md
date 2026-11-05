@@ -181,7 +181,7 @@ Grant access for the features you use; optional features can be skipped. You can
 | Bluetooth | Identifying connected audio devices and using supported headphone battery and listening controls. |
 | Local Network | Discovering nearby AirPlay devices after you enable the feature. |
 | Keychain | Using a saved Wi-Fi password, or remembering a password you entered. |
-| Accessibility | Optionally recording and restoring system icon display settings, or running menu diagnostics. |
+| Accessibility | Optionally recording and restoring system icon display settings. |
 | Administrator authorization | Changing the energy mode for the current power source. |
 
 **Wi-Fi passwords:** manually entered passwords are saved to Combo's local Keychain only after a successful connection and if you choose to remember them; you can delete them later. System-saved passwords are used for the selected connection without being copied into Combo's storage. Canceling or denying access stops further system-password requests during that run.

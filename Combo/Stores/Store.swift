@@ -74,13 +74,9 @@ enum SystemPermissionAlert {
     @Published var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
     @Published var screenActive = true
     @Published var observation: LocalizedText = "系统监听初始化中"
-    @Published var menuDiagnostic: LocalizedText = "尚未检测；不会自动请求授权"
-    @Published var checkingMenus = false
     @Published var showMenuPermission = false
     @Published var menuAccessGranted = AXIsProcessTrusted()
     @Published var menuPermissionMessage: LocalizedText = ""
-    @Published var foldExperimentMessage: LocalizedText = "折叠实验已暂停：曾同时隐藏 Combo 图标。"
-    let foldExperiment = MenuFoldExperiment()
     private var volumeHint: Task<Void, Never>?
     private var centerHint = CenterHint()
     private var centerHintTask: Task<Void, Never>?
@@ -179,7 +175,7 @@ enum SystemPermissionAlert {
                 Task { @MainActor in
                     self?.screenActive = active
                     self?.mediaPlayback.setEnabled(active)
-                    if active { self?.audio.invalidateRoute(); self?.refresh() } else { self?.foldExperiment.release() }
+                    if active { self?.audio.invalidateRoute(); self?.refresh() }
                 }
             })
         }
@@ -261,8 +257,23 @@ enum SystemPermissionAlert {
         hotspotActivity?.cancel(); hotspots.stop()
         nearbyAirPlayActivity?.cancel(); audio.setNearbyDiscoveryActive(false)
         bluetoothActivity?.cancel()
-        foldExperiment.release()
         clearVolumeHint(); network.stop()
         observers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
+    }
+}
+
+extension Store {
+    func refreshMenuAccess() {
+        menuAccessGranted = AXIsProcessTrusted()
+    }
+    func requestMenuAccess() {
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
+        refreshMenuAccess()
+        guard !menuAccessGranted else { return }
+        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+        menuPermissionMessage = NSWorkspace.shared.open(url)
+            ? "已尝试打开系统设置。开启 Combo 后返回此页；若未跳到目标页面，请手动进入“隐私与安全性 → 辅助功能”。"
+            : "未能打开系统设置，请手动进入“系统设置 → 隐私与安全性 → 辅助功能”。"
     }
 }

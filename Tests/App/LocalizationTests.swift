@@ -67,11 +67,9 @@ extension IntegrationTests {
             #expect(message.string == "Connecting to 电池 %@ 100%…")
             #expect(battery.string == "Battery 80%")
             #expect(device.string == name, "External names must stay verbatim even when they match a translation key")
-            let parts: [LocalizedText] = [message, battery]
-            let combined = LocalizedText.joined(parts, separator: "\n")
-            #expect(combined.string == "Connecting to 电池 %@ 100%…\nBattery 80%")
             shared.selection = .simplifiedChinese
-            #expect(combined.string == "正在连接 电池 %@ 100%…\n电量 80%")
+            #expect(message.string == "正在连接 电池 %@ 100%…")
+            #expect(battery.string == "电量 80%")
             #expect(loginFeedback.string == "请在系统设置的登录项中允许 Combo。")
             #expect(settingsErrors["menu"]?.string == "无法打开菜单栏设置，请手动进入系统设置。")
             #expect(settingsErrors["sound"]?.string == "无法打开系统声音设置，请手动进入系统设置。")

@@ -36,7 +36,6 @@
 		2C9F7F5B041826B590DBFF1C /* AirPlayRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3279D63259E9338C19EA9023 /* AirPlayRouteTests.swift */; };
 		2CAC0E57C683F547763C2B18 /* OutputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD0C0DE0000000000000001 /* OutputDevice.swift */; };
 		2ED8D19708235400C20D6E98 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 682E6A0AC33379301D321FAB /* Cocoa.framework */; };
-		32E1CB35F0A51A0A3846C835 /* MenuDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E707D0608019378308FCC72 /* MenuDiagnostics.swift */; };
 		32E8C806C22E3C5F481AC454 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E00B5F29D1B3C07E139C083F /* Foundation.framework */; };
 		345B5D61FC888C1E25E5F044 /* ApplicationMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56A7BB1E90631234C57FF928 /* ApplicationMenuTests.swift */; };
 		3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */; };
@@ -80,7 +79,6 @@
 		89DC5D6706474E9C6DB410D9 /* AirPlayHelperCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 9D52094C15F002CB00E1A49E /* AirPlayHelperCheck.m */; };
 		89FA0F2D68E43D5B438C82AC /* EnergyApps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89D8B2128427EB6D64D4651E /* EnergyApps.swift */; };
 		8C9E5A355DE71EB25061A754 /* HoverScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A453DCC82C729938A532C5 /* HoverScroller.swift */; };
-		8D0E3ADF639C9B4669A8DF0A /* MenuFoldExperiment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */; };
 		908640C6F77CB53C46879E70 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 682E6A0AC33379301D321FAB /* Cocoa.framework */; };
 		94C8D63BF36B9CD65D269356 /* IconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360D743C5A0F4A49B67622DA /* IconRenderer.swift */; };
 		954227314649115F4BCCD392 /* NetworkStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12994A42967FE55612E83F0C /* NetworkStatus.swift */; };
@@ -107,7 +105,6 @@
 		AC244BC079035DB113172D85 /* ChargeControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */; };
 		AF1AF0ACA3B27B5A3CCA5B04 /* WiFiIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */; };
 		AFA2F91CCEE742DEAE9C0D76 /* WiFiIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */; };
-		B00D367D74666D2B8093F593 /* MenuDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E707D0608019378308FCC72 /* MenuDiagnostics.swift */; };
 		B291299B53CC6B6FDC8B4D0D /* AudioStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84944DB5015F43C89D9DB5E3 /* AudioStore.swift */; };
 		B34AA0BB30701F2500429926 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B34AA0BA30701F2500429926 /* Media.xcassets */; };
 		B37C395930774797006B8A12 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B37C395830774797006B8A12 /* Sparkle */; };
@@ -120,7 +117,6 @@
 		BBDFDCFDFA4043FEB1A05A4D /* IconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360D743C5A0F4A49B67622DA /* IconRenderer.swift */; };
 		BE73585065B5A84C11542B88 /* IconBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77C8AB30786E5F82BDBA4CBE /* IconBoundaryTests.swift */; };
 		C0A5E40CCC642E19E6E3D83A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D54D08915E2455AB5B921B3 /* SettingsView.swift */; };
-		C2256C79ABA98A1D77D1559A /* MenuFoldExperiment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */; };
 		C5C5B8786E2F208F9135C201 /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBA43210000000000000001 /* OnboardingState.swift */; };
 		C760545B21E0C0B2F48B3A4E /* AirPlayDiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91D4F02ADB781E9898C2241 /* AirPlayDiscoveryTests.swift */; };
 		C7FE1F6ECF5B09D863122339 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000001 /* Localization.swift */; };
@@ -225,12 +221,10 @@
 		3D3C17B64C1665884A057BD9 /* IconTransitionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IconTransitionTests.swift; sourceTree = "<group>"; };
 		4388C57A71C206398AE55B8E /* PanelDesignTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PanelDesignTests.swift; sourceTree = "<group>"; };
 		4DBC8D262B60CD9F33E58A0B /* PanelTestCase.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PanelTestCase.swift; sourceTree = "<group>"; };
-		4E707D0608019378308FCC72 /* MenuDiagnostics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuDiagnostics.swift; sourceTree = "<group>"; };
 		52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ComboIcon.swift; sourceTree = "<group>"; };
 		560A84B06FED44A09CBCC0AD /* PanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PanelView.swift; sourceTree = "<group>"; };
 		56365C8D37CC6FF675E89AC8 /* ChargeControlTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChargeControlTests.swift; sourceTree = "<group>"; };
 		56A7BB1E90631234C57FF928 /* ApplicationMenuTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ApplicationMenuTests.swift; sourceTree = "<group>"; };
-		572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuFoldExperiment.swift; sourceTree = "<group>"; };
 		5ED7A791364F6D2F13C1E0F6 /* SettingsPreferencesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsPreferencesTests.swift; sourceTree = "<group>"; };
 		628947417B405D94700C64C2 /* AirPodsContext.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; path = AirPodsContext.c; sourceTree = "<group>"; };
 		62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiControl.swift; sourceTree = "<group>"; };
@@ -369,8 +363,6 @@
 			isa = PBXGroup;
 			children = (
 				EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */,
-				4E707D0608019378308FCC72 /* MenuDiagnostics.swift */,
-				572C4C10FFDFFF4244C400B0 /* MenuFoldExperiment.swift */,
 			);
 			path = MenuBar;
 			sourceTree = "<group>";
@@ -967,8 +959,6 @@
 				ABCD12340000000000000001 /* OnboardingState.swift in Sources */,
 				ABCD12340000000000000002 /* OnboardingView.swift in Sources */,
 				D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */,
-				32E1CB35F0A51A0A3846C835 /* MenuDiagnostics.swift in Sources */,
-				8D0E3ADF639C9B4669A8DF0A /* MenuFoldExperiment.swift in Sources */,
 				954227314649115F4BCCD392 /* NetworkStatus.swift in Sources */,
 				F44BAAD3AA4CE1463CC4CD81 /* PowerModeControl.swift in Sources */,
 				20AF98593CEC5902E72C031C /* State.swift in Sources */,
@@ -1011,8 +1001,6 @@
 				1D4951E3F9399F20F2FC7DA3 /* OnboardingState.swift in Sources */,
 				06C82E78B8A57343A5F1A1A2 /* OnboardingView.swift in Sources */,
 				FEB5575CFCD7EB8F8A5E4EF6 /* MenuBarSetup.swift in Sources */,
-				B00D367D74666D2B8093F593 /* MenuDiagnostics.swift in Sources */,
-				C2256C79ABA98A1D77D1559A /* MenuFoldExperiment.swift in Sources */,
 				76D9BA8BE14BC8D7E0897F76 /* NetworkStatus.swift in Sources */,
 				DF92FE4B08C7C2AC9F17F5E4 /* PowerModeControl.swift in Sources */,
 				D31546FE107E7AFA43A600AF /* State.swift in Sources */,

@@ -116,9 +116,9 @@ AirBattery 的 BLE 实现以特定 Apple 广播类型发现设备，随后调用
 
 <a id="menu-bar"></a>
 
-## 自动折叠研究（暂停）
+## 自动折叠研究（已废弃，历史归档）
 
-当前采用系统设置手动隐藏、基线记录和确认恢复，见 [产品规格](../product/behavior.md#settings)。以下历史实验来自 2026-09-23、macOS 27.0 build `26A428`，不代表已授权重新试验。
+实验性项目页、自动折叠与菜单访问诊断已移除，不再作为后续开发方向。当前采用系统设置手动隐藏、基线记录和确认恢复，见 [产品规格](../product/behavior.md#settings)。以下历史实验来自 2026-09-23、macOS 27.0 build `26A428`，不代表已授权重新试验。
 
 ### 历史折叠实验与方案比较
 
@@ -145,9 +145,9 @@ AppKit 只管理本应用 NSStatusItem，`removeStatusItem` 不可用于删除�
 
 [源码选择 action](https://github.com/thaw-app/Thaw/blob/46a306a9a2fcb0d7f808269230c6a5c4f7a586e4/.github/actions/checkout-source/action.yml#L1-L6)将 `thaw-next` 明确列为私有 macOS 27 仓库，不能用公开 README 的系统支持范围推导未运行的发行版内部机制。公开源码的辅助功能用于发现/移动/点击，录屏用于预览等功能；不能无证据为 Combo 额外要求录屏。项目为 GPL-3.0，研究机制不等于可直接移植到任意分发形态。
 
-### 后续进入条件
+### 历史验收条件
 
-重启折叠工作前，先完成当前进程只读定位，确认目标唯一且自身入口可观测；AXExtrasMenuBar、MenuBarAgent 容器与 overflow 几何是不同入口，不能仅按标题或固定坐标动作。
+当时要求先完成当前进程只读定位，确认目标唯一且自身入口可观测；AXExtrasMenuBar、MenuBarAgent 容器与 overflow 几何是不同入口，不能仅按标题或固定坐标动作。
 
 任何隔离试验必须同时证明：Combo 全程可见可点击、目标逐项独立、失败/退出后能恢复、原生菜单能打开。普通、拥挤、刘海、多显示器布局均需验证；一次短时成功不等于跨版本交付。不能靠写未公开 plist、关闭 SIP、重置全局 TCC 或重启系统代理作为常规恢复。
 
