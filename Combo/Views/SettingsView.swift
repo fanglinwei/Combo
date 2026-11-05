@@ -3,17 +3,16 @@ import AppKit
 
 enum Page: String, CaseIterable, Identifiable {
     var title: String { LKey(rawValue) }
-    case general = "通用", appearance = "外观与动效", integration = "菜单栏与控制", media = "媒体来源", about = "关于与帮助"
+    case general = "通用", appearance = "外观与动效", integration = "菜单栏与控制", about = "关于与帮助"
     var id: String { rawValue }
     var symbol: String {
-        switch self { case .general: "slider.horizontal.3"; case .appearance: "circle.dotted.circle"; case .integration: "menubar.rectangle"; case .media: "waveform"; case .about: "info.circle" }
+        switch self { case .general: "slider.horizontal.3"; case .appearance: "circle.dotted.circle"; case .integration: "menubar.rectangle"; case .about: "info.circle" }
     }
     var subtitle: String {
         switch self {
         case .general: L("设置 Combo 的启动方式与语言。")
         case .appearance: L("选择外观，预览图标与播放效果。")
         case .integration: L("设置 Combo 的显示与连接偏好。")
-        case .media: L("只看现在在播什么。")
         case .about: L("轻一点的菜单栏，清楚一点的状态。")
         }
     }
@@ -22,43 +21,6 @@ struct Card<Content: View>: View {
     @ViewBuilder var content: Content
     @Environment(\.comboPalette) private var palette
     var body: some View { VStack(alignment: .leading, spacing: 16) { content }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(palette.surface, in: RoundedRectangle(cornerRadius: 14)).overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.primary.opacity(0.055))) }
-}
-/// 状态行里的四柱，规则和菜单栏图标底部是同一条（docs/product/behavior.md「固定播放动效」）：
-/// 播放中错峰起伏，减少动态效果时停在高低柱上、不做循环。暂停由 MediaDots 表达。
-private struct MediaBars: View {
-    let animating: Bool
-    @Environment(\.comboPalette) private var palette
-    @State private var raised = false
-    private let heights: [CGFloat] = [6, 12, 8, 5]
-
-    var body: some View {
-        HStack(alignment: .bottom, spacing: 2) {
-            ForEach(heights.indices, id: \.self) { index in
-                Capsule()
-                    .fill(palette.accent)
-                    .frame(width: 3, height: heights[index])
-                    .scaleEffect(y: animating && !raised ? 0.4 : 1, anchor: .bottom)
-                    .animation(animating ? .easeInOut(duration: 0.6).repeatForever(autoreverses: true).delay(Double(index) * 0.15) : nil, value: raised)
-            }
-        }
-        .frame(height: 12, alignment: .bottom)
-        .onAppear { raised = true }
-        .accessibilityHidden(true)
-    }
-}
-/// 音柱收回四点：暂停、以及关闭播放动效时底部显示的样子。
-private struct MediaDots: View {
-    @Environment(\.comboPalette) private var palette
-
-    var body: some View {
-        HStack(alignment: .bottom, spacing: 2) {
-            ForEach(0..<4, id: \.self) { _ in
-                Circle().fill(palette.accent.opacity(0.5)).frame(width: 3, height: 3)
-            }
-        }
-        .frame(height: 12, alignment: .bottom)
-        .accessibilityHidden(true)
-    }
 }
 struct SettingsView: View {
     @ObservedObject private var updater = AppUpdater.shared
@@ -139,7 +101,6 @@ struct SettingsView: View {
                                 case .appearance: appearance
                                 case .general: general
                                 case .integration: integration
-                                case .media: media
                                 case .about: about
                                 }
                             }.padding(28).frame(maxWidth: 650, alignment: .leading).frame(maxWidth: .infinity)
@@ -599,209 +560,6 @@ struct SettingsView: View {
         }.padding(24).frame(width: 540, height: 510).buttonStyle(SettingsButtonStyle()).foregroundStyle(labelColor).tint(palette.accent)
             .onAppear { store.refreshMenuAccess() }
     }
-    var media: some View {
-        MediaPage(store: store)
-    }
-
-/// 媒体来源页：当前在播来源、菜单栏四个状态的对照、状态是怎么读到的。
-/// 单独成视图便于渲染核对与媒体音柱回归检查（见 Tests/Rendering/MediaBarsCheck.swift）。
-struct MediaPage: View {
-    @ObservedObject var store: Store
-    @Environment(\.comboPalette) private var palette
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            nowPlaying
-            soundSection
-            menuBarSection
-            readingSection
-        }
-    }
-
-    @State private var soundError: LocalizedText = ""
-
-    private var soundSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(L("声音")).font(.system(size: 12, weight: .semibold)).foregroundStyle(palette.mutedText)
-                Spacer()
-                Button(L("打开系统声音设置")) {
-                    soundError = store.openSystemSettings("sound") ? "" : "无法打开系统声音设置，请手动进入系统设置。"
-                }.buttonStyle(SettingsButtonStyle())
-            }
-            Text(L("在 macOS 中管理声音输入、输出与其他系统选项。"))
-                .font(.system(size: 12)).foregroundStyle(palette.mutedText)
-            if !soundError.isEmpty { Text(soundError.string).font(.caption).foregroundStyle(palette.mutedText) }
-        }
-    }
-
-    /// 整页唯一一块 surface。状态用图标底部那一套：播放中四柱，其余四点。
-    private var nowPlaying: some View {
-        Card {
-            HStack(spacing: 7) {
-                if store.mediaVisible {
-                    if store.live.playing && store.animate {
-                        // 重建音柱，让动态效果重新开启时从入场状态启动循环。
-                        MediaBars(animating: !store.reduceMotion).id(store.reduceMotion)
-                    } else { MediaDots() }
-                }
-                Text(mediaStatusText)
-                    .font(.system(size: 13, weight: store.mediaVisible ? .semibold : .medium))
-                    .foregroundStyle(store.mediaVisible ? Color.primary : Color.secondary)
-            }
-            if store.mediaVisible { mediaTrack } else { mediaIdle }
-        }.buttonStyle(.automatic)
-    }
-
-    private var mediaStatusText: String {
-        if !store.mediaControlsAvailable && store.mediaVisible { return L("重新连接中") }
-        guard store.mediaVisible else { return L("未检测到播放") }
-        return store.live.playing ? L("正在播放") : L("已暂停")
-    }
-
-    private var mediaTrack: some View {
-        HStack(spacing: 16) {
-            artwork(store.mediaTrack?.artwork)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(store.mediaTitle).font(.system(size: 16.5, weight: .semibold)).lineLimit(1)
-                if let artist = store.mediaTrack?.artist, !artist.isEmpty {
-                    Text(artist).font(.system(size: 12.5)).foregroundStyle(.secondary).lineLimit(1)
-                }
-                if let source = store.mediaTrack?.source, !source.isEmpty {
-                    HStack(spacing: 5) {
-                        if let icon = appIcon(store.mediaTrack?.bundleIdentifier) {
-                            Image(nsImage: icon).resizable().frame(width: 17, height: 17).accessibilityHidden(true)
-                        }
-                        Text(source).font(.system(size: 12)).foregroundStyle(.tertiary).lineLimit(1)
-                    }
-                }
-            }
-            Spacer(minLength: 12)
-            if let source = store.mediaTrack?.source, !source.isEmpty {
-                Button(L("打开\(source)")) { store.openMediaSource() }
-                    .controlSize(.small)
-                    .disabled(store.mediaTrack?.bundleIdentifier == nil)
-            }
-        }
-    }
-
-    private var mediaIdle: some View {
-        HStack(spacing: 16) {
-            placeholderArtwork
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L("现在没有东西在播放。")).font(.system(size: 15, weight: .medium))
-                Text(L("Combo 只显示向系统报告播放状态的应用。")).font(.system(size: 12.5)).foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 0)
-        }
-    }
-
-    /// 面板里封面只有 40pt，这里按 80pt 展示；没有封面时用同尺寸占位，卡片高度不跳。
-    @ViewBuilder private func artwork(_ data: Data?) -> some View {
-        if let data, let image = NSImage(data: data) {
-            Image(nsImage: image).resizable().scaledToFill()
-                .frame(width: 80, height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.1)))
-                .accessibilityHidden(true)
-        } else {
-            placeholderArtwork
-        }
-    }
-
-    private var placeholderArtwork: some View {
-        Image(systemName: "music.note").font(.system(size: 26)).foregroundStyle(.tertiary)
-            .frame(width: 80, height: 80)
-            .background(palette.isDark ? Color.white.opacity(0.05) : Color.black.opacity(0.045), in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.08)))
-            .accessibilityHidden(true)
-    }
-
-    /// 来源 App 的真实图标。系统查不到（或在跑的副本已挪走）时返回 nil，不猜一个通用图形。
-    private func appIcon(_ bundleIdentifier: String?) -> NSImage? {
-        guard let bundleIdentifier,
-              let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else { return nil }
-        return NSWorkspace.shared.icon(forFile: url.path)
-    }
-
-    /// 四个真实状态的对照。规则来自 docs/product/behavior.md「固定播放动效／显示优先级」，示例数据用应用自己的 demo 场景。
-    private var menuBarSection: some View {
-        let playing = Snapshot.demo(.music)
-        let paused = Snapshot.demo(.paused)
-        let airPods = Snapshot.demo(.airpods)
-        var airPodsIdle = airPods
-        airPodsIdle.playing = false
-        let onAirPods = store.live.outputIsAirPods
-        let live = store.mediaVisible
-        return VStack(alignment: .leading, spacing: 0) {
-            rule.padding(.bottom, 15)
-            HStack(spacing: 12) {
-                ComboIcon(snapshot: store.snapshot, animate: store.animate, size: 22).accessibilityHidden(true)
-                Text(L("菜单栏会怎么变")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(palette.mutedText)
-                Spacer(minLength: 12)
-                Button(store.scene != .live ? L("结束演示") : L("演示播放状态")) { store.scene = store.scene != .live ? .live : .music }
-                    .controlSize(.small).buttonStyle(SettingsButtonStyle())
-            }
-            VStack(spacing: 14) {
-                HStack(spacing: 26) {
-                    legendTile(snapshot: playing, title: L("正在播放"), note: L("四点伸长成四柱，循环起伏"),
-                               animate: true, isCurrent: live && store.live.playing && !onAirPods)
-                    legendTile(snapshot: paused, title: L("已暂停"), note: L("音柱收回四点，静止不动"),
-                               animate: false, isCurrent: live && !store.live.playing && !onAirPods)
-                }
-                HStack(spacing: 26) {
-                    legendTile(snapshot: airPods, title: L("AirPods 播放"), note: L("中央变成耳机图标，底部照旧起伏"),
-                               animate: true, isCurrent: live && store.live.playing && onAirPods)
-                    legendTile(snapshot: airPodsIdle, title: L("AirPods 已连接"), note: L("只连接、未播放时，底部回到音量圆点"),
-                               animate: false, isCurrent: live && !store.live.playing && onAirPods)
-                }
-            }.padding(.top, 14)
-            Text(L("系统静音优先于播放；开启减少动态效果时，音柱不再循环。"))
-                .font(.system(size: 10.5)).foregroundStyle(palette.mutedText).padding(.top, 10)
-        }
-    }
-
-    /// 图例只演示规则，所以两格播放态固定动画；系统开了减少动态效果时 ComboIcon 自己会停。
-    private func legendTile(snapshot: Snapshot, title: String, note: String, animate: Bool, isCurrent: Bool) -> some View {
-        HStack(spacing: 14) {
-            ComboIcon(snapshot: snapshot, animate: animate, size: 64).accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(isCurrent ? palette.accent : Color.primary)
-                Text(note).font(.system(size: 10.5)).foregroundStyle(palette.mutedText).fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
-        }.frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var readingSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            rule
-            DisclosureGroup(L("Combo 怎么读到这些")) {
-                VStack(spacing: 0) {
-                    factRow(key: L("读取"), text: L("只读取系统的播放状态：不采集声音、不录音，也不读取网页内容。"), first: true)
-                    factRow(key: L("识别"), text: L("未向系统报告播放状态的播放器不会出现在这里。"))
-                    factRow(key: L("保留"), text: L("曲目信息在播放结束后保留约 5 秒，切歌时不会闪空。"))
-                }.padding(.top, 10)
-            }.font(.system(size: 12))
-        }
-    }
-
-    private func factRow(key: String, text: String, first: Bool = false) -> some View {
-        VStack(spacing: 0) {
-            if !first { rule }
-            HStack(alignment: .top, spacing: 14) {
-                Text(key).font(.system(size: 11.5)).foregroundStyle(palette.mutedText).frame(width: 34, alignment: .leading)
-                Text(text).font(.system(size: 11.5)).foregroundStyle(palette.mutedText).fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-            }.padding(.vertical, 7)
-        }
-    }
-
-    private var rule: some View {
-        Rectangle().fill(Color.primary.opacity(0.055)).frame(height: 1)
-    }
-}
-
     private var updateSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
             groupHeader(L("软件更新"))

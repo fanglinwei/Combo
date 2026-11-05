@@ -121,7 +121,6 @@
 		C760545B21E0C0B2F48B3A4E /* AirPlayDiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91D4F02ADB781E9898C2241 /* AirPlayDiscoveryTests.swift */; };
 		C7FE1F6ECF5B09D863122339 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10100000000000000000001 /* Localization.swift */; };
 		CB6817AA8526F553AD332DF6 /* OnboardingDesignTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D027BB0C73AC99E58AB9D4 /* OnboardingDesignTests.swift */; };
-		CB896706CDE1CFF7FF9A9CEA /* MediaBarsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F1EAA51C5A0C1227990940 /* MediaBarsTests.swift */; };
 		CCBDA3A5B792D3D3D8A16ACB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 682E6A0AC33379301D321FAB /* Cocoa.framework */; };
 		CFDBF13B5D13D54DCBBB1884 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A708ED2D32863A97143501C2 /* IOBluetooth.framework */; };
 		D1F38D560F429DB0829BF73C /* WiFiControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */; };
@@ -209,7 +208,6 @@
 		1D54D08915E2455AB5B921B3 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		245908813421402DFF9EE42F /* WiFiControlTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WiFiControlTests.swift; sourceTree = "<group>"; };
 		250C12FEA6BF8178AE8C7937 /* AppUpdaterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppUpdaterTests.swift; sourceTree = "<group>"; };
-		27F1EAA51C5A0C1227990940 /* MediaBarsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediaBarsTests.swift; sourceTree = "<group>"; };
 		2AA94D6E8F52C473080BEE59 /* PanelMotionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PanelMotionTests.swift; sourceTree = "<group>"; };
 		2AFD49C0A61581E9B8952E18 /* ComboTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ComboTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F951B1AB68E4AC17144EF10 /* IconTransition.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IconTransition.swift; sourceTree = "<group>"; };
@@ -596,7 +594,6 @@
 			isa = PBXGroup;
 			children = (
 				3D3C17B64C1665884A057BD9 /* IconTransitionTests.swift */,
-				27F1EAA51C5A0C1227990940 /* MediaBarsTests.swift */,
 				77C8AB30786E5F82BDBA4CBE /* IconBoundaryTests.swift */,
 			);
 			name = Rendering;
@@ -912,7 +909,6 @@
 				A80B354AC478A533550A4A12 /* IntegrationTestCase.swift in Sources */,
 				5538E5409277AB883C705760 /* StoreIsolationTests.swift in Sources */,
 				345B5D61FC888C1E25E5F044 /* ApplicationMenuTests.swift in Sources */,
-				CB896706CDE1CFF7FF9A9CEA /* MediaBarsTests.swift in Sources */,
 				56680FA17BFE538B2225A824 /* PanelDesignTests.swift in Sources */,
 				CB6817AA8526F553AD332DF6 /* OnboardingDesignTests.swift in Sources */,
 				9EFCF04EE684D0606C4AB79E /* PanelTestCase.swift in Sources */,

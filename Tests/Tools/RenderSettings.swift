@@ -18,10 +18,6 @@ import SwiftUI
         defaults.set(true, forKey: OnboardingState.completedKey)
         let store = Store()
         store.stop()
-        store.mediaVisible = true
-        store.mediaControlsAvailable = true
-        store.mediaTrack = MediaTrack(title: "微风", artist: "空频信号", source: "Music", bundleIdentifier: "com.apple.Music", playing: true, artwork: nil)
-        store.live.playing = true
         let out = URL(fileURLWithPath: CommandLine.arguments.dropFirst().first ?? "build/settings-previews", isDirectory: true)
         try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
         var count = 0

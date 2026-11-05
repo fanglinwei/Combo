@@ -34,10 +34,6 @@ extension IntegrationTests {
             defer { store.stop() }
             store.screenActive = false
             store.reduceMotion = true
-            store.mediaVisible = true
-            store.mediaControlsAvailable = true
-            store.mediaTrack = MediaTrack(title: "微风", artist: "空频信号", source: "Music", bundleIdentifier: "com.apple.Music", playing: true, artwork: nil)
-            store.live.playing = true
             var count = 0
             for language in (accessible ? [.english] : [AppLanguage.simplifiedChinese, .english]) {
                 Localization.shared.selection = language
@@ -77,7 +73,7 @@ extension IntegrationTests {
                     }
                 }
             }
-            #expect(count == (accessible ? 5 : 120), "Every settings variant must be exercised")
+            #expect(count == (accessible ? 4 : 96), "Every settings variant must be exercised")
         }
 
         @MainActor

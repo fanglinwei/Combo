@@ -153,7 +153,6 @@
 "让 Combo 按你的习惯工作。" = "Make Combo work the way you do.";
 "让外观、图标与动效都按你的习惯呈现。" = "Choose how Combo's appearance, icon, and motion work for you.";
 "查看 Wi-Fi、声音与电池的日常功能。" = "Explore everyday Wi-Fi, Sound, and Battery controls.";
-"只看现在在播什么。" = "Only what's playing right now.";
 "轻一点的菜单栏，清楚一点的状态。" = "A lighter menu bar. A clearer view of your status.";
 "状态，合而为一" = "Your Status, Together";
 "为 MacBook 而设计" = "Designed for MacBook";
@@ -231,25 +230,7 @@
 "打开系统设置并授权" = "Open System Settings and Authorize";
 "未启用" = "Not Enabled";
 "重新连接中" = "Reconnecting";
-"正在播放" = "Playing";
 "已暂停" = "Paused";
-"未检测到播放" = "No Playback Detected";
-"现在没有东西在播放。" = "Nothing is playing right now.";
-"Combo 只显示向系统报告播放状态的应用。" = "Combo only shows apps that report playback to macOS.";
-"菜单栏会怎么变" = "What the menu bar does";
-"四点伸长成四柱，循环起伏" = "The four dots stretch into bars and loop";
-"音柱收回四点，静止不动" = "The bars collapse back to dots and hold";
-"AirPods 已连接" = "AirPods Connected";
-"中央变成耳机图标，底部照旧起伏" = "The center becomes the earbuds icon; the bottom keeps moving";
-"只连接、未播放时，底部回到音量圆点" = "Connected but idle: the bottom returns to volume dots";
-"系统静音优先于播放；开启减少动态效果时，音柱不再循环。" = "Mute outranks playback; with Reduce Motion on, the bars stop looping.";
-"Combo 怎么读到这些" = "How Combo reads this";
-"读取" = "Reads";
-"识别" = "Sees";
-"保留" = "Holds";
-"只读取系统的播放状态：不采集声音、不录音，也不读取网页内容。" = "Reads the system playback state only: no audio capture, no recording, no page reading.";
-"未向系统报告播放状态的播放器不会出现在这里。" = "Players that do not report playback to macOS do not appear here.";
-"曲目信息在播放结束后保留约 5 秒，切歌时不会闪空。" = "Track info is held for about 5 seconds after playback ends, so switching songs does not flash empty.";
 "结束演示，返回本机状态" = "End Demo and Return to Live Status";
 "在菜单栏演示播放" = "Demo Playback in Menu Bar";
 "1.2.0 · 三合一预览版" = "1.2.0 · Three-in-One Preview";
@@ -464,7 +445,6 @@
 "取消 Wi‑Fi、电池、声音左侧的勾选。" = "Uncheck the boxes to the left of Wi-Fi, Battery, and Sound.";
 "只读取你点击的已知网络密码，不读取其他钥匙串项目，不另存系统密码，不上传网络名称或密码。" = "Reads only the password for the known network you select. Does not read other Keychain items, copy system passwords, or upload network names or passwords.";
 "回顾功能与操作步骤。" = "Review features and how to use them.";
-"在 macOS 中管理声音输入、输出与其他系统选项。" = "Manage sound input, output, and other system options in macOS.";
 "在菜单栏演示" = "Demo in the menu bar";
 "外观" = "Appearance";
 "密码与隐私说明" = "Passwords & Privacy";
@@ -488,7 +468,6 @@
 "无法完整读取待恢复项目，未作修改；请重试或手动恢复。" = "Could not read all items to restore. No changes were made. Retry or restore them manually.";
 "无法完整读取适用项目，未记录；请手动确认，Combo 不会猜测原始状态。" = "Could not read all applicable items, so nothing was recorded. Check manually; Combo will not guess their original state.";
 "无法恢复；请检查辅助功能权限和系统菜单栏设置。" = "Could not restore settings. Check Accessibility access and System Menu Bar Settings.";
-"无法打开系统声音设置，请手动进入系统设置。" = "Could not open System Sound Settings. Open System Settings manually.";
 "无法打开系统设置，请手动进入对应页面。" = "Could not open System Settings. Navigate to the relevant page manually.";
 "无法打开菜单栏设置，请手动进入系统设置。" = "Could not open Menu Bar Settings. Open System Settings manually.";
 "显示阈值" = "Display threshold";
@@ -500,7 +479,6 @@
 "检测只读取设置勾选，不能证明图标在屏幕上可见。请人工确认系统图标已隐藏，Combo 图标仍在。" = "The check reads settings only; it cannot confirm on-screen visibility. Verify that the system icons are hidden and Combo remains visible.";
 "此 Mac 无内置电池，只需处理 Wi‑Fi 与声音；图片中的电池项目仅作参照。" = "This Mac has no built-in battery. Only Wi-Fi and Sound apply; Battery in the images is a reference.";
 "此前记录" = "Earlier record";
-"演示播放状态" = "Demo Playback";
 "电池详情的高耗能应用" = "Energy-intensive apps in battery details";
 "电量显示" = "Battery Display";
 "稍后设置" = "Set Up Later";
