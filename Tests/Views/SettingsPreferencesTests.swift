@@ -109,7 +109,7 @@ extension IntegrationTests {
             let thresholdKeys = ["batteryDisplayThreshold", "batteryLastDisplayThreshold"]
             let savedThresholds = thresholdKeys.map { ($0, UserDefaults.standard.object(forKey: $0)) }
             defer { for (key, value) in savedThresholds { UserDefaults.standard.set(value, forKey: key) } }
-            let settings = SettingsView(store: store, page: .integration) { _ in }
+            let settings = SettingsView(store: store, page: .appearance) { _ in }
             for (input, expected) in [(0.0, 20), (19.4, 20), (20.0, 20), (20.6, 21), (80.0, 80), (100.0, 80)] {
                 store.battery.displayThreshold = 50
                 settings.thresholdBinding.wrappedValue = input

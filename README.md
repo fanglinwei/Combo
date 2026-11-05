@@ -63,7 +63,7 @@ These GIFs use the app's own icon renderer and demo data. See the [icon gallery]
 - **Wi-Fi**: Toggle Wi-Fi, browse and join networks, use saved passwords, or choose to remember a password locally. Personal Hotspot and enterprise authentication continue in macOS Wi-Fi settings.
 - **Sound and AirPods**: Switch outputs, adjust volume, and mute. On supported devices, check AirPods battery levels and change noise control modes. Find nearby AirPlay devices and connect through macOS Sound settings.
 - **Media controls**: View the track, artwork, and source app; use previous, play/pause, and next, or open the source app. The player must provide media information and the relevant controls to macOS.
-- **Personalization**: Three theme colors, light and dark appearances, English and Simplified Chinese, and launch at login. Playback bars follow a fixed loop; animations can be disabled and respect Reduce Motion. Settings offers 16 icon previews; a menu bar demo starts only when you choose it and ends when you close settings.
+- **Personalization**: Three theme colors, light and dark appearances, English and Simplified Chinese, and launch at login. Playback bars follow a fixed loop; animations can be disabled and respect Reduce Motion. Settings includes one live status preview that reflects your display preferences.
 
 Some features depend on your device and macOS version. See [Compatibility](#compatibility) for support details and [Permissions and privacy](#permissions-and-privacy) for access and password storage.
 
@@ -165,7 +165,7 @@ Local re-signing may require granting Location, Bluetooth, or Accessibility acce
 
 1. **Open the panel.** Launch Combo and click its menu bar icon. The first-launch guide helps you get started; you can revisit it in Settings → General.
 2. **Use what you need.** Choose Battery, Wi-Fi, or Sound, or control the current media session. Grant the permissions required for the features you use.
-3. **Set your preferences.** Click the gear button to choose appearance, language, and launch at login. Menu Bar & Controls includes a guide to manually hiding the system icons.
+3. **Set your preferences.** Click the gear button to choose appearance, language, and launch at login. General includes connection preferences and a guide to manually hiding the system icons; Appearance & Animation includes battery display preferences.
 
 Closing settings keeps Combo running. System icon settings are restored only when you explicitly request it.
 

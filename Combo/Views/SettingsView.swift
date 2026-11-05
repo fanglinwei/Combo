@@ -3,16 +3,15 @@ import AppKit
 
 enum Page: String, CaseIterable, Identifiable {
     var title: String { LKey(rawValue) }
-    case general = "通用", appearance = "外观与动效", integration = "菜单栏与控制", about = "关于与帮助"
+    case general = "通用", appearance = "外观与动效", about = "关于与帮助"
     var id: String { rawValue }
     var symbol: String {
-        switch self { case .general: "slider.horizontal.3"; case .appearance: "circle.dotted.circle"; case .integration: "menubar.rectangle"; case .about: "info.circle" }
+        switch self { case .general: "slider.horizontal.3"; case .appearance: "circle.dotted.circle"; case .about: "info.circle" }
     }
     var subtitle: String {
         switch self {
-        case .general: L("设置 Combo 的启动方式与语言。")
-        case .appearance: L("选择外观，预览图标与播放效果。")
-        case .integration: L("设置 Combo 的显示与连接偏好。")
+        case .general: L("设置启动、语言与连接偏好。")
+        case .appearance: L("调整图标外观、动效与电量显示。")
         case .about: L("轻一点的菜单栏，清楚一点的状态。")
         }
     }
@@ -41,7 +40,6 @@ struct SettingsView: View {
     }
     @State private var page: Page
     @State private var hoveredPage: Page?
-    @State private var preview: Scene = .wired
     @State private var reset = false
     @State private var showingOnboarding = false
     @State private var showingIconGuide = false
@@ -82,15 +80,6 @@ struct SettingsView: View {
                 HStack(spacing: 0) {
                     sidebar.padding(.leading, 10).padding(.vertical, 10)
                     VStack(spacing: 0) {
-                        if store.scene != .live {
-                            HStack(spacing: 12) {
-                                Label(L("正在演示 · \(store.scene.title)"), systemImage: "play.circle")
-                                    .font(.system(size: 12, weight: .medium))
-                                Spacer()
-                                Button(L("结束演示")) { store.scene = .live }
-                            }.padding(16).background(palette.accent.opacity(0.08))
-                            Divider()
-                        }
                         ScrollView {
                             VStack(alignment: .leading, spacing: 22) {
                                 VStack(alignment: .leading, spacing: 8) {
@@ -100,7 +89,6 @@ struct SettingsView: View {
                                 switch page {
                                 case .appearance: appearance
                                 case .general: general
-                                case .integration: integration
                                 case .about: about
                                 }
                             }.padding(28).frame(maxWidth: 650, alignment: .leading).frame(maxWidth: .infinity)
@@ -218,47 +206,13 @@ struct SettingsView: View {
                 }.padding(16)
             }
             note(L("更改立即生效。跟随系统时随 macOS 外观切换。"))
-            HStack {
-                groupHeader(L("效果预览"))
-                Text(L("窗口内预览")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
-                    .padding(.horizontal, 8).padding(.vertical, 2)
-                    .background(colors.surface, in: Capsule()).overlay(Capsule().stroke(colors.line))
-            }
+            groupHeader(L("效果预览"))
             SettingsGroup {
-                HStack(spacing: 40) {
-                    Spacer()
-                    VStack(spacing: 8) {
-                        ComboIcon(snapshot: store.snapshot(for: preview), animate: store.animate, size: 112, previewScene: preview)
-                        Text(preview.title).font(.system(size: 11)).foregroundStyle(palette.mutedText)
-                    }
-                    VStack(spacing: 12) {
-                        ComboIcon(snapshot: store.snapshot(for: preview), animate: store.animate, size: 22, previewScene: preview)
-                        Text(L("菜单栏尺寸")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
-                    }
-                    Spacer()
-                }.padding(20)
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 8) {
-                    ForEach([Scene.wired, .wifi, .music, .paused, .airpods, .adjusting, .mute, .wifiMute, .low, .charging, .offline, .connecting, .wifiOff, .plug, .unplug, .reduced]) { scene in
-                        Button { preview = scene } label: {
-                            Text(scene.title).font(.system(size: 11, weight: preview == scene ? .semibold : .regular))
-                                .frame(maxWidth: .infinity)
-                        }.buttonStyle(SettingsButtonStyle(isEmphasized: preview == scene, isScene: true))
-                            .accessibilityAddTraits(preview == scene ? .isSelected : [])
-                    }
-                }.padding(.horizontal, 16).padding(.bottom, 16)
-                Divider()
-                HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(L("在菜单栏演示"))
-                        note(L("临时替换 Combo 的实时显示；关闭设置窗口后结束。"))
-                    }
-                    Spacer()
-                    Button(store.scene == .live ? L("开始演示") : L("结束演示")) {
-                        store.scene = store.scene == .live ? preview : .live
-                    }
-                }.padding(16)
+                VStack(spacing: 8) {
+                    ComboIcon(snapshot: store.snapshot(for: .live), animate: store.animate, size: 80)
+                    note(L("本机状态"))
+                }.frame(maxWidth: .infinity).padding(20)
             }
-            note(L("选择场景只改变窗口内预览；点击开始演示后才切换菜单栏显示。"))
             groupHeader(L("播放动效"))
             SettingsGroup {
                 VStack(alignment: .leading, spacing: 6) {
@@ -268,6 +222,7 @@ struct SettingsView: View {
                 Divider()
                 LabeledContent(L("减少动态效果"), value: store.reduceMotion ? L("系统已开启 · 静态音柱") : L("跟随系统设置")).padding(16)
             }
+            batterySettings
         }
     }
     var general: some View {
@@ -285,6 +240,7 @@ struct SettingsView: View {
             }
             note(L("更改立即生效。"))
             if !loginFeedback.isEmpty { note(loginFeedback.string) }
+            connectionSettings
             groupHeader(L("使用帮助"))
             SettingsGroup { helpRow }
             Divider()
@@ -325,7 +281,7 @@ struct SettingsView: View {
         )
     }
 
-    var integration: some View {
+    private var connectionSettings: some View {
         VStack(alignment: .leading, spacing: 20) {
             groupHeader(L("系统菜单栏图标"))
             SettingsGroup {
@@ -357,6 +313,11 @@ struct SettingsView: View {
             groupHeader(L("Wi‑Fi 连接"), systemSection: "wifi")
             SettingsGroup { WiFiPasswordSettings(wifi: store.wifi).padding(16) }
             if let error = settingsErrors["wifi"] { note(error.string) }
+        }
+    }
+
+    private var batterySettings: some View {
+        VStack(alignment: .leading, spacing: 20) {
             groupHeader(L("电量显示"), systemSection: "battery")
             SettingsGroup {
                 SettingsToggleRow(title: L("低电量时显示百分比"), isOn: Binding(
@@ -649,6 +610,10 @@ struct SettingsView: View {
                 }.padding(16)
             }
             Divider()
+            DisclosureGroup(L("媒体播放说明")) {
+                note(L("仅显示向 macOS 报告播放状态的应用。静音时显示静音图标；开启“减少动态效果”后，播放音柱保持静止。"))
+                    .padding(.top, 12)
+            }
             DisclosureGroup(L("隐私与状态边界")) {
                 note(L("不上传状态，不读取网页，不录音或截图。无线图标只表示路径类型，不代表信号格数；互联网连通性尚未检测。读取系统保存的 Wi‑Fi 密码与辅助功能授权，在相关操作中单独说明。"))
                     .padding(.top, 12)
@@ -726,7 +691,6 @@ private struct SettingsColors {
 
 private struct SettingsButtonStyle: ButtonStyle {
     var isEmphasized = false
-    var isScene = false
     @Environment(\.comboPalette) private var palette
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -742,8 +706,8 @@ private struct SettingsButtonStyle: ButtonStyle {
         let label = configuration.label
             .font(.system(size: 12, weight: isEmphasized ? .semibold : .regular))
             .foregroundStyle(foreground)
-            .padding(.horizontal, isScene ? 6 : 12).padding(.vertical, 6)
-            .frame(minHeight: isScene ? 36 : 32)
+            .padding(.horizontal, 12).padding(.vertical, 6)
+            .frame(minHeight: 32)
             .background(!isEnabled ? colors.surface : solid || configuration.isPressed ? colors.field : colors.controlGlass, in: shape)
         Group {
             if solid { label }

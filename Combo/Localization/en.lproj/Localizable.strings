@@ -169,7 +169,6 @@
 "效果预览" = "Preview";
 "示例数据 · 不改变系统状态" = "Sample Data · No System Changes";
 "实时预览" = "Live Preview";
-"菜单栏尺寸" = "Menu Bar Size";
 "播放时显示音柱" = "Show Bars During Playback";
 "固定循环，不录制声音，也不跟随音乐节奏。" = "A fixed loop. No audio recording or beat detection.";
 "系统已开启 · 静态音柱" = "Enabled in System · Static Bars";
@@ -426,7 +425,6 @@
 "系统设置 → 隐私与安全性 → 本地网络 → Combo" = "System Settings → Privacy & Security → Local Network → Combo";
 "电视音量请用遥控器" = "Use the remote to adjust TV volume";
 "设备音量请在设备上调节" = "Adjust volume on the device";
-"菜单栏与控制" = "Menu Bar & Controls";
 "1 · 先记录当前设置" = "1 · Record the current settings first";
 "2 · 在系统设置中手动隐藏" = "2 · Hide icons manually in System Settings";
 "3 · 返回并核对" = "3 · Return and check";
@@ -434,7 +432,6 @@
 "Wi‑Fi 连接" = "Wi-Fi Connection";
 "不上传状态，不读取网页，不录音或截图。无线图标只表示路径类型，不代表信号格数；互联网连通性尚未检测。读取系统保存的 Wi‑Fi 密码与辅助功能授权，在相关操作中单独说明。" = "No status uploads, webpage reading, recording, or screenshots. The wireless icon indicates the connection type, not signal strength; internet connectivity is not checked. System Wi-Fi passwords and Accessibility access are explained where they are used.";
 "不同 macOS 版本的排列可能不同，以项目名称和左侧勾选为准。" = "The layout may vary by macOS version. Use the item names and checkboxes on the left as your guide.";
-"临时替换 Combo 的实时显示；关闭设置窗口后结束。" = "Temporarily replaces the live Combo display. Closing Settings ends the demo.";
 "仅重置播放动效与低电量显示，其他设置不变。" = "Resets playback animation and low-battery display only. Other settings stay unchanged.";
 "低于" = "Below";
 "低电量时显示百分比" = "Show percentage when battery is low";
@@ -445,7 +442,6 @@
 "取消 Wi‑Fi、电池、声音左侧的勾选。" = "Uncheck the boxes to the left of Wi-Fi, Battery, and Sound.";
 "只读取你点击的已知网络密码，不读取其他钥匙串项目，不另存系统密码，不上传网络名称或密码。" = "Reads only the password for the known network you select. Does not read other Keychain items, copy system passwords, or upload network names or passwords.";
 "回顾功能与操作步骤。" = "Review features and how to use them.";
-"在菜单栏演示" = "Demo in the menu bar";
 "外观" = "Appearance";
 "密码与隐私说明" = "Passwords & Privacy";
 "对照图片，先记录再手动隐藏。" = "Use the images as a guide. Record first, then hide icons manually.";
@@ -455,7 +451,6 @@
 "已恢复到记录的菜单栏图标设置；记录仍保留。" = "Restored the recorded menu bar icon settings. The record is preserved.";
 "已有记录，保留原值" = "Recorded values are preserved";
 "已记录设置" = "Recorded Settings";
-"开始演示" = "Start Demo";
 "恢复偏好" = "Reset Preferences";
 "恢复动效与电量显示偏好…" = "Reset Animation & Battery Display…";
 "恢复已记录设置…" = "Restore Recorded Settings…";
@@ -485,17 +480,12 @@
 "管理系统菜单栏图标" = "Manage System Menu Bar Icons";
 "系统图标隐藏指引" = "System Icon Hiding Instructions";
 "系统菜单栏图标" = "System Menu Bar Icons";
-"结束演示" = "End Demo";
 "记录只保留现在的勾选状态。此前已隐藏且未记录时，如需恢复请在系统设置中手动调整。" = "A record saves the current checkbox values only. If icons were hidden before recording, restore them manually in System Settings.";
 "记录当前设置" = "Record Current Settings";
-"设置 Combo 的启动方式与语言。" = "Set how Combo starts and which language it uses.";
-"设置 Combo 的显示与连接偏好。" = "Set display and connection preferences for Combo.";
 "请输入 1–100 的整数；当前输入尚未保存。" = "Enter a whole number from 1 to 100. The current input has not been saved.";
 "读取图标显示设置需要辅助功能权限。" = "Reading icon display settings requires Accessibility access.";
 "连接已知网络时使用；macOS 可能另行请求授权。" = "Used when connecting to a known network; macOS may request separate access.";
 "退出 Combo 不会恢复系统图标；只有点击恢复按钮才会更改。" = "Quitting Combo does not restore system icons. They change only when you choose Restore.";
-"选择场景只改变窗口内预览；点击开始演示后才切换菜单栏显示。" = "Selecting a scene changes the in-window preview only. Start Demo to change the menu bar display.";
-"选择外观，预览图标与播放效果。" = "Choose an appearance and preview icons and playback effects.";
 "部分项目未能确认恢复；可只重试失败项，也可在系统设置中手动检查。" = "Some items could not be verified. Retry only those items, or check them manually in System Settings.";
 "重新查看使用引导" = "Review the Getting Started Guide";
 "重试失败项" = "Retry Failed Items";
@@ -504,12 +494,10 @@
 "隐藏前 · 左侧为蓝色勾选" = "Before hiding · Blue checkboxes on the left";
 "隐藏后 · 左侧取消勾选" = "After hiding · Left checkboxes cleared";
 "高耗能应用按系统结果显示，数量不足时不补齐。" = "Energy-intensive apps follow system results. Fewer results are not padded with other apps.";
-"正在演示 · %@" = "Demo Running · %@";
 "最多 %lld 个" = "Up to %lld apps";
 "%@ · 三合一预览版" = "%@ · Three-in-One Preview";
 "继续原任务" = "Continue Original Task";
 
-"窗口内预览" = "In-window preview";
 
 "更多" = "More";
 "充电上限" = "Charge limit";
@@ -573,3 +561,8 @@
 "尚未检查" = "Not Checked Yet";
 "菜单栏图标、点击面板与设置" = "Menu Bar Icon, Click Panel, and Settings";
 "读取图标显示设置需要辅助功能权限。恢复记录时，Combo 会修改这些设置。授权本身不会修改图标，你可以随时撤销权限。" = "Reading icon display settings requires Accessibility access. Restoring a record changes those settings. Granting access does not change icons, and you can revoke access at any time.";
+
+"设置启动、语言与连接偏好。" = "Set startup, language, and connection preferences.";
+"调整图标外观、动效与电量显示。" = "Adjust icon appearance, animation, and battery display.";
+"媒体播放说明" = "Media Playback Help";
+"仅显示向 macOS 报告播放状态的应用。静音时显示静音图标；开启“减少动态效果”后，播放音柱保持静止。" = "Only apps that report playback status to macOS appear. Mute takes priority; playback bars stay still when Reduce Motion is enabled.";
