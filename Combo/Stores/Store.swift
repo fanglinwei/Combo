@@ -52,7 +52,7 @@ enum SystemPermissionAlert {
     @Published var panelVisible = false
     /// 权限请求覆盖整个等待过程；本地网络额外检查系统授权窗口，不能把 waiting 当成用户已拒绝。
     var permissionPromptActive: Bool {
-        wifi.isRequestingLocation || wifi.isRequestingSystemPassword
+        wifi.isRequestingLocation
             || audio.bluetoothPermission.isRequestingPermission
             || isSystemPermissionAlertVisible()
     }
@@ -77,7 +77,6 @@ enum SystemPermissionAlert {
     private var volumeHint: Task<Void, Never>?
     private var centerHint = CenterHint()
     private var centerHintTask: Task<Void, Never>?
-    private var wifiChange: AnyCancellable?
     private var lastVolumeChange: TimeInterval?
     private var observers: [NSObjectProtocol] = []
     private let network = NetworkStatus()
@@ -139,10 +138,6 @@ enum SystemPermissionAlert {
         }
         guard monitorsSystem else { return }
         mediaPlayback.setEnabled(true)
-        wifiChange = wifi.$connecting.dropFirst().sink { [weak self] connecting in
-            self?.live.wifiConnecting = connecting
-            if !connecting { self?.network.refresh() }
-        }
         hotspotActivity = Publishers.CombineLatest3($panelVisible, $screenActive, wifi.$powerOn)
             .map { visible, active, power in visible && active && power == true }
             .removeDuplicates()
@@ -248,7 +243,7 @@ enum SystemPermissionAlert {
     func resetDisplay() { animate = true; battery.displayEnabled = true }
     func stop() {
         mediaPlayback.stop()
-        centerHintTask?.cancel(); sceneExpiry?.cancel(); wifiChange?.cancel()
+        centerHintTask?.cancel(); sceneExpiry?.cancel()
         battery.stop()
         audio.stop()
         hotspotActivity?.cancel(); hotspots.stop()

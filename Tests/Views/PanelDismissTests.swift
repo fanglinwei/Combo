@@ -1,7 +1,6 @@
 import Testing
 import Foundation
 import AppKit
-import CoreWLAN
 @testable import ComboTestHost
 
 extension IntegrationTests {
@@ -230,24 +229,15 @@ extension IntegrationTests {
 
         @Test
         @MainActor
-        func testInlineEscapePriority() async throws {
+        func testWiFiDetailEscape() async throws {
             let fixture = PanelTestCase()
             defer { fixture.cleanUp() }
             let delegate = try await fixture.makeDelegate()
             delegate.panel?.orderOut(nil)
-            // Inline cancellation takes priority over dismissing the detail surface.
             delegate.store.detailSection = .wifi
-            delegate.store.wifi.passwordRequest = WiFiChoice(network: CWNetwork(), name: "Inline form")
             delegate.store.wifi.busy = true
             delegate.handleDetailEscape()
-            #expect(delegate.store.wifi.passwordRequest != nil && delegate.store.detailSection == .wifi,
-                   "A busy form cannot be cancelled or dismissed by Esc")
-            delegate.store.wifi.busy = false
-            delegate.handleDetailEscape()
-            #expect(delegate.store.wifi.passwordRequest == nil && delegate.store.detailSection == .wifi,
-                   "First Esc must cancel the inline form and keep the detail window")
-            delegate.handleDetailEscape()
-            #expect(delegate.store.detailSection == nil, "Next Esc must close the detail window")
+            #expect(delegate.store.detailSection == nil, "Esc must close Wi-Fi details even during a scan")
         }
 
         @MainActor

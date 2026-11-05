@@ -377,9 +377,7 @@ final class ComboPanel: NSPanel {
         }
     }
     func handleDetailEscape() {
-        if store.detailSection == .wifi, store.wifi.passwordRequest != nil {
-            if !store.wifi.busy { store.wifi.passwordRequest = nil }
-        } else { store.detailSection = nil }
+        store.detailSection = nil
     }
 
     // Native animators retarget the current frame and alpha when opening reverses a close.

@@ -26,7 +26,7 @@
   <a href="https://github.com/fanglinwei/Combo/issues">Report an issue</a>
 </p>
 
-Combo is a macOS menu bar app for checking battery status, joining Wi-Fi networks, adjusting volume, and controlling media playback.
+Combo is a macOS menu bar app for checking battery and Wi-Fi status, adjusting volume, and controlling media playback.
 
 Combo is designed primarily for people who work on a MacBook and love listening to music, bringing work and music together in the menu bar.
 
@@ -46,13 +46,13 @@ Combo is designed primarily for people who work on a MacBook and love listening 
   <img src="docs/assets/combo-panel-now-playing-en.png" width="420" alt="Combo main panel during media playback, showing artwork, track details, playback controls, battery, Wi-Fi, and volume">
 </p>
 
-The Combo panel brings macOS Wi-Fi, battery, and sound controls together, so you can join networks, check battery levels, adjust supported battery options, change volume, and switch audio outputs in one place.
+The Combo panel brings macOS Wi-Fi, battery, and sound controls together, so you can check networks and battery levels, adjust supported battery options, change volume, and switch audio outputs in one place.
 
 ### Menu bar icon in motion
 
-| Connecting to Wi-Fi | Charging while playing | Listening with AirPods | Adjusting AirPods volume |
-| :---: | :---: | :---: | :---: |
-| <img src="docs/assets/states/connecting.gif" width="120" alt="The Wi-Fi symbol expands and pulses while connecting"> | <img src="docs/assets/states/charging.gif" width="120" alt="A green battery arc, charging indicator, and playback bars"> | <img src="docs/assets/states/airpods.gif" width="120" alt="The AirPods symbol in the center with playback bars following a fixed animation loop below"> | <img src="docs/assets/states/adjusting.gif" width="120" alt="A temporary volume number returns to the AirPods symbol"> |
+| Charging while playing | Listening with AirPods | Adjusting AirPods volume |
+| :---: | :---: | :---: |
+| <img src="docs/assets/states/charging.gif" width="120" alt="A green battery arc, charging indicator, and playback bars"> | <img src="docs/assets/states/airpods.gif" width="120" alt="The AirPods symbol in the center with playback bars following a fixed animation loop below"> | <img src="docs/assets/states/adjusting.gif" width="120" alt="A temporary volume number returns to the AirPods symbol"> |
 
 These GIFs use the app's own icon renderer and demo data. See the [icon gallery](docs/product/icon-gallery.md) for more examples (in Chinese).
 
@@ -60,12 +60,12 @@ These GIFs use the app's own icon renderer and demo data. See the [icon gallery]
 
 - **Status icon**: Battery around the edge, network or audio device in the center, and volume or playback below. Low battery turns red; charging turns green.
 - **Battery**: Check charge, charging status, health, and any readable charging limit, or switch supported energy modes. While plugged in with charging paused by a manual limit, **Charge to Full Now** can temporarily lift that limit; macOS manages its restoration.
-- **Wi-Fi**: Toggle Wi-Fi, browse and join networks, use saved passwords, or choose to remember a password locally. Personal Hotspot and enterprise authentication continue in macOS Wi-Fi settings.
+- **Wi-Fi**: View the current network, nearby networks, signal strength, and security. Click a network or Personal Hotspot to open macOS Wi-Fi settings, where you connect and turn Wi-Fi on or off.
 - **Sound and AirPods**: Switch outputs, adjust volume, and mute. On supported devices, check AirPods battery levels and change noise control modes. Find nearby AirPlay devices and connect through macOS Sound settings.
 - **Media controls**: View the track, artwork, and source app; use previous, play/pause, and next, or open the source app. The player must provide media information and the relevant controls to macOS.
 - **Personalization**: Light and dark appearances, English and Simplified Chinese, and launch at login. Playback bars follow a fixed loop; animations can be disabled and respect Reduce Motion. Settings includes one live status preview that reflects your display preferences.
 
-Some features depend on your device and macOS version. See [Compatibility](#compatibility) for support details and [Permissions and privacy](#permissions-and-privacy) for access and password storage.
+Some features depend on your device and macOS version. See [Compatibility](#compatibility) for support details and [Permissions and privacy](#permissions-and-privacy) for access details.
 
 ## Requirements and installation
 
@@ -165,7 +165,7 @@ Local re-signing may require granting Location or Bluetooth access again. It doe
 
 1. **Open the panel.** Launch Combo and click its menu bar icon. The one-page welcome shows the basic interaction; click Get Started to finish. Revisit it in Settings → About & Help.
 2. **Use what you need.** Choose Battery, Wi-Fi, or Sound, or control the current media session. Grant the permissions required for the features you use.
-3. **Set your preferences.** Click the gear button to choose appearance, language, and launch at login. General includes connection preferences; Appearance & Animation includes battery display preferences. System icon hiding instructions and other help are in About & Help.
+3. **Set your preferences.** Click the gear button to choose appearance, language, and launch at login. General includes a system Wi-Fi settings link; Appearance & Animation includes battery display preferences. System icon hiding instructions and other help are in About & Help.
 
 Closing settings keeps Combo running. System icons are managed manually in macOS settings.
 
@@ -180,10 +180,9 @@ Grant access for the features you use; optional features can be skipped. You can
 | Location | Displaying Wi-Fi names and scanning nearby networks, as required by macOS. |
 | Bluetooth | Identifying connected audio devices and using supported headphone battery and listening controls. |
 | Local Network | Discovering nearby AirPlay devices after you enable the feature. |
-| Keychain | Using a saved Wi-Fi password, or remembering a password you entered. |
 | Administrator authorization | Changing the energy mode for the current power source. |
 
-**Wi-Fi passwords:** manually entered passwords are saved to Combo's local Keychain only after a successful connection and if you choose to remember them; you can delete them later. System-saved passwords are used for the selected connection without being copied into Combo's storage. Canceling or denying access stops further system-password requests during that run.
+**Wi-Fi passwords:** connections are handled in system Wi-Fi settings. Combo does not read or save Wi-Fi passwords or request related Keychain access.
 
 System icon hiding is guided by pictures. Combo does not read, record, or restore these settings and does not request Accessibility access.
 

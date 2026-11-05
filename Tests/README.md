@@ -89,7 +89,7 @@ LiveState 删除已迁移的控制器检查和 ApplicationServices import，保�
 
 设置窗口的 Dock 生命周期检查仍会短暂显示一个宿主图标，以验证打开、最小化、重开与关闭的真实行为。直接运行 `xcodebuild` 或 Xcode 的 ⌘U 不经过此文件锁，避免与命令行检查同时执行。
 
-[ComboTests.xctestplan](ComboTests.xctestplan) 默认串行执行两个测试 bundle。`ComboTests` 无应用宿主，编译所需的 18 个现有生产源码文件，不启动 Combo 的 Store、权限监听或更新流程。Onboarding 使用独立随机偏好域验证首次显示与完成状态；EnergyApps 沿用临时 helper，保留失败、取消和超时覆盖；OutputDevice 保留系统图标存在性检查。这些 Swift 测试只加入 `ComboTests` target。AppUpdater 链接并随测试 bundle 嵌入 Sparkle，保持禁用真实更新；图标基准 PNG 从测试 bundle 读取，图像与 GIF 保存为结果附件。Network、AirPlay、AirPods 沿用注入和临时 helper；Wi-Fi 凭据持久化仍使用随机测试账户并清理，不连接真实网络。充电的模拟案例使用 Swift Testing，打包 helper 的只读 `--status` 由 `ChargeHelperCheck.swift` 继续独立执行。
+[ComboTests.xctestplan](ComboTests.xctestplan) 默认串行执行两个测试 bundle。`ComboTests` 无应用宿主，编译所需的 18 个现有生产源码文件，不启动 Combo 的 Store、权限监听或更新流程。Onboarding 使用独立随机偏好域验证首次显示与完成状态；EnergyApps 沿用临时 helper，保留失败、取消和超时覆盖；OutputDevice 保留系统图标存在性检查。这些 Swift 测试只加入 `ComboTests` target。AppUpdater 链接并随测试 bundle 嵌入 Sparkle，保持禁用真实更新；图标基准 PNG 从测试 bundle 读取，图像与 GIF 保存为结果附件。Network、AirPlay、AirPods 沿用注入和临时 helper；Wi-Fi 仅检查网络展示规则，不访问钥匙串或连接真实网络。充电的模拟案例使用 Swift Testing，打包 helper 的只读 `--status` 由 `ChargeHelperCheck.swift` 继续独立执行。
 
 `ComboIntegrationTests` 通过独立 `ComboTestHost` 承接本地化 4 例、设置 2 例、详情反馈 3 例、应用菜单 3 例、面板设计 4 例、引导设计 3 例、面板动画 1 例、面板关闭与退出清理 9 例、设置布局 2 例及 Store 通知 / 音量提示 / 启动隔离 / scope 清理 4 例。宿主编译 32 个共享生产 Swift 文件并复用本地化、权限描述和品牌资源；独立入口 [TestHostApp.swift](Support/TestHostApp.swift) 运行 AppKit 事件循环，不创建产品 AppDelegate / Store。`COMBO_TEST_HOST` 只用于宿主，启用测试用菜单及设置窗口；产品入口 [ComboApp.swift](../Combo/App/ComboApp.swift) 和 SwiftUI commands 不加入宿主。案例使用 `Store(monitorsSystem: false)`，Wi-Fi 替身禁用位置授权回调，避免真实系统变化覆盖测试状态；生产默认行为保持开启。设置案例关闭窗口并释放 SwiftUI 内容，所有 Store 在退出时停止。
 
@@ -103,7 +103,7 @@ AirPods 渲染使用固定输出身份和原临时 helper，不读取真实音�
 
 [PanelTestCase.swift](Support/PanelTestCase.swift) 是每个面板案例独立创建的普通上下文，准备前注册 defer，调用 cleanUp 执行共用窗口 / 退出清理：2 秒内等状态栏尺寸和 screen 就绪；使用不监听系统的 Store 和固定演示数据；每例停止任务、移除状态栏项、关闭本例面板并释放内容。工作区通知通过独立 NotificationCenter 注入，禁用测试进程的全局鼠标监听，避免用户在其他应用的点击 / 切换污染时序。生产默认仍监听真实工作区与全局鼠标。实际本地鼠标 monitor、工作区通知回调与 Escape monitor 的注册 / 移除继续验证，不用直接调用处理器替代这些路径。
 
-动画案例保留 20 次定时高度采样并补充原生 resize 通知记录，验证首次测量、快速反转和减弱动态效果的原等待与容差；帧数据保存为文本附件。关闭案例保留详情增长 / 收缩、超过 5 秒的权限保护、内部点击与外部关闭、应用切换、整组移动，以及 Wi-Fi 表单 Escape 优先级；新增实际应用激活观察器和退出期间任务 / 监听清理的案例。历史详情收缩偶发失败没有确认根因，不将隔离后的测试通过视为产品问题已修复。
+动画案例保留 20 次定时高度采样并补充原生 resize 通知记录，验证首次测量、快速反转和减弱动态效果的原等待与容差；帧数据保存为文本附件。关闭案例保留详情增长 / 收缩、超过 5 秒的权限保护、内部点击与外部关闭、应用切换、整组移动，以及 Wi-Fi 详情扫描时的 Escape 关闭；新增实际应用激活观察器和退出期间任务 / 监听清理的案例。历史详情收缩偶发失败没有确认根因，不将隔离后的测试通过视为产品问题已修复。
 
 设置布局案例覆盖三页设置的 24 组常规矩阵与 3 组大字体 / 高对比环境，保存 27 张 PNG 附件；保留旧主题色偏好时仍按统一蓝色检查。检查窗口尺寸、滚动视口边界、正文水平宽度、三行导航文字与页标题像素、选中导航文字 4.5:1 对比度断言。像素读取保留位图颜色配置后转换至 sRGB；不使用整个截图的固定哈希。当前离屏宿主没有暴露 SwiftUI 可访问性子节点，因此这些检查属于布局 / 文字渲染覆盖，不代表完整可访问性树或 VoiceOver 验收。
 

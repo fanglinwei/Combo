@@ -235,8 +235,8 @@ struct SettingsView: View {
 
     private var connectionSettings: some View {
         VStack(alignment: .leading, spacing: 20) {
-            groupHeader(L("Wi‑Fi 连接"), systemSection: "wifi")
-            SettingsGroup { WiFiPasswordSettings(wifi: store.wifi).padding(16) }
+            groupHeader(L("Wi‑Fi"), systemSection: "wifi")
+            SettingsGroup { note(L("仅展示无线网络信息；请在系统 Wi‑Fi 设置中连接或开关 Wi‑Fi。")).padding(16) }
             if let error = settingsErrors["wifi"] { note(error.string) }
         }
     }
@@ -366,7 +366,7 @@ struct SettingsView: View {
                     .padding(.top, 12)
             }
             DisclosureGroup(L("隐私与状态边界")) {
-                note(L("不上传状态，不读取网页，不录音或截图。无线图标只表示路径类型，不代表信号格数；互联网连通性尚未检测。读取系统保存的 Wi‑Fi 密码，在相关操作中单独说明。"))
+                note(L("不上传状态，不读取网页，不录音或截图。无线图标只表示路径类型，不代表信号格数；互联网连通性尚未检测。"))
                     .padding(.top, 12)
             }
         }
