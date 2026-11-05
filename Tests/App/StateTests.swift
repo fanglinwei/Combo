@@ -103,15 +103,6 @@ struct StateTests {
 
     @Test
     @MainActor
-    func testMenuRestoreBaseline() async throws {
-        let menuKeys: Set<String> = ["wifi", "sound", "battery"]
-        #expect(menuBarRestoreKeys(original: ["wifi": true, "sound": false, "battery": true], current: ["wifi": false, "sound": false, "battery": false], keys: menuKeys) == ["battery", "wifi"])
-        #expect(menuBarRestoreKeys(original: ["wifi": true], current: ["wifi": false, "sound": false, "battery": false], keys: menuKeys) == nil)
-        #expect(menuBarRestoreKeys(original: ["wifi": true, "sound": false, "battery": true], current: ["wifi": false], keys: menuKeys) == nil)
-    }
-
-    @Test
-    @MainActor
     func testChargeLimitParsingAndStatus() async throws {
         let limitRecord = "{Terminated = 0; chargeSocLimitReason = manualChargeLimit; chargeSocLimitSoc = 80;}"
         #expect(parseChargeLimit("Battery level limits:\n(\(limitRecord),\(limitRecord))") == .value(80))

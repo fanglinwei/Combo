@@ -51,36 +51,6 @@ extension IntegrationTests {
 
         @Test
         @MainActor
-        func testMenuBaselinePersistenceAndRetryPlanning() throws {
-            let suite = "Combo.SettingsPreferencesTests.\(UUID())"
-            let defaults = try #require(UserDefaults(suiteName: suite))
-            defer { defaults.removePersistentDomain(forName: suite) }
-            for hasBattery in [true, false] {
-                defaults.removePersistentDomain(forName: suite)
-                let setup = MenuBarSetup(defaults: defaults, hasInternalBattery: hasBattery)
-                #expect(!setup.hasBaseline && setup.states.isEmpty && setup.failedKeys.isEmpty)
-                #expect(!setup.recordBaseline(["wifi": true]), "Incomplete reads must not establish a baseline")
-                #expect(defaults.dictionary(forKey: "menuSetupBaseline") == nil)
-                let baseline = hasBattery ? ["wifi": false, "sound": true, "battery": false] : ["wifi": false, "sound": true]
-                #expect(setup.recordBaseline(baseline))
-                #expect(setup.hasBaseline && setup.recordedAt != nil)
-                #expect(setup.recordBaseline(["wifi": true, "sound": false, "battery": true]))
-                #expect(setup.baseline == baseline, "The first complete baseline must never be overwritten")
-                let reopened = MenuBarSetup(defaults: defaults, hasInternalBattery: hasBattery)
-                #expect(reopened.baseline == baseline && reopened.hasBaseline)
-                #expect(reopened.states.isEmpty, "A baseline is not a current detection result")
-                let keys = Set(reopened.supportedKeys)
-                let changed = Dictionary(uniqueKeysWithValues: baseline.map { ($0.key, !$0.value) })
-                #expect(menuBarRestoreKeys(original: baseline, current: changed, keys: keys) == keys.sorted())
-                #expect(menuBarRestoreKeys(original: baseline, current: ["sound": false], keys: ["sound"]) == ["sound"],
-                       "Retrying Sound must not require or modify already restored items")
-                #expect(menuBarRestoreKeys(original: baseline, current: baseline, keys: keys) == [])
-                #expect(menuBarRestoreKeys(original: baseline, current: [:], keys: keys) == nil)
-            }
-        }
-
-        @Test
-        @MainActor
         func testSettingsWindowLifecycleAndThresholdBinding() throws {
             _ = NSApplication.shared
             NSApp.setActivationPolicy(.prohibited)

@@ -175,11 +175,6 @@ func volumeHintActive(changedAt: TimeInterval?, now: TimeInterval) -> Bool {
     return now >= changedAt && now - changedAt < 2
 }
 
-func menuBarRestoreKeys(original: [String: Bool], current: [String: Bool], keys: Set<String>) -> [String]? {
-    guard keys.isSubset(of: Set(original.keys)), keys.isSubset(of: Set(current.keys)) else { return nil }
-    return keys.sorted().filter { original[$0] != current[$0] }
-}
-
 /// 引导浮层的落点：水平居中于真实状态栏图标，并夹在该屏可见范围内。
 /// 屏幕窄到放不下时先保住左边界，宁可箭头偏一点也不要浮层跑出屏幕。
 func calloutOrigin(anchor: CGRect, size: CGSize, visible: CGRect) -> CGPoint {

@@ -14,8 +14,6 @@ import AppKit
         print("Volume: \(store.live.volume == nil ? "unavailable" : "valid")")
         print("Network: \(store.live.network)")
         print("Observers: \(store.observation)")
-        assert(!store.showMenuPermission, "permission guide must not interrupt startup")
-        print("PASS: real startup does not interrupt with menu permission guidance")
         if store.audio.selectedOutputID != 0 && store.audio.canMute {
             // Simulate the previous observed mute value, then read the real device without writing it.
             store.audio.muted.toggle()

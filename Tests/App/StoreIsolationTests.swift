@@ -2,22 +2,10 @@ import Testing
 import Foundation
 import AppKit
 import Combine
-import ApplicationServices
 @testable import ComboTestHost
 
 extension IntegrationTests {
     struct StoreIsolationTests {
-        @Test
-        @MainActor
-        func testMenuPermissionRefreshDoesNotShowGuidance() {
-            let store = Store(monitorsSystem: false)
-            defer { store.stop() }
-            #expect(!store.showMenuPermission, "permission guide must not interrupt startup")
-            store.refreshMenuAccess()
-            #expect(store.menuAccessGranted == AXIsProcessTrusted())
-            #expect(!store.showMenuPermission, "refreshing access must not request permission")
-        }
-
         @Test
         @MainActor
         func testBatteryThresholdNotifiesStore() {

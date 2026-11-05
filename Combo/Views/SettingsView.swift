@@ -26,14 +26,12 @@ struct SettingsView: View {
     @ObservedObject private var localization = Localization.shared
     @ObservedObject var store: Store
     @ObservedObject var battery: BatteryStore
-    @ObservedObject var setup: MenuBarSetup
     /// 引导是否在屏幕上。它决定窗口要不要抬到浮动层，逻辑留在 AppDelegate。
     let setGuideOnTop: (Bool) -> Void
     let closeGuide: () -> Void
     init(store: Store, page: Page = .general, closeGuide: @escaping () -> Void = {}, setGuideOnTop: @escaping (Bool) -> Void) {
         self.store = store
         self.battery = store.battery
-        self.setup = store.menuSetup
         self.setGuideOnTop = setGuideOnTop
         self.closeGuide = closeGuide
         _page = State(initialValue: page)
@@ -43,13 +41,8 @@ struct SettingsView: View {
     @State private var reset = false
     @State private var showingOnboarding = false
     @State private var showingIconGuide = false
-    @State private var restoreConfirmation = false
-    @State private var confirmAfterPermission = false
-    @State private var retryRestore = false
-    @State private var pendingMenuAction: MenuAction?
     @State private var loginFeedback: LocalizedText = ""
     @State private var settingsErrors: [String: LocalizedText] = [:]
-    private enum MenuAction { case record, check, restore, retry }
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var contrast
     @AppStorage(OnboardingState.completedKey) private var onboardingCompleted = false
@@ -106,26 +99,9 @@ struct SettingsView: View {
                 Button(L("取消"), role: .cancel) {}
                 Button(L("恢复")) { store.resetDisplay() }
             } message: {
-                Text(L("播放动效开启，低电量显示开启且阈值恢复为 20%。其他偏好和系统图标记录保持不变。"))
+                Text(L("播放动效开启，低电量显示开启且阈值恢复为 20%。其他偏好保持不变。"))
             }
-            .alert(L("恢复已记录设置？"), isPresented: $restoreConfirmation) {
-                Button(L("取消"), role: .cancel) {}
-                Button(L("恢复")) { Task { _ = await setup.restore(retryOnly: retryRestore) } }
-            } message: {
-                Text(recordedSummary(retryOnly: retryRestore))
-            }
-            .sheet(isPresented: $showingIconGuide, onDismiss: { pendingMenuAction = nil }) { iconGuide }
-            .sheet(isPresented: Binding(
-                get: { store.showMenuPermission && !showingIconGuide },
-                set: { store.showMenuPermission = $0; if !$0 { pendingMenuAction = nil } }
-            ), onDismiss: {
-                if confirmAfterPermission { confirmAfterPermission = false; restoreConfirmation = true }
-                pendingMenuAction = nil
-            }) { menuPermissionGuide }
-            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                store.refreshMenuAccess()
-                if store.menuAccessGranted { continueMenuAction() }
-            }
+            .sheet(isPresented: $showingIconGuide) { iconGuide }
             .environment(\.comboPalette, palette)
     }
 
@@ -284,22 +260,6 @@ struct SettingsView: View {
                     Spacer()
                     Button(L("查看指引")) { showingIconGuide = true }.buttonStyle(SettingsButtonStyle(isEmphasized: true))
                 }.padding(16)
-                Divider()
-                HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(setup.hasBaseline ? L("已记录设置") : L("尚未记录"))
-                        note(setup.hasBaseline ? recordedSummary() : L("先记录，再隐藏，之后可按需恢复。"))
-                    }
-                    Spacer()
-                    if setup.hasBaseline {
-                        Button(L("恢复已记录设置…")) { requestMenuAction(.restore) }.disabled(setup.busy)
-                    }
-                }.padding(16)
-            }
-            note(L("退出 Combo 不会恢复系统图标；只有点击恢复按钮才会更改。"))
-            note(setup.message.string)
-            if !setup.failedKeys.isEmpty {
-                Button(L("重试失败项")) { requestMenuAction(.retry) }.disabled(setup.busy)
             }
             groupHeader(L("Wi‑Fi 连接"), systemSection: "wifi")
             SettingsGroup { WiFiPasswordSettings(wifi: store.wifi).padding(16) }
@@ -375,51 +335,12 @@ struct SettingsView: View {
         }
     }
 
-    private func recordedSummary(retryOnly: Bool = false) -> String {
-        let rows = setup.supportedKeys.filter { !retryOnly || setup.failedKeys.contains($0) }.map { key in
-            let title = key == "wifi" ? "Wi‑Fi" : key == "sound" ? L("声音") : L("电池")
-            return title + " · " + (setup.baseline[key] == true ? L("设置为显示") : L("设置为隐藏"))
-        }
-        let date = setup.recordedAt.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? L("此前记录")
-        return date + "\n" + rows.joined(separator: "\n")
-    }
-
-    private func requestMenuAction(_ action: MenuAction) {
-        pendingMenuAction = action
-        store.refreshMenuAccess()
-        if store.menuAccessGranted { continueMenuAction() }
-        else if !showingIconGuide { store.showMenuPermission = true }
-    }
-
-    private func continueMenuAction() {
-        guard store.menuAccessGranted, let action = pendingMenuAction else { return }
-        let wasShowingPermission = store.showMenuPermission
-        pendingMenuAction = nil
-        store.showMenuPermission = false
-        switch action {
-        case .record: setup.openAndCapture()
-        case .check: setup.check()
-        case .restore, .retry:
-            retryRestore = action == .retry
-            if wasShowingPermission { confirmAfterPermission = true }
-            else { restoreConfirmation = true }
-        }
-    }
-
     private var iconGuide: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(L("手动隐藏系统图标")).font(.system(size: 20, weight: .semibold))
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(L("1 · 先记录当前设置")).font(.headline)
-                    note(L("记录只保留现在的勾选状态。此前已隐藏且未记录时，如需恢复请在系统设置中手动调整。"))
-                    if setup.hasBaseline { note(recordedSummary()) }
-                    Button(setup.hasBaseline ? L("已有记录，保留原值") : L("记录当前设置")) { requestMenuAction(.record) }
-                        .disabled(setup.busy || setup.hasBaseline)
-                    if pendingMenuAction == .record && !store.menuAccessGranted { inlineMenuPermission }
-                    if setup.busy { ProgressView().controlSize(.small) }
-                    note(setup.message.string)
-                    Text(L("2 · 在系统设置中手动隐藏")).font(.headline)
+                    Text(L("1 · 在系统设置中手动隐藏")).font(.headline)
                     HStack(alignment: .top, spacing: 12) {
                         guideScreenshot(L("隐藏前 · 左侧为蓝色勾选"), image: "MenuBarBefore")
                         guideScreenshot(L("隐藏后 · 左侧取消勾选"), image: "MenuBarAfter")
@@ -427,20 +348,12 @@ struct SettingsView: View {
                     note(battery.hasInternalBattery ? L("取消 Wi‑Fi、电池、声音左侧的勾选。") : L("此 Mac 无内置电池，只需处理 Wi‑Fi 与声音；图片中的电池项目仅作参照。"))
                     note(L("不同 macOS 版本的排列可能不同，以项目名称和左侧勾选为准。"))
                     Button(L("打开菜单栏设置")) {
-                        if !setup.openWithoutCapture() { settingsErrors["menu"] = "无法打开菜单栏设置，请手动进入系统设置。" }
+                        if !store.openSystemSettings("menu") { settingsErrors["menu"] = "无法打开菜单栏设置，请手动进入系统设置。" }
                         else { settingsErrors["menu"] = nil }
                     }
                     if let error = settingsErrors["menu"] { note(error.string) }
-                    Text(L("3 · 返回并核对")).font(.headline)
-                    Button(L("重新检测")) { requestMenuAction(.check) }.disabled(setup.busy)
-                    if pendingMenuAction == .check && !store.menuAccessGranted { inlineMenuPermission }
-                    ForEach(setup.supportedKeys, id: \.self) { key in
-                        let title = key == "wifi" ? "Wi‑Fi" : key == "sound" ? L("声音") : L("电池")
-                        let state = (setup.states[key] ?? .unknown).title
-                        LabeledContent(title, value: state)
-                            .accessibilityElement(children: .ignore).accessibilityLabel(title).accessibilityValue(state)
-                    }
-                    note(L("检测只读取设置勾选，不能证明图标在屏幕上可见。请人工确认系统图标已隐藏，Combo 图标仍在。"))
+                    Text(L("2 · 手动核对菜单栏")).font(.headline)
+                    note(L("请确认系统图标已隐藏，Combo 图标仍在。如需重新显示，请在系统设置中重新勾选。"))
                 }.frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 16)
             }
             HStack { Spacer(); Button(L("关闭指引")) { showingIconGuide = false }.keyboardShortcut(.cancelAction) }
@@ -454,64 +367,6 @@ struct SettingsView: View {
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var permissionExplanation: some View {
-        note(L("读取图标显示设置需要辅助功能权限。恢复记录时，Combo 会修改这些设置。授权本身不会修改图标，你可以随时撤销权限。"))
-    }
-    private var inlineMenuPermission: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            permissionExplanation
-            HStack {
-                Button(L("打开辅助功能设置")) { store.requestMenuAccess() }
-                Button(L("重新检查")) { store.refreshMenuAccess(); continueMenuAction() }
-                Button(L("稍后设置")) { pendingMenuAction = nil }
-            }
-        }.frame(maxWidth: .infinity, alignment: .leading)
-    }
-    var menuPermissionGuide: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack(spacing: 14) {
-                        Image(systemName: store.menuAccessGranted ? "checkmark.shield" : "hand.raised")
-                            .font(.system(size: 30)).foregroundStyle(palette.accent).accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(store.menuAccessGranted ? L("辅助功能已授权") : L("管理系统菜单栏图标"))
-                                .font(.system(size: 21, weight: .semibold))
-                            Text(L("一步设置 · 授权由你决定")).font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    permissionExplanation
-                    Card {
-                        Text(L("在辅助功能列表中开启 Combo")).font(.headline)
-                        Text(L("系统设置 → 隐私与安全性 → 辅助功能")).font(.subheadline)
-                        Text(L("若列表中没有 Combo，点击“＋”，选择当前运行的 Combo.app。系统可能要求你输入密码或使用 Touch ID。")).font(.caption).foregroundStyle(.secondary)
-                        Text(Bundle.main.bundleURL.path).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
-                    }
-                    Label(store.menuAccessGranted ? L("已确认授权，可以继续检测。") : L("系统尚未允许当前进程访问；不一定是开关未开启。"), systemImage: store.menuAccessGranted ? "checkmark.circle.fill" : "info.circle")
-                        .font(.subheadline).foregroundStyle(store.menuAccessGranted ? palette.accent : .secondary)
-                    if !store.menuPermissionMessage.isEmpty {
-                        Text(store.menuPermissionMessage.string).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    }
-                    Text(L("如果系统开关已开启：先退出并重新打开 Combo。仍无效时，请在系统权限列表中移除旧 Combo，再用上方路径添加当前应用并开启。开发预览版重新编译后，旧授权可能不再匹配。系统新版也可能将此项称为“设备控制和数据访问”。"))
-                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    Text(L("你可以随时在同一页面关闭权限。稍后授权不影响电量、网络与音量显示，但 Combo 将无法自动读取或恢复系统图标设置。")).font(.caption).foregroundStyle(.secondary)
-                }.frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 16)
-            }
-            HStack {
-                Button(L("稍后设置")) { pendingMenuAction = nil; store.showMenuPermission = false }.keyboardShortcut(.cancelAction)
-                Spacer()
-                Button(L("重新检查")) { store.refreshMenuAccess() }
-                if store.menuAccessGranted {
-                    Button(L("继续原任务")) {
-                        continueMenuAction()
-                    }.keyboardShortcut(.defaultAction)
-                } else {
-                    Button(L("打开辅助功能设置")) { store.requestMenuAccess() }.keyboardShortcut(.defaultAction)
-                }
-            }
-        }.padding(24).frame(width: 540, height: 510).buttonStyle(SettingsButtonStyle()).foregroundStyle(labelColor).tint(palette.accent)
-            .onAppear { store.refreshMenuAccess() }
-    }
     private var updateSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
             groupHeader(L("软件更新"))
@@ -594,7 +449,7 @@ struct SettingsView: View {
                 HStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(L("系统图标隐藏指引"))
-                        note(L("对照图片，先记录再手动隐藏。"))
+                        note(L("对照图片，在系统设置中手动取消勾选。"))
                     }
                     Spacer()
                     Button(L("查看指引")) { showingIconGuide = true }.buttonStyle(SettingsButtonStyle(isEmphasized: true))
@@ -606,7 +461,7 @@ struct SettingsView: View {
                     .padding(.top, 12)
             }
             DisclosureGroup(L("隐私与状态边界")) {
-                note(L("不上传状态，不读取网页，不录音或截图。无线图标只表示路径类型，不代表信号格数；互联网连通性尚未检测。读取系统保存的 Wi‑Fi 密码与辅助功能授权，在相关操作中单独说明。"))
+                note(L("不上传状态，不读取网页，不录音或截图。无线图标只表示路径类型，不代表信号格数；互联网连通性尚未检测。读取系统保存的 Wi‑Fi 密码，在相关操作中单独说明。"))
                     .padding(.top, 12)
             }
         }

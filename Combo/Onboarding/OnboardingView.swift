@@ -7,7 +7,6 @@ struct OnboardingView: View {
     @ObservedObject private var localization = Localization.shared
     @ObservedObject var store: Store
     @ObservedObject var battery: BatteryStore
-    @ObservedObject var setup: MenuBarSetup
     @ObservedObject var wifi: WiFiControl
     @ObservedObject var bluetooth: BluetoothPermission
     /// 绑到 UserDefaults：换一步就存一步，重新打开引导时从上次的位置继续。
@@ -23,7 +22,6 @@ struct OnboardingView: View {
     init(store: Store, step: Binding<Int>, dismiss: @escaping (Bool) -> Void) {
         self.store = store
         self.battery = store.battery
-        self.setup = store.menuSetup
         self.wifi = store.wifi
         self.bluetooth = store.audio.bluetoothPermission
         self._step = step
@@ -219,7 +217,7 @@ struct OnboardingView: View {
                     Label(L("系统设置 → 菜单栏"), systemImage: "gearshape")
                         .font(.system(size: 13, weight: .medium))
                     Spacer()
-                    Button(L("打开菜单栏设置")) { settingsError = !setup.openWithoutCapture() }
+                    Button(L("打开菜单栏设置")) { settingsError = !store.openSystemSettings("menu") }
                 }
                 Text(battery.hasInternalBattery ? L("取消 Wi‑Fi、电池、声音左侧的勾选：") : L("取消 Wi‑Fi、声音左侧的勾选："))
                     .font(.system(size: 13, weight: .medium))

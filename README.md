@@ -157,7 +157,7 @@ Use this only to attempt to repair the outer app signature when a fresh download
 3. Enter your Mac login password, then run the verification command from Step 4 again.
 4. If verification passes, open Combo from Applications; return to Step 2 if it remains blocked. If verification still fails, report the error or build from source.
 
-Local re-signing may require granting Location, Bluetooth, or Accessibility access again. It does not replace Developer ID signing or Apple notarization, and does not guarantee that a system update or replacement install will never prompt again. The signing approach follows [Apple's code-signing guidance](https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac).
+Local re-signing may require granting Location or Bluetooth access again. It does not replace Developer ID signing or Apple notarization, and does not guarantee that a system update or replacement install will never prompt again. The signing approach follows [Apple's code-signing guidance](https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac).
 
 </details>
 
@@ -167,7 +167,7 @@ Local re-signing may require granting Location, Bluetooth, or Accessibility acce
 2. **Use what you need.** Choose Battery, Wi-Fi, or Sound, or control the current media session. Grant the permissions required for the features you use.
 3. **Set your preferences.** Click the gear button to choose appearance, language, and launch at login. General includes connection preferences and a guide to manually hiding the system icons; Appearance & Animation includes battery display preferences.
 
-Closing settings keeps Combo running. System icon settings are restored only when you explicitly request it.
+Closing settings keeps Combo running. System icons are managed manually in macOS settings.
 
 ## Permissions and privacy
 
@@ -181,12 +181,11 @@ Grant access for the features you use; optional features can be skipped. You can
 | Bluetooth | Identifying connected audio devices and using supported headphone battery and listening controls. |
 | Local Network | Discovering nearby AirPlay devices after you enable the feature. |
 | Keychain | Using a saved Wi-Fi password, or remembering a password you entered. |
-| Accessibility | Optionally recording and restoring system icon display settings. |
 | Administrator authorization | Changing the energy mode for the current power source. |
 
 **Wi-Fi passwords:** manually entered passwords are saved to Combo's local Keychain only after a successful connection and if you choose to remember them; you can delete them later. System-saved passwords are used for the selected connection without being copied into Combo's storage. Canceling or denying access stops further system-password requests during that run.
 
-**Accessibility is optional:** basic status display does not require it. Granting access alone does not change system icons; hiding is manual, and restoring recorded settings requires an explicit action.
+System icon hiding is guided by pictures. Combo does not read, record, or restore these settings and does not request Accessibility access.
 
 ## Compatibility
 
@@ -220,13 +219,9 @@ The player must report a media session to macOS. Check whether it is actually pl
 
 Check the permissions and compatibility table above. Some capabilities require a supported device or the specifically validated system build. Use the accompanying system settings entry point when the direct operation is unavailable.
 
-**Accessibility is enabled, but Combo still says access is unavailable.**
-
-Quit and reopen the app first. If you rebuilt or moved a locally signed copy, remove the old Combo entry from the permission list and add the currently running copy again.
-
 **Will the system's icons come back when I quit?**
 
-Use Combo's explicit restore action if an initial record is available, or turn them back on in macOS settings. Quitting does not restore their recorded values automatically.
+Turn them back on manually in macOS menu bar settings. Quitting Combo does not change system icon settings.
 
 ## Build from source
 

@@ -589,7 +589,6 @@ final class ComboPanel: NSPanel {
         guard let window = notification.object as? NSWindow, window === settings else { return }
         NSApp.setActivationPolicy(.accessory)
         store.scene = .live
-        store.showMenuPermission = false
     }
     func applicationWillTerminate(_ notification: Notification) {
         languageChange?.cancel()

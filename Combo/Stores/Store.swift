@@ -74,9 +74,6 @@ enum SystemPermissionAlert {
     @Published var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
     @Published var screenActive = true
     @Published var observation: LocalizedText = "系统监听初始化中"
-    @Published var showMenuPermission = false
-    @Published var menuAccessGranted = AXIsProcessTrusted()
-    @Published var menuPermissionMessage: LocalizedText = ""
     private var volumeHint: Task<Void, Never>?
     private var centerHint = CenterHint()
     private var centerHintTask: Task<Void, Never>?
@@ -85,7 +82,6 @@ enum SystemPermissionAlert {
     private var observers: [NSObjectProtocol] = []
     private let network = NetworkStatus()
     let wifi: WiFiControl
-    let menuSetup = MenuBarSetup()
     var snapshot: Snapshot {
         var result = snapshot(for: scene)
         if scene != .live, let event = result.centerEvent {
@@ -199,13 +195,14 @@ enum SystemPermissionAlert {
     @discardableResult func openSystemSettings(_ section: String) -> Bool {
         let extensionID: String
         switch section {
+        case "menu": extensionID = "com.apple.ControlCenter-Settings.extension?MenuBar"
         case "wifi": extensionID = "com.apple.wifi-settings-extension"
         case "battery": extensionID = "com.apple.Battery-Settings.extension"
         case "local-network": extensionID = "com.apple.preference.security?Privacy_LocalNetwork"
         default: extensionID = "com.apple.Sound-Settings.extension"
         }
         guard let url = URL(string: "x-apple.systempreferences:\(extensionID)"), NSWorkspace.shared.open(url) else {
-            message = "无法打开系统设置；请手动进入相应的 Wi‑Fi、电池或声音页面。"
+            message = "无法打开系统设置；请手动进入相应页面。"
             return false
         }
         message = ""
@@ -259,21 +256,5 @@ enum SystemPermissionAlert {
         bluetoothActivity?.cancel()
         clearVolumeHint(); network.stop()
         observers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
-    }
-}
-
-extension Store {
-    func refreshMenuAccess() {
-        menuAccessGranted = AXIsProcessTrusted()
-    }
-    func requestMenuAccess() {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(options)
-        refreshMenuAccess()
-        guard !menuAccessGranted else { return }
-        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-        menuPermissionMessage = NSWorkspace.shared.open(url)
-            ? "已尝试打开系统设置。开启 Combo 后返回此页；若未跳到目标页面，请手动进入“隐私与安全性 → 辅助功能”。"
-            : "未能打开系统设置，请手动进入“系统设置 → 隐私与安全性 → 辅助功能”。"
     }
 }

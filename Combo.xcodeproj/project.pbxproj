@@ -124,7 +124,6 @@
 		CCBDA3A5B792D3D3D8A16ACB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 682E6A0AC33379301D321FAB /* Cocoa.framework */; };
 		CFDBF13B5D13D54DCBBB1884 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A708ED2D32863A97143501C2 /* IOBluetooth.framework */; };
 		D1F38D560F429DB0829BF73C /* WiFiControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B1DF2CFD13CF899761DD82 /* WiFiControl.swift */; };
-		D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */; };
 		D31546FE107E7AFA43A600AF /* State.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAD8F5DF85A5699BF4EF74DD /* State.swift */; };
 		D42FC522642069B373310A50 /* ChargeControlTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56365C8D37CC6FF675E89AC8 /* ChargeControlTests.swift */; };
 		D507B2ED0787BAFA1EC46954 /* AppUpdaterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 250C12FEA6BF8178AE8C7937 /* AppUpdaterTests.swift */; };
@@ -144,7 +143,6 @@
 		F5437EC2ABC2C2E8D4795B83 /* AppUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20200000000000000000002 /* AppUpdater.swift */; };
 		F78FC4582475D1974EF19A1A /* BatterySections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18CFAB0D2474FDBB947237D /* BatterySections.swift */; };
 		F7D660BF05BDFA103C4E55DE /* MediaPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */; };
-		FEB5575CFCD7EB8F8A5E4EF6 /* MenuBarSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */; };
 		FF9A2DB1E5592302C7C5E714 /* EnergyApps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89D8B2128427EB6D64D4651E /* EnergyApps.swift */; };
 		FF9FB7495A39B530D96D3217 /* MediaPlaybackHelperCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 82A834BC0E9DAFCA12B0C7A8 /* MediaPlaybackHelperCheck.m */; };
 /* End PBXBuildFile section */
@@ -273,7 +271,6 @@
 		DCBA43210000000000000002 /* OnboardingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		DEC6FB7D6A024102BD2E9F79 /* BatteryStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BatteryStore.swift; sourceTree = "<group>"; };
 		E00B5F29D1B3C07E139C083F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuBarSetup.swift; sourceTree = "<group>"; };
 		F6CE5149DF92562886DF166F /* AirPodsHelper.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = AirPodsHelper.m; sourceTree = "<group>"; };
 		F8F83141104BDCB5F6B0C7D0 /* StateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StateTests.swift; sourceTree = "<group>"; };
 		FB27557A01FB08CA924E932C /* IntegrationTestCase.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationTestCase.swift; sourceTree = "<group>"; };
@@ -357,14 +354,6 @@
 			path = Fixtures;
 			sourceTree = "<group>";
 		};
-		275E14D7993944F3A200D4BC /* MenuBar */ = {
-			isa = PBXGroup;
-			children = (
-				EA8501FABE54DC6B6C8EEFA0 /* MenuBarSetup.swift */,
-			);
-			path = MenuBar;
-			sourceTree = "<group>";
-		};
 		28FB1FBEB17338F68E3F3F64 /* Support */ = {
 			isa = PBXGroup;
 			children = (
@@ -407,7 +396,6 @@
 				D0BB29948FD940CFAF28711A /* Audio */,
 				5571A3256A8942BAB16B8F6F /* Battery */,
 				42AF82BC159C493597535D65 /* Network */,
-				275E14D7993944F3A200D4BC /* MenuBar */,
 				1D8D29E072EA45598FE7D157 /* Onboarding */,
 				FB37982F6EFE4EDAB569B50B /* Rendering */,
 				69079DF3A660422CB8FF703F /* Stores */,
@@ -954,7 +942,6 @@
 				E9389571F13E1CBB3B732459 /* MediaPlayback.swift in Sources */,
 				ABCD12340000000000000001 /* OnboardingState.swift in Sources */,
 				ABCD12340000000000000002 /* OnboardingView.swift in Sources */,
-				D20CA0F7FBC71D963997C5D1 /* MenuBarSetup.swift in Sources */,
 				954227314649115F4BCCD392 /* NetworkStatus.swift in Sources */,
 				F44BAAD3AA4CE1463CC4CD81 /* PowerModeControl.swift in Sources */,
 				20AF98593CEC5902E72C031C /* State.swift in Sources */,
@@ -996,7 +983,6 @@
 				F7D660BF05BDFA103C4E55DE /* MediaPlayback.swift in Sources */,
 				1D4951E3F9399F20F2FC7DA3 /* OnboardingState.swift in Sources */,
 				06C82E78B8A57343A5F1A1A2 /* OnboardingView.swift in Sources */,
-				FEB5575CFCD7EB8F8A5E4EF6 /* MenuBarSetup.swift in Sources */,
 				76D9BA8BE14BC8D7E0897F76 /* NetworkStatus.swift in Sources */,
 				DF92FE4B08C7C2AC9F17F5E4 /* PowerModeControl.swift in Sources */,
 				D31546FE107E7AFA43A600AF /* State.swift in Sources */,

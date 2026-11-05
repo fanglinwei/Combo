@@ -135,11 +135,11 @@ AirPods 播放中调到 75%：中央临时显示 `75`，底部显示三颗亮点
 | --- | --- |
 | 主面板 | 总览；电池、Wi-Fi、声音三个详情页。 |
 | 设置窗口 | 通用、外观与动效、关于与帮助三页；外观可跟随系统、浅色或深色。 |
-| 系统图标手动隐藏检查 | Wi-Fi、声音、电池各为“设置为显示”“设置为隐藏”或“无法判断”；读取和恢复期间有忙碌与结果提示。 |
+| 系统图标隐藏指引 | 隐藏前后图片、按设备说明手动取消勾选，并打开菜单栏设置；用户人工核对。 |
 | 个人热点与高耗能应用 | 读取中、不可用、可用；可用但列表为空时各有空状态说明。 |
 | 充电上限 | 读取中、无法判断、未检测到活动上限、具体百分比、多个限制冲突。 |
 
-这些界面分支见 [SettingsView.swift](../../Combo/Views/SettingsView.swift) 与 [PanelView.swift](../../Combo/Views/PanelView.swift)、[MenuBarSetup.swift](../../Combo/MenuBar/MenuBarSetup.swift) 与 [State.swift](../../Combo/App/State.swift)。
+这些界面分支见 [SettingsView.swift](../../Combo/Views/SettingsView.swift)、[PanelView.swift](../../Combo/Views/PanelView.swift) 与 [State.swift](../../Combo/App/State.swift)。
 
 ## 来源与重绘
 

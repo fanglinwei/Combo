@@ -72,9 +72,8 @@ extension IntegrationTests {
             #expect(openings == 2 && window.frame.size == NSSize(width: 900, height: 720),
                     "Reattaching the same scene window must preserve the user's size")
             store.scene = .music
-            store.showMenuPermission = true
             window.close()
-            #expect(NSApp.activationPolicy() == .accessory && store.scene == .live && !store.showMenuPermission)
+            #expect(NSApp.activationPolicy() == .accessory && store.scene == .live)
             delegate.openSettings()
             #expect(openings == 3 && window.isVisible && NSApp.activationPolicy() == .regular)
             delegate.applicationWillTerminate(Notification(name: NSApplication.willTerminateNotification))
