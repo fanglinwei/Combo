@@ -16,19 +16,19 @@ import SwiftUI
         let saved = keys.map { ($0, defaults.object(forKey: $0)) }
         defer { for (key, value) in saved { defaults.set(value, forKey: key) }; Localization.shared.refresh() }
         defaults.set(true, forKey: OnboardingState.completedKey)
-        let store = Store()
-        store.stop()
+        let store = Store(monitorsSystem: false)
+        defer { store.stop() }
         let out = URL(fileURLWithPath: CommandLine.arguments.dropFirst().first ?? "build/settings-previews", isDirectory: true)
         try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
         var count = 0
         for language in [AppLanguage.simplifiedChinese, .english] {
             Localization.shared.selection = language
             for dark in [false, true] {
-                for frameSize in [NSSize(width: 850, height: 690), NSSize(width: 780, height: 620)] {
+                for frameSize in [NSSize(width: 560, height: 640), NSSize(width: 560, height: 560)] {
                     let size = NSWindow.contentRect(forFrameRect: NSRect(origin: .zero, size: frameSize),
                                                     styleMask: [.titled, .closable, .miniaturizable, .resizable]).size
                     for page in Page.allCases {
-                        let variants = language == .english && dark && size.width == 780 ? [false, true] : [false]
+                        let variants = language == .english && dark && frameSize.height == 560 ? [false, true] : [false]
                         for accessible in variants {
                             let view = SettingsView(store: store, page: page) { _ in }
                                 .environment(\.colorScheme, dark ? .dark : .light)
@@ -37,6 +37,7 @@ import SwiftUI
                             hosting.frame = NSRect(origin: .zero, size: size)
                             let window = NSWindow(contentRect: hosting.frame, styleMask: .borderless, backing: .buffered, defer: false)
                             window.isReleasedWhenClosed = false
+                            window.backgroundColor = NSColor(ComboPalette.settings(isDark: dark).canvasTop)
                             window.appearance = NSAppearance(named: accessible ? .accessibilityHighContrastDarkAqua : dark ? .darkAqua : .aqua)
                             window.contentView = hosting
                             window.setFrameOrigin(NSPoint(x: -9000, y: -9000))

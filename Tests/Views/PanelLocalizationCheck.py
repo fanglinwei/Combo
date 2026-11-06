@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-VIEWS = ["PanelView", "BatterySections", "WiFiSections", "SoundSections", "Theme"]
+VIEWS = ["PanelView", "BatterySections", "WiFiSections", "SoundSections", "Theme", "SettingsView", "IconPreviewView"]
 
 
 def literal(source, start):

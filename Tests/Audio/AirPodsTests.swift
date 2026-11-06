@@ -26,6 +26,8 @@ struct AirPodsTests {
         #expect((try #require(drag(90, count: 2, selected: 0, x: 75))).rounded() == 1)
         #expect((try #require(drag(-90, count: 2, selected: 1, x: 225))).rounded() == 0)
         #expect(drag(80, x: 20) == nil && drag(80, y: 60) == nil, "Drag must start on the selected capsule")
+        #expect(drag(20, x: 110) != nil && drag(20, x: 190) != nil, "The full selected segment must accept dragging")
+        #expect(drag(20, y: 40) == nil, "Dragging outside the compact segment must be ignored")
         #expect(drag(.nan) == nil && drag(10, count: 1, selected: 0) == nil)
     }
 

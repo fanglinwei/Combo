@@ -65,8 +65,8 @@ extension IntegrationTests {
             #expect(openings == 1 && delegate.settings === window)
             #expect(window.delegate === windowDelegate, "The bridge must preserve SwiftUI's window delegate")
             #expect(window.styleMask.contains([.miniaturizable, .resizable]))
-            #expect(window.frame.size == NSSize(width: 850, height: 690))
-            #expect(window.minSize == NSSize(width: 780, height: 620))
+            #expect(window.frame.size == NSSize(width: 560, height: 640))
+            #expect(window.minSize == NSSize(width: 560, height: 560))
             window.setFrame(NSRect(x: -9000, y: -9000, width: 900, height: 720), display: false)
             delegate.openSettings()
             #expect(openings == 2 && window.frame.size == NSSize(width: 900, height: 720),

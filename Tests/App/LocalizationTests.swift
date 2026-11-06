@@ -41,11 +41,11 @@ extension IntegrationTests {
             let shared = Localization.shared
             shared.selection = .simplifiedChinese
             let name = "电池 %@ 100%"
-            let message: LocalizedText = "正在连接 \(name)…"
+            let message: LocalizedText = "连接 \(name)"
             let device: LocalizedText = "\(name)"
             let number = 80
             let battery: LocalizedText = "电量 \(number)%"
-            #expect(message.string == "正在连接 电池 %@ 100%…")
+            #expect(message.string == "连接 电池 %@ 100%")
             #expect(battery.string == "电量 80%")
             #expect(L("设置…") == "设置…")
             // Existing settings feedback must resolve again after a language change.
@@ -62,11 +62,11 @@ extension IntegrationTests {
             #expect(loginFeedback.string == "Allow Combo in Login Items in System Settings.")
             #expect(settingsErrors["wifi"]?.string == "Could not open System Settings. Navigate to the relevant page manually.")
             #expect(settingsErrors["menu"]?.string == "Could not open Menu Bar Settings. Open System Settings manually.")
-            #expect(message.string == "Connecting to 电池 %@ 100%…")
+            #expect(message.string == "Connect to 电池 %@ 100%")
             #expect(battery.string == "Battery 80%")
             #expect(device.string == name, "External names must stay verbatim even when they match a translation key")
             shared.selection = .simplifiedChinese
-            #expect(message.string == "正在连接 电池 %@ 100%…")
+            #expect(message.string == "连接 电池 %@ 100%")
             #expect(battery.string == "电量 80%")
             #expect(loginFeedback.string == "请在系统设置的登录项中允许 Combo。")
             #expect(settingsErrors["menu"]?.string == "无法打开菜单栏设置，请手动进入系统设置。")

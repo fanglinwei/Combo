@@ -154,7 +154,8 @@ extension IntegrationTests {
                 window.setFrame(original, display: true)
                 defaults.set(false, forKey: OnboardingState.completedKey)
                 try await settle()
-                #expect(window.frame.height == 620 && window.frame.maxY == original.maxY)
+                #expect(window.frame.height == 620 && window.frame.maxY == original.maxY,
+                        "Guide frame=\(window.frame), original=\(original), minimum=\(window.minSize)")
                 window.close()
                 delegate.openSettings()
                 window.orderOut(nil)
@@ -163,7 +164,7 @@ extension IntegrationTests {
                 try await settle()
                 #expect(defaults.bool(forKey: OnboardingState.completedKey))
                 #expect(!window.isVisible, "Completing the guide must close the window without showing settings")
-                #expect(window.frame == original, "Completing the guide must restore the previous settings frame while hidden")
+                #expect(window.frame == original, "Completing the guide must restore the previous settings frame while hidden: frame=\(window.frame), original=\(original)")
                 delegate.openSettings()
                 try await settle()
                 #expect(window.isVisible && window.frame == original,

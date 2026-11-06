@@ -39,8 +39,8 @@ extension IntegrationTests {
             var count = 0
             for language in (accessible ? [.english] : [AppLanguage.simplifiedChinese, .english]) {
                 Localization.shared.selection = language
-                for dark in (accessible ? [true] : [false, true]) {
-                    for frameSize in (accessible ? [NSSize(width: 780, height: 620)] : [NSSize(width: 850, height: 690), NSSize(width: 780, height: 620)]) {
+                for dark in [false, true] {
+                    for frameSize in (accessible ? [NSSize(width: 560, height: 560)] : [NSSize(width: 560, height: 640), NSSize(width: 560, height: 560)]) {
                         let size = NSWindow.contentRect(forFrameRect: NSRect(origin: .zero, size: frameSize),
                                                        styleMask: [.titled, .closable, .miniaturizable, .resizable]).size
                         for page in Page.allCases {
@@ -54,8 +54,9 @@ extension IntegrationTests {
                             let window = NSWindow(contentRect: NSRect(origin: NSPoint(x: -9000, y: -9000), size: size),
                                                   styleMask: .borderless, backing: .buffered, defer: false)
                             window.isReleasedWhenClosed = false
+                            window.backgroundColor = NSColor(ComboPalette.settings(isDark: dark).canvasTop)
                             defer { window.close(); window.contentView = nil }
-                            window.appearance = NSAppearance(named: accessible ? .accessibilityHighContrastDarkAqua : dark ? .darkAqua : .aqua)
+                            window.appearance = NSAppearance(named: accessible ? (dark ? .accessibilityHighContrastDarkAqua : .accessibilityHighContrastAqua) : dark ? .darkAqua : .aqua)
                             window.contentView = hosting
                             window.orderFrontRegardless()
                             try await Task.sleep(for: .milliseconds(80))
@@ -66,13 +67,13 @@ extension IntegrationTests {
                             hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
                             let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing settings PNG: \(name)")
                             Attachment.record(png, named: "\(name).png")
-                            try checkNavigationAndContent(hosting, bitmap: bitmap, page: page, window: window, palette: ComboPalette.standard(isDark: dark), name: name)
+                            try checkNavigationAndContent(hosting, bitmap: bitmap, page: page, window: window, palette: ComboPalette.settings(isDark: dark), name: name)
                             count += 1
                         }
                     }
                 }
             }
-            #expect(count == (accessible ? 3 : 24), "Every settings variant must be exercised")
+            #expect(count == (accessible ? 6 : 24), "Every settings variant must be exercised")
         }
 
         @MainActor
@@ -85,22 +86,24 @@ extension IntegrationTests {
                           "Settings scroll viewport must fit the content view: \(viewport), \(name)")
             #expect(document.frame.width <= scroll.contentView.bounds.width + 1,
                           "Settings content must fit horizontally: document=\(document.frame), viewport=\(scroll.contentView.bounds), \(name)")
-            let accent = try #require(NSColor(palette.accent).usingColorSpace(.sRGB), "Missing settings accent")
-            let label = NSColor(srgbRed: palette.isDark ? 0.96 : 0.11, green: palette.isDark ? 0.96 : 0.11,
-                                blue: palette.isDark ? 0.97 : 0.12, alpha: 1)
-            let selected = try #require(Page.allCases.firstIndex(of: page))
-            for index in Page.allCases.indices {
-                let target = index == selected ? accent : label
-                let region = NSRect(x: 54, y: 87 + 42 * index, width: 126, height: 38)
-                let count = try pixels(matching: target, in: region, bitmap: bitmap, size: window.frame.size)
-                #expect(count > 20, "Each navigation label must render inside its row: row=\(index), pixels=\(count), \(name)")
+            let text = NSColor(palette.primaryText)
+            let region = NSRect(x: viewport.minX + 20, y: viewport.minY + 20,
+                                width: viewport.width - 40, height: min(350, viewport.height - 40))
+            #expect(try pixels(matching: text, in: region, bitmap: bitmap, size: window.frame.size) > 30,
+                    "The selected settings page must render readable content: \(name)")
+            #expect(contrast(text, NSColor(palette.canvasTop)) >= 4.5,
+                    "Settings text must remain readable in both appearances: \(name)")
+
+        }
+
+        private func contrast(_ text: NSColor, _ background: NSColor) -> Double {
+            func luminance(_ color: NSColor) -> Double {
+                let color = color.usingColorSpace(.sRGB) ?? color
+                func linear(_ value: Double) -> Double { value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4) }
+                return linear(color.redComponent) * 0.2126 + linear(color.greenComponent) * 0.7152 + linear(color.blueComponent) * 0.0722
             }
-            let heading = NSRect(x: 230, y: 28, width: window.frame.width - 260, height: 32)
-            #expect(try pixels(matching: label, in: heading, bitmap: bitmap, size: window.frame.size) > 30,
-                          "The page heading must render visibly above its content: \(name)")
-            let background = try color(at: NSPoint(x: 180, y: 106 + 42 * selected), bitmap: bitmap, size: window.frame.size)
-            #expect(MediaArtworkTint.contrast(accent, background) >= 4.5 - 0.001,
-                          "The selected navigation label must remain readable: \(name)")
+            let a = luminance(text), b = luminance(background)
+            return (max(a, b) + 0.05) / (min(a, b) + 0.05)
         }
 
         @MainActor

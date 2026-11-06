@@ -44,13 +44,7 @@ struct PersonalHotspotSection: View {
     @Environment(\.comboPalette) private var palette
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
-            HStack {
-                Text(L("个人热点")).font(.system(size: 13, weight: .semibold))
-                Spacer()
-                Button(action: openSettings) { Image(systemName: "arrow.up.forward") }
-                    .buttonStyle(PanelIconButtonStyle()).accessibilityLabel(L("打开个人热点系统设置"))
-                    .help(L("打开系统 Wi‑Fi 设置"))
-            }
+            Text(L("个人热点")).font(.system(size: 11, weight: .medium)).foregroundStyle(palette.mutedText)
             switch control.state {
             case .loading:
                 Text(L("正在查找个人热点…")).foregroundStyle(palette.mutedText)
@@ -66,15 +60,13 @@ struct PersonalHotspotSection: View {
                 ForEach(phones) { phone in
                     Button(action: openSettings) {
                         HStack(spacing: 9) {
-                            Image(systemName: "personalhotspot")
-                                .frame(width: 28, height: 28)
-                                .background(Color.primary.opacity(0.08), in: Circle())
+                            Image(systemName: "iphone").font(.system(size: 19)).foregroundStyle(palette.mutedText).frame(width: 23)
                             Text(phone.name).lineLimit(1).help(phone.name)
                             Spacer(minLength: 4)
-                            HotspotStatusIcons(signal: phone.signal, battery: phone.battery)
-                                .accessibilityHidden(true)
+                            HotspotStatusIcons(signal: phone.signal, battery: phone.battery).accessibilityHidden(true)
+                            Image(systemName: "arrow.up.right").font(.system(size: 11)).foregroundStyle(palette.mutedText)
                         }
-                    }.buttonStyle(PanelRowButtonStyle())
+                    }.buttonStyle(PanelRowButtonStyle()).pointerStyle(.link)
                         .accessibilityLabel(phone.name
                             + (phone.signal.map { L("，蜂窝信号等级 \($0)") } ?? "")
                             + (phone.battery.map { L("，电量 \($0)%") } ?? ""))
@@ -123,53 +115,50 @@ struct WiFiSection: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: PanelGeometry.groupSpacing) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 12) {
-                    WiFiIcon(level: WiFiChoice.signalLevel(wifi.currentRSSI) ?? 0).frame(width: 32, height: 32).foregroundStyle(palette.accent)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(name).font(.system(size: 17, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8).help(name)
-                        Text(status).font(.system(size: 12)).foregroundStyle(palette.mutedText)
-                    }.frame(maxWidth: .infinity, alignment: .leading)
-                    Button(action: openSettings) { Image(systemName: "arrow.up.forward") }
-                        .buttonStyle(PanelIconButtonStyle()).accessibilityLabel(L("打开系统 Wi‑Fi 设置"))
-                        .help(L("打开系统 Wi‑Fi 设置"))
-                }
-                Divider()
-                DetailFacts(facts: [(L("信号"), wifi.currentSSID == nil ? "—" : WiFiChoice.signalLevel(wifi.currentRSSI).map { "\($0)/3" } ?? "—"),
-                                    (L("安全性"), wifi.currentSSID == nil ? "—" : security), (L("默认路径"), connection)])
-            }.modifier(DetailWell()).accessibilityElement(children: .contain)
+            HStack(spacing: 13) {
+                CategoryIcon(symbol: "wifi", color: palette.iconBlue, size: 44)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(name).font(.system(size: 24, weight: .semibold)).tracking(-0.48)
+                        .lineLimit(2).minimumScaleFactor(0.8).help(name)
+                    HStack(spacing: 6) {
+                        if wifi.powerOn == true && wifi.currentSSID != nil {
+                            Circle().fill(palette.toggle).frame(width: 6, height: 6).accessibilityHidden(true)
+                        }
+                        Text(status).font(.system(size: 12))
+                    }
+                    if wifi.currentSSID != nil {
+                        Text(security + " · " + L("信号") + " " + (WiFiChoice.signalLevel(wifi.currentRSSI).map { "\($0)/3" } ?? "—"))
+                            .font(.system(size: 11)).foregroundStyle(palette.mutedText)
+                    }
+                }.frame(maxWidth: .infinity, alignment: .leading)
+            }.frame(minHeight: 66).accessibilityElement(children: .combine)
             situation
             if wifi.powerOn == true {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 7) {
                     HStack {
-                        Text(L("已知网络")).font(.system(size: 13, weight: .semibold))
-                        if wifi.hasScanned && wifi.knownNames == nil {
-                            Spacer(minLength: 4)
-                            Text(L("暂时无法区分已知网络。")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
-                        }
-                    }
-                    ForEach(known) { networkRow($0) }
-                    if known.isEmpty { Text("—").font(.system(size: 11)).foregroundStyle(palette.mutedText).padding(.vertical, 6) }
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack {
-                        Text(L("附近网络")).font(.system(size: 13, weight: .semibold))
+                        Text(L("附近网络")).font(.system(size: 11, weight: .medium)).foregroundStyle(palette.mutedText)
                         Spacer()
                         Button(wifi.hasScanned ? L("刷新网络") : L("查找网络")) { wifi.scan() }
                             .buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(palette.accent).disabled(wifi.busy)
                     }
-                    ForEach(others) { networkRow($0) }
-                    if others.isEmpty {
+                    ForEach(known + others) { networkRow($0) }
+                    if known.isEmpty && others.isEmpty {
                         Text(wifi.hasScanned ? L("未发现其他网络") : L("点击“查找网络”获取列表"))
                             .font(.system(size: 11)).foregroundStyle(palette.mutedText).padding(.vertical, 6)
+                    }
+                    if wifi.hasScanned && wifi.knownNames == nil {
+                        Text(L("暂时无法区分已知网络。")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
                     }
                 }
                 PersonalHotspotSection(control: hotspots, openSettings: openSettings)
             }
-            DetailMore {
-                Button(L("Wi‑Fi 设置…"), action: openSettings).buttonStyle(.plain)
-                Text(L("仅展示无线网络信息；请在系统 Wi‑Fi 设置中连接或开关 Wi‑Fi。"))
-                if !wifi.nameAccess { Text(L("系统设置 → 隐私与安全性 → 定位服务 → Combo")) }
+            VStack(alignment: .leading, spacing: 11) {
+                DetailFooter(title: L("Wi‑Fi 设置"), action: openSettings)
+                Text(L("连接与开关由 macOS 管理。")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
+                if !wifi.nameAccess {
+                    Text(L("系统设置 → 隐私与安全性 → 定位服务 → Combo")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
+                }
+                DetailMore { Text(L("默认路径") + " · " + connection) }
             }
         }
         .task(id: active) {
@@ -216,13 +205,18 @@ struct WiFiSection: View {
         Button(action: openSettings) {
             HStack(spacing: 9) {
                 WiFiIcon(level: WiFiChoice.signalLevel(choice.network.rssiValue) ?? 0)
-                    .frame(width: 28, height: 28).background(Color.primary.opacity(0.08), in: Circle()).accessibilityHidden(true)
-                Text(choice.name).font(.system(size: 13, weight: .medium)).lineLimit(1).help(choice.name)
+                    .frame(width: 23, height: 23).foregroundStyle(palette.mutedText).accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(choice.name).font(.system(size: 12)).lineLimit(2).help(choice.name)
+                    if wifi.knownNames?.contains(choice.name) == true {
+                        Text(L("已知网络")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
+                    }
+                }
                 Spacer(minLength: 4)
                 if choice.secure { Image(systemName: "lock.fill").foregroundStyle(palette.mutedText) }
-                Text(WiFiChoice.signalLevel(choice.network.rssiValue).map { "\($0)/3" } ?? "—").font(.system(size: 11)).foregroundStyle(palette.mutedText)
-            }
-        }.buttonStyle(PanelRowButtonStyle())
+                Image(systemName: "arrow.up.right").font(.system(size: 11)).foregroundStyle(palette.mutedText)
+            }.frame(minHeight: 32)
+        }.buttonStyle(PanelRowButtonStyle()).pointerStyle(.link)
             .accessibilityLabel(L("\(choice.name)，\(choice.secure ? L("需要密码，") : "")\(WiFiChoice.signalLevel(choice.network.rssiValue).map { L("信号 \($0) 格") } ?? L("信号未知"))"))
             .accessibilityHint(L("打开系统 Wi‑Fi 设置，由你选择连接"))
             .help(L("在系统设置中连接"))

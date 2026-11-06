@@ -18,10 +18,13 @@ extension IntegrationTests {
             try await Task.sleep(for: .milliseconds(60))
             let panel = try #require(delegate.panel)
             #expect(!delegate.store.panelExpanded, "AirPods information must wait until the entrance finishes")
+            let deadline = Date().addingTimeInterval(2)
+            while panel.alphaValue == 0 && Date() < deadline { try await Task.sleep(for: .milliseconds(10)) }
+            #expect(panel.alphaValue > 0, "A measured panel must begin revealing within two seconds")
             let firstHeight = panel.frame.height
             try await Task.sleep(for: .milliseconds(450))
             #expect(abs(panel.frame.height - firstHeight) < 1,
-                   "First opening must measure its height before becoming visible")
+                   "First opening must measure its height before becoming visible: first=\(firstHeight), final=\(panel.frame.height)")
             #expect(panel.isVisible && panel.alphaValue > 0.99 && delegate.store.panelExpanded)
             let hosting = panel.contentView
             let beforeGrowth = panel.frame
@@ -64,6 +67,14 @@ extension IntegrationTests {
             try await Task.sleep(for: .milliseconds(450))
             #expect(panel.isVisible && panel.alphaValue > 0.99 && delegate.store.panelExpanded && abs(panel.frame.minX - resting.minX) < 1,
                    "A stale close completion must not hide a reopened panel: visible=\(panel.isVisible), alpha=\(panel.alphaValue), expanded=\(delegate.store.panelExpanded), panelVisible=\(delegate.store.panelVisible), frame=\(panel.frame), resting=\(resting), reduced=\(delegate.store.reduceMotion)")
+
+            delegate.togglePanel()
+            try await Task.sleep(for: .milliseconds(500))
+            #expect(!panel.isVisible)
+            delegate.togglePanel()
+            try await Task.sleep(for: .milliseconds(600))
+            #expect(panel.isVisible && panel.alphaValue > 0.99 && abs(panel.frame.minX - resting.minX) < 1,
+                   "Reopening a fully closed panel must restore its original screen and finish revealing")
 
             delegate.store.reduceMotion = true
             delegate.togglePanel()

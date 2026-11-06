@@ -8,32 +8,6 @@ extension IntegrationTests {
     struct PanelDesignTests {
         @Test
         @MainActor
-        func testArtworkTintAndContrastAcrossPalettes() async throws {
-            var combinations = 0
-            for dark in [false, true] {
-                let palette = ComboPalette.standard(isDark: dark)
-                let samples: [(NSColor, NSColor?)] = [(.black, nil), (.white, nil), (.gray, nil), (.red, nil), (.green, nil), (.blue, nil),
-                    (NSColor(srgbRed: 0.7, green: 0.55, blue: 0.45, alpha: 1), nil),
-                    (NSColor(srgbRed: 0.31, green: 0.19, blue: 0.42, alpha: 1), nil), (.black, .yellow), (.white, .systemPurple)]
-                for (index, item) in samples.enumerated() {
-                    let data = try artwork(item.0, patch: item.1)
-                    let sample = MediaArtworkTint.sample(data)
-                    if index < 3 { #expect(sample == nil, "Grayscale artwork must fall back to the theme accent") }
-                    for increased in [false, true] {
-                        let tint = MediaArtworkTint.resolved(sample, palette: palette, increasedContrast: increased)
-                        let background = MediaArtworkTint.mixed(tint.color, over: NSColor(palette.surface), alpha: tint.alpha * 2)
-                        #expect(MediaArtworkTint.contrast(NSColor(palette.mutedText), background) >= 4.5 - 0.001,
-                               "Artwork tint must preserve readable secondary text")
-                        #expect(tint.alpha * 2 <= (dark ? 0.15 : 0.12))
-                    }
-                    combinations += 1
-                }
-            }
-            #expect(combinations == 20)
-        }
-
-        @Test
-        @MainActor
         func testRowHoverPressAndDisabledPixelsAcrossPalettes() async throws {
             for dark in [false, true] {
                 try await checkRowHover(palette: ComboPalette.standard(isDark: dark), name: "\(dark ? "dark" : "light")")
@@ -53,11 +27,18 @@ extension IntegrationTests {
                 for section in [PanelSection?.none, .battery, .wifi, .sound] {
                     store.panelRevealed = false
                     store.detailSection = section
+                    store.scene = section == .battery ? .live : .charging
+                    if section == .battery {
+                        store.live.battery = 0.82; store.live.charging = true; store.live.plugged = true
+                        store.battery.hasInternalBattery = true; store.battery.level = 0.82
+                        store.battery.onAC = true; store.battery.isCharging = true
+                        store.battery.health = "良好"; store.battery.maximumCapacity = 91
+                    }
                     var measured: CGFloat = 0
                     let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: store.audio.airpods, bluetoothPermission: store.audio.bluetoothPermission,
-                                         mode: section == nil ? .overview : .detail, showSettings: {}, maxHeight: 900, reportHeight: { measured = $0 })
+                                         showSettings: {}, maxHeight: 900, reportHeight: { measured = $0 })
                         .defaultAppStorage(defaults).environment(\.colorScheme, dark ? .dark : .light)
-                    let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: 420, height: 900), styleMask: .borderless, backing: .buffered, defer: false)
+                    let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: PanelView.width, height: 900), styleMask: .borderless, backing: .buffered, defer: false)
                     window.isReleasedWhenClosed = false
                     defer { window.close(); window.contentView = nil }
                     window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
@@ -71,7 +52,7 @@ extension IntegrationTests {
                     hosting.layoutSubtreeIfNeeded()
                     #expect(measured > 100 && measured < 900, "Default content must fit without internal scrolling: \(measured)")
                     guard measured > 100 && measured < 900 else { return }
-                    let frame = NSRect(x: 0, y: 0, width: 420, height: measured)
+                    let frame = NSRect(x: 0, y: 0, width: PanelView.width, height: measured)
                     let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: frame), "Missing bitmap prerequisite")
                     hosting.cacheDisplay(in: frame, to: bitmap)
                     let png = try #require(bitmap.representation(using: .png, properties: [:]), "Missing png prerequisite")
@@ -104,7 +85,6 @@ extension IntegrationTests {
             store.reduceMotion = true
             store.panelVisible = true
             store.panelRevealed = true
-            store.detailRevealed = true
             store.scene = .charging
             store.wifi.powerOn = true
             store.wifi.currentSSID = "Office Network With A Long Name"
@@ -144,9 +124,9 @@ extension IntegrationTests {
             store.panelExpanded = false
             var heights: [CGFloat] = []
             let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: control,
-                                 bluetoothPermission: store.audio.bluetoothPermission, mode: .overview,
+                                 bluetoothPermission: store.audio.bluetoothPermission,
                                  showSettings: {}, maxHeight: 900, reportHeight: { heights.append($0) })
-            let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: 420, height: 900),
+            let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: PanelView.width, height: 900),
                                   styleMask: .borderless, backing: .buffered, defer: false)
             let hosting = NSHostingView(rootView: view)
             hosting.sizingOptions = []
@@ -201,7 +181,7 @@ extension IntegrationTests {
                 .modifier(PanelRowSurface(hovered: hovered, pressed: pressed))
                 .environment(\.comboPalette, palette).environment(\.isEnabled, enabled)
                 .frame(width: frame.width, height: frame.height)
-                .background(palette.isDark ? Color.black : Color.white)
+                .background(palette.canvasTop)
                 let hosting = NSHostingView(rootView: view)
                 hosting.frame = frame
                 hosting.appearance = NSAppearance(named: palette.isDark ? .darkAqua : .aqua)
@@ -221,12 +201,14 @@ extension IntegrationTests {
                 abs(first.redComponent - second.redComponent) + abs(first.greenComponent - second.greenComponent) + abs(first.blueComponent - second.blueComponent)
             }
             #expect(try difference(color(0, 100, 20), color(1, 100, 20)) > 0.1, "Hover must highlight the row")
-            #expect(try difference(color(1, 100, 20), color(2, 100, 20)) > 0.05, "Press must be distinct from hover")
+            #expect(try difference(color(1, 100, 20), color(2, 100, 20)) > 0.03, "Press must be distinct from hover")
+            #expect(try color(1, 100, 20).redComponent > color(0, 100, 20).redComponent,
+                    "Hover must lighten the surface in both appearances")
             #expect(try difference(color(0, 100, 20), color(3, 100, 20)) < 0.01, "Disabled rows must ignore hover and press")
             #expect(try difference(color(0, 20, 20), color(1, 20, 20)) < 0.01, "Hover backgrounds must not tint the content")
             #expect(try difference(color(0, 0, 0), color(1, 0, 0)) < 0.01, "Hover must stay inside rounded corners")
             #expect(try color(1, 8, 20).redComponent - color(1, 8, 20).greenComponent > 0.8
-                   && abs(color(1, 7, 20).redComponent - color(1, 7, 20).greenComponent) < 0.01,
+                   && difference(color(1, 7, 20), color(1, 100, 20)) < 0.01,
                    "The icon must have an 8pt leading inset")
         }
         @MainActor

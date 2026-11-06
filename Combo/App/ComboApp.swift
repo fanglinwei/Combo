@@ -11,7 +11,8 @@ struct ComboApp: App {
         Settings {
             ComboSettingsView(appDelegate: appDelegate)
         }
-        .defaultSize(width: 850, height: 690)
+        .defaultSize(width: SettingsLayout.width, height: SettingsLayout.height)
+        .windowResizability(.contentMinSize)
         .environment(\.locale, Locale(identifier: localization.language))
         .commands { ComboCommands(appDelegate: appDelegate, language: localization.language) }
         .onChange(of: scenePhase, initial: true) { _, _ in
@@ -26,18 +27,29 @@ struct ComboApp: App {
 private struct ComboSettingsView: View {
     let appDelegate: AppDelegate
     @State private var titlebarHeight: CGFloat = 0
+    @AppStorage("appearanceMode") private var appearanceMode: ComboAppearance = .system
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    private var palette: ComboPalette { .settings(isDark: colorScheme == .dark) }
 
     var body: some View {
         appDelegate.settingsView()
-            .frame(minWidth: 780, minHeight: 620 - titlebarHeight)
+            .preferredColorScheme(appearanceMode.colorScheme)
+            .frame(minWidth: SettingsLayout.width, minHeight: SettingsLayout.minHeight - titlebarHeight)
+            .containerBackground(for: .window) {
+                if reduceTransparency { palette.canvasTop }
+                else { GlassBackdrop(blur: 34).overlay(palette.settingsCanvas) }
+            }
+            .toolbarBackground(reduceTransparency ? palette.canvasTop : palette.settingsToolbar, for: .windowToolbar)
             .background(SettingsWindowReader { window in
-                appDelegate.configureSettingsWindow(window)
-                // Measure after SwiftUI installs its full-size content view and title bar.
+                titlebarHeight = window.frame.height - window.contentLayoutRect.height
+                // Apply content constraints before setting the native window's final frame.
                 DispatchQueue.main.async {
-                    titlebarHeight = window.frame.height - window.contentLayoutRect.height
+                    appDelegate.configureSettingsWindow(window)
                     appDelegate.updateSettingsLayout()
                 }
             })
+            .onChange(of: appearanceMode) { _, _ in appDelegate.updateWindowAppearance() }
     }
 }
 
@@ -59,7 +71,7 @@ private struct SettingsWindowReader: NSViewRepresentable {
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
-            if let window { configure(window) }
+            if let window { DispatchQueue.main.async { [configure] in configure(window) } }
         }
     }
 }

@@ -7,12 +7,66 @@ extension IntegrationTests {
     struct PanelDismissTests {
         @Test
         @MainActor
-        func testInternalClicksAndDetailHeightGrowthAndShrink() async throws {
+        func testSettingsReturnRestoresPanelAndKeyboardFocus() async throws {
+            let fixture = PanelTestCase()
+            defer { fixture.cleanUp() }
+            let delegate = try await fixture.makeDelegate()
+            let window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            defer {
+                delegate.applicationWillTerminate(Notification(name: NSApplication.willTerminateNotification))
+                window.close()
+                window.contentView = nil
+            }
+            var openings = 0
+            delegate.installSettingsAction {
+                openings += 1
+                delegate.configureSettingsWindow(window)
+            }
+            delegate.openSettings()
+            window.close()
+            try await Task.sleep(for: .milliseconds(100))
+            #expect(delegate.panel == nil && !delegate.store.panelVisible,
+                    "Closing settings opened without a panel must not create one")
+
+            try await fixture.open(delegate)
+            let panel = try #require(delegate.panel)
+            delegate.openSettings()
+            #expect(!delegate.store.panelVisible, "Opening settings must dismiss its originating panel")
+            try await Task.sleep(for: .milliseconds(300))
+            window.close()
+            try await Task.sleep(for: .milliseconds(400))
+            #expect(delegate.panel === panel && panel.isVisible && panel.isKeyWindow && delegate.store.panelVisible)
+            #expect(!delegate.store.panelSettingsFocusRequested, "The rendered panel must consume the focus request")
+            let content = try #require(panel.contentView)
+            let bitmap = try #require(content.bitmapImageRepForCachingDisplay(in: content.bounds))
+            content.cacheDisplay(in: content.bounds, to: bitmap)
+            Attachment.record(try #require(bitmap.representation(using: .png, properties: [:])), named: "settings-return-focus.png")
+            for type in [NSEvent.EventType.keyDown, .keyUp] {
+                let event = try #require(NSEvent.keyEvent(with: type, location: .zero, modifierFlags: [],
+                    timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: panel.windowNumber, context: nil,
+                    characters: " ", charactersIgnoringModifiers: " ", isARepeat: false, keyCode: 49))
+                NSApp.sendEvent(event)
+            }
+            try await Task.sleep(for: .milliseconds(100))
+            try #require(openings == 3 && window.isVisible && !delegate.store.panelVisible,
+                         "Space after returning must activate the focused settings button; responder: \(String(describing: panel.firstResponder)), active: \(NSApp.isActive)")
+            window.close()
+            delegate.applicationWillTerminate(Notification(name: NSApplication.willTerminateNotification))
+            try await Task.sleep(for: .milliseconds(200))
+            #expect(!delegate.store.panelVisible, "Termination must cancel a queued settings return")
+        }
+
+        @Test
+        @MainActor
+        func testInlineNavigationAndDetailHeightGrowthAndShrink() async throws {
             let fixture = PanelTestCase()
             defer { fixture.cleanUp() }
             let delegate = try await fixture.makeDelegate()
             try await fixture.open(delegate)
             let panel = try #require(delegate.panel)
+            let overviewFrame = panel.frame
+            let hosting = panel.contentView
             panel.resignKey()
             #expect(delegate.store.panelVisible, "Losing key alone must not dismiss a permission-preserved panel")
             delegate.handlePanelMouseDown(at: CGPoint(x: panel.frame.midX, y: panel.frame.midY), in: panel)
@@ -25,29 +79,31 @@ extension IntegrationTests {
                 #expect(delegate.store.panelVisible, "The icon must reach togglePanel without close-then-reopen")
             }
             delegate.store.detailSection = .battery
-            delegate.updateDetailWindow(.battery)
-            try await Task.sleep(for: .milliseconds(100))
-            let detail = try #require(NSApp.windows.first { $0 is ComboPanel && $0 !== panel && $0.isVisible })
+            delegate.updatePanelSection(.battery)
+            try await Task.sleep(for: .milliseconds(300))
+            let detail = try #require(delegate.panel)
+            #expect(detail === panel && panel.contentView === hosting, "Details must reuse the overview window and hosting view")
+            #expect(!NSApp.windows.contains { $0 is ComboPanel && $0 !== panel && $0.isVisible }, "Inline details must not create a second glass window")
             delegate.handlePanelMouseDown(at: CGPoint(x: detail.frame.midX, y: detail.frame.midY), in: detail)
             #expect(delegate.store.panelVisible, "The detail belongs to the panel")
             delegate.store.detailSection = .sound
-            delegate.updateDetailWindow(.sound)
+            delegate.updatePanelSection(.sound)
             try await Task.sleep(for: .milliseconds(300))
             let soundFrame = detail.frame
             let visible = try #require(detail.screen).visibleFrame
-            #expect(abs(soundFrame.maxY - panel.frame.maxY) < 1, "Detail top must align to the overview panel")
+            #expect(abs(soundFrame.maxY - overviewFrame.maxY) < 1, "Detail top must align to the overview panel")
             let detailContent = try #require(detail.contentView)
             let scroll = try #require(scrollView(in: detailContent))
             let document = try #require(scroll.documentView)
             let maximumHeight = visible.height - 16
-            #expect(abs(soundFrame.height - min(ceil(document.frame.height), maximumHeight)) < 1,
+            #expect(abs(soundFrame.height - min(ceil(document.frame.height) + 69, maximumHeight)) < 1,
                    "The native detail window must match its visible content, without a transparent tail")
             delegate.store.detailSection = .battery
-            delegate.updateDetailWindow(.battery)
+            delegate.updatePanelSection(.battery)
             try await Task.sleep(for: .milliseconds(300))
             #expect(abs(detail.frame.maxY - panel.frame.maxY) < 1, "Switching details must preserve top alignment")
             delegate.store.detailSection = .sound
-            delegate.updateDetailWindow(.sound)
+            delegate.updatePanelSection(.sound)
             try await Task.sleep(for: .milliseconds(300))
             #expect(abs(detail.frame.height - soundFrame.height) < 1, "Returning to sound must restore its content height")
             delegate.store.message = LocalizedText { String(repeating: "Panel height regression\n", count: 120) }
@@ -63,12 +119,20 @@ extension IntegrationTests {
             try await Task.sleep(for: .milliseconds(300))
             #expect(abs(detail.frame.height - soundFrame.height) < 1 && abs(detail.frame.maxY - soundFrame.maxY) < 1,
                    "Removing content must shrink the native window and preserve alignment with the overview panel: actual=\(detail.frame), expected=\(soundFrame), overview=\(panel.frame), content=\(expandedDocument.frame), reducedMotion=\(delegate.store.reduceMotion)")
+            delegate.handleDetailEscape()
+            try await Task.sleep(for: .milliseconds(300))
+            #expect(delegate.store.detailSection == nil && abs(panel.frame.height - overviewFrame.height) < 1,
+                   "Returning must restore the overview in the same window")
+            delegate.store.detailSection = .sound
+            delegate.updatePanelSection(.sound)
+            try await Task.sleep(for: .milliseconds(300))
             let formerTail = CGPoint(x: detail.frame.midX, y: detail.frame.minY - 10)
             #expect(expandedFrame.contains(formerTail) && !detail.frame.contains(formerTail))
             delegate.handlePanelMouseDown(at: formerTail)
-            #expect(!delegate.store.panelVisible && delegate.store.detailSection == nil,
-                   "Outside clicks must close the whole group even when neither window has key")
+            #expect(!delegate.store.panelVisible && delegate.store.detailSection == .sound,
+                   "Closing must preserve the current page until the panel is hidden")
             try await Task.sleep(for: .milliseconds(300))
+            #expect(delegate.store.detailSection == nil)
         }
 
         @Test
@@ -133,12 +197,13 @@ extension IntegrationTests {
             // Keep the existing whole-group closing animation regression.
             try await fixture.open(delegate)
             delegate.store.detailSection = .battery
-            delegate.updateDetailWindow(.battery)
+            delegate.updatePanelSection(.battery)
             try await Task.sleep(for: .milliseconds(100))
             let panel = try #require(delegate.panel)
             let resting = panel.frame.minX
             delegate.store.reduceMotion = false
             delegate.handlePanelMouseDown(at: fixture.outside)
+            #expect(delegate.store.detailSection == .battery, "Closing a detail must not flash the overview")
             try await Task.sleep(for: .milliseconds(600))
             #expect(panel.frame.minX - resting > 300 && delegate.store.detailSection == nil)
             try await fixture.open(delegate)
@@ -202,7 +267,7 @@ extension IntegrationTests {
             delegate.store.reduceMotion = false
             delegate.togglePanel()
             delegate.store.detailSection = .wifi
-            delegate.updateDetailWindow(.wifi)
+            delegate.updatePanelSection(.wifi)
             try await Task.sleep(for: .milliseconds(60))
             #expect(!delegate.store.panelExpanded, "Termination fixture must interrupt the entrance")
             delegate.applicationWillTerminate(Notification(name: NSApplication.willTerminateNotification))
@@ -221,7 +286,7 @@ extension IntegrationTests {
             NSApp.sendEvent(click)
             #expect(delegate.store.panelVisible, "Termination must remove the local mouse monitor")
             let escape = try #require(NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
-                                      timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: other.windowNumber,
+                                      timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: delegate.panel?.windowNumber ?? 0,
                                       context: nil, characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53))
             NSApp.sendEvent(escape)
             #expect(delegate.store.detailSection == .wifi, "Termination must remove the detail Escape monitor")

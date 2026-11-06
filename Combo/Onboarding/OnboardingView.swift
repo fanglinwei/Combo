@@ -37,7 +37,7 @@ struct OnboardingView: View {
                         Text(L("找不到图标时，可以按住 Command 拖动调整它在菜单栏中的位置。"))
                             .font(.system(size: 11)).foregroundStyle(palette.mutedText)
                     }.modifier(OnboardingWell())
-                    Text(L("隐藏系统图标与其他说明，统一在“设置 → 关于与帮助”中查看。"))
+                    Text(L("隐藏系统图标与其他说明，统一在“设置 → 关于”中查看。"))
                         .font(.system(size: 12)).foregroundStyle(palette.mutedText)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -105,7 +105,7 @@ struct MenuBarCallout: View {
             Text(L("点这里打开面板"))
                 .font(.system(size: 13, weight: .medium))
                 .padding(.horizontal, 13).padding(.vertical, 8)
-                .modifier(PanelSurface(tinted: true, radius: 9))
+                .modifier(PanelSurface(radius: 9))
         }
         .padding(.top, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
