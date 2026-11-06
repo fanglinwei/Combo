@@ -81,7 +81,7 @@ Some features depend on your device and macOS version. See [Compatibility](#comp
 
 [Visit GitHub Releases](https://github.com/fanglinwei/Combo/releases) for published packages and release notes.
 
-**This page previews the 1.3.0 UI; the app version in the repository is still `1.2.0 / 102`.** Check Releases for available packages, or use the [source build instructions](#build-from-source) for the development version. Verify the package's architecture and signing status before downloading.
+**This page previews the 1.3.0 UI; the app version in the repository is still `1.3.0 / 103`.** Check Releases for available packages, or use the [source build instructions](#build-from-source) for the development version. Verify the package's architecture and signing status before downloading.
 
 ### Manual installation
 
