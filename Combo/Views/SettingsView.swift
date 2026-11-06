@@ -309,7 +309,7 @@ struct SettingsView: View {
                 Image(nsImage: brandImage).resizable().frame(width: 52, height: 52).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Combo").font(.system(size: 22, weight: .semibold))
-                    note("\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.2.0") · macOS 26+")
+                    note("\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.3.0") · macOS 26+")
                 }
             }
             updateSettings
