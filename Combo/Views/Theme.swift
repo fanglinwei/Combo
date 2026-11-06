@@ -15,9 +15,8 @@ enum Motion {
     static let cardOffset: CGFloat = 16
     static let cardShow: TimeInterval = 0.2
     static let cardStep: TimeInterval = 0.03     // 四张卡片的完整入场为 290ms
-    static let detailShow: TimeInterval = 0.28    // 详情窗淡入
-    static let detailHide: TimeInterval = 0.15    // 详情窗淡出
     static let detailResize: TimeInterval = 0.18  // 内容变化时的高度缓动，防止高度瞬跳
+    static let settingsResize: TimeInterval = 0.3 // 固定标题栏位置，内容高度无回弹收敛
     static let reducedFade: TimeInterval = 0.12   // 减弱动态：只淡入，不位移不缩放
 
     static func animation(_ duration: Double) -> Animation {
@@ -31,54 +30,58 @@ private func themeColor(_ rgb: UInt32) -> Color {
           blue: Double(rgb & 0xFF) / 255)
 }
 struct ComboPalette {
-    var primaryText: Color { isDark ? .white : .black }
+    let primaryText: Color
+    var iconBlue: Color { themeColor(isDark ? 0x2184DB : 0x0876D4) }
+    var iconGreen: Color { themeColor(isDark ? 0x339C4F : 0x26863D) }
+    var iconPurple: Color { themeColor(isDark ? 0x8963D3 : 0x7754C8) }
+    var iconRed: Color { themeColor(isDark ? 0xD8424C : 0xD83B43) }
+    var iconSlate: Color { themeColor(isDark ? 0x718098 : 0x627188) }
+    var toggle: Color { themeColor(isDark ? 0x2DA54B : 0x248A3D) }
+    let separator: Color
+    var module: Color { .white.opacity(isDark ? 0.075 : 0.47) }
+    var hover: Color { .white.opacity(isDark ? 0.13 : 0.75) }
+    var field: Color { .white.opacity(isDark ? 0.085 : 0.65) }
+    var selected: Color { .white.opacity(isDark ? 0.11 : 0.58) }
+    var inset: Color { isDark ? .white.opacity(0.045) : themeColor(0x4B6A94).opacity(0.065) }
+    var previewSurface: Color { .white.opacity(isDark ? 0.10 : 0.67) }
+    var panelGlass: Color { themeColor(isDark ? 0x1D222B : 0xF4F7FC).opacity(isDark ? 0.80 : 0.76) }
+    var panelRim: Color { .white.opacity(isDark ? 0.28 : 0.72) }
+    var settingsCanvas: Color { themeColor(isDark ? 0x202631 : 0xF4F8FD).opacity(isDark ? 0.87 : 0.83) }
+    var onboardingGlass: Color { themeColor(isDark ? 0x1D222B : 0xF4F7FC).opacity(isDark ? 0.88 : 0.84) }
+    var settingsContent: Color { isDark ? themeColor(0x0F1620).opacity(0.24) : .white.opacity(0.24) }
+    var settingsToolbar: Color { .white.opacity(isDark ? 0.035 : 0.16) }
     let canvasTop: Color
     let canvasBottom: Color
     let surface: Color
-    let tileTop: Color
-    let tileBottom: Color
     let mutedText: Color
     let accent: Color
     let isDark: Bool
-}
-enum ComboTheme: String, CaseIterable, Identifiable {
-    case blue, purple, gold
-    var id: String { rawValue }
-    var title: String {
-        switch self { case .blue: L("蓝色"); case .purple: L("紫色"); case .gold: L("暖金色") }
-    }
-    func palette(isDark: Bool) -> ComboPalette {
-        switch (self, isDark) {
-        case (.blue, false):
-            return ComboPalette(canvasTop: themeColor(0xB5D1EB), canvasBottom: themeColor(0x91BADB),
-                                surface: themeColor(0xDBEBF7), tileTop: themeColor(0xDEEDF7), tileBottom: themeColor(0xC2DBF0),
-                                mutedText: themeColor(0x364D63), accent: themeColor(0x2B6196), isDark: false)
-        case (.blue, true):
-            let accent = themeColor(0x78C6FF)
-            return ComboPalette(canvasTop: themeColor(0x17263C), canvasBottom: themeColor(0x0E1B2B),
-                                surface: themeColor(0x263D55), tileTop: accent.opacity(0.23), tileBottom: accent.opacity(0.10),
-                                mutedText: themeColor(0xD1E3F5), accent: accent, isDark: true)
-        case (.purple, false):
-            return ComboPalette(canvasTop: themeColor(0xFBF9FD), canvasBottom: themeColor(0xF1ECF7),
-                                surface: themeColor(0xF4EDF9), tileTop: themeColor(0xFFFEFF), tileBottom: themeColor(0xF4EDF9),
-                                mutedText: themeColor(0x61546E), accent: themeColor(0x785C9C), isDark: false)
-        case (.purple, true):
-            return ComboPalette(canvasTop: themeColor(0x241C2D), canvasBottom: themeColor(0x130F1C),
-                                surface: themeColor(0x3B3049), tileTop: themeColor(0x3B3049), tileBottom: themeColor(0x2B2538),
-                                mutedText: themeColor(0xD4CCDE), accent: themeColor(0xC9B0DE), isDark: true)
-        case (.gold, false):
-            return ComboPalette(canvasTop: themeColor(0xFDFBF6), canvasBottom: themeColor(0xF3EDE3),
-                                surface: themeColor(0xF9F2E9), tileTop: themeColor(0xFFFEFC), tileBottom: themeColor(0xF9F2E9),
-                                mutedText: themeColor(0x695C4F), accent: themeColor(0x966E47), isDark: false)
-        case (.gold, true):
-            return ComboPalette(canvasTop: themeColor(0x212124), canvasBottom: themeColor(0x121215),
-                                surface: themeColor(0x363637), tileTop: themeColor(0x363637), tileBottom: themeColor(0x29292C),
-                                mutedText: themeColor(0xD6D1C9), accent: themeColor(0xDBC4A3), isDark: true)
+
+    static func standard(isDark: Bool) -> ComboPalette {
+        if isDark {
+            let accent = themeColor(0xEDEDEE)
+            return ComboPalette(primaryText: themeColor(0xF6F8FC), separator: .white.opacity(0.16),
+                                canvasTop: themeColor(0x282E38), canvasBottom: themeColor(0x252B35),
+                                surface: themeColor(0x343A44),
+                                mutedText: themeColor(0xD2D9E5), accent: accent, isDark: true)
         }
+        return ComboPalette(primaryText: themeColor(0x20252D), separator: themeColor(0x29394E).opacity(0.14),
+                            canvasTop: themeColor(0xEDF1F7), canvasBottom: themeColor(0xE6EBF2),
+                            surface: themeColor(0xF4F6FA),
+                            mutedText: themeColor(0x414B59), accent: themeColor(0x3B3B3D), isDark: false)
+    }
+
+    static func settings(isDark: Bool) -> ComboPalette {
+        let palette = standard(isDark: isDark)
+        return ComboPalette(primaryText: themeColor(isDark ? 0xF4F7FC : 0x222A35),
+                            separator: isDark ? .white.opacity(0.13) : themeColor(0x2E3D54).opacity(0.14),
+                            canvasTop: themeColor(isDark ? 0x282F3A : 0xEDF2F8), canvasBottom: palette.canvasBottom,
+                            surface: palette.surface, mutedText: themeColor(isDark ? 0xC2CAD6 : 0x4E5A6B),
+                            accent: palette.accent, isDark: isDark)
     }
 }
 private struct ComboPaletteKey: EnvironmentKey {
-    static let defaultValue = ComboTheme.blue.palette(isDark: false)
+    static let defaultValue = ComboPalette.standard(isDark: false)
 }
 extension EnvironmentValues {
     var comboPalette: ComboPalette {
@@ -97,62 +100,62 @@ enum ComboAppearance: String, CaseIterable, Identifiable {
     var nsAppearance: NSAppearance? {
         switch self { case .system: nil; case .light: NSAppearance(named: .aqua); case .dark: NSAppearance(named: .darkAqua) }
     }
+    var colorScheme: ColorScheme? {
+        switch self { case .system: nil; case .light: .light; case .dark: .dark }
+    }
 }
 
-// Panel and detail specifications: one surface, content wells, and one optional floating layer.
+// The overview and its detail pages share one glass surface.
 enum PanelGeometry {
-    static let radius: CGFloat = 22
-    static let inset: CGFloat = 18
-    static let cardRadius: CGFloat = 16
-    static let cardInset: CGFloat = 12
-    static let groupSpacing: CGFloat = 18
+    static let radius: CGFloat = 30
+    static let inset: CGFloat = 19
+    static let groupSpacing: CGFloat = 23
+}
+
+struct GlassBackdrop: View {
+    let blur: CGFloat
+
+    var body: some View {
+        Color.clear.glassEffect(.clear, in: Rectangle())
+            // Extend the sample so the blur does not fade the surface edges.
+            .padding(-3 * blur).blur(radius: blur).saturation(1.25).clipped()
+    }
 }
 
 struct PanelSurface: ViewModifier {
     @Environment(\.comboPalette) private var palette
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var contrast
-    var tinted = false
     var radius: CGFloat = PanelGeometry.radius
 
     func body(content: Content) -> some View {
-        content.background {
-            let shape = RoundedRectangle(cornerRadius: radius)
-            ZStack {
-                if reduceTransparency {
-                    shape.fill(tinted ? palette.canvasBottom : Color(nsColor: .windowBackgroundColor))
-                } else {
-                    shape.fill(.regularMaterial)
-                    if tinted {
-                        shape.fill(LinearGradient(colors: [palette.canvasTop.opacity(0.72), palette.canvasBottom.opacity(0.82)],
-                                                  startPoint: .topLeading, endPoint: .bottomTrailing))
-                    }
-                    shape.strokeBorder(LinearGradient(colors: [.white.opacity(colorScheme == .dark ? 0.30 : 0.85),
-                                                               .white.opacity(0.14), .black.opacity(colorScheme == .dark ? 0.22 : 0.06)],
-                                                      startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
-                    shape.inset(by: 1).strokeBorder(.white.opacity(colorScheme == .dark ? 0.14 : 0.60), lineWidth: 0.5)
+        Group {
+            if reduceTransparency {
+                content.background(palette.canvasTop, in: RoundedRectangle(cornerRadius: radius))
+            } else {
+                content.background {
+                    GlassBackdrop(blur: 28).overlay(palette.panelGlass)
+                        .clipShape(RoundedRectangle(cornerRadius: radius))
+                        .overlay { RoundedRectangle(cornerRadius: radius).strokeBorder(palette.panelRim, lineWidth: 1) }
                 }
-                if contrast == .increased { shape.strokeBorder(Color.primary, lineWidth: 1) }
             }
+        }.overlay {
+            if contrast == .increased { RoundedRectangle(cornerRadius: radius).strokeBorder(Color.primary, lineWidth: 1) }
         }
     }
 }
 
-struct DetailWell: ViewModifier {
-    @Environment(\.comboPalette) private var palette
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @Environment(\.colorSchemeContrast) private var contrast
+struct CategoryIcon: View {
+    let symbol: String
+    let color: Color
+    var size: CGFloat = 24
 
-    func body(content: Content) -> some View {
-        content.frame(maxWidth: .infinity, alignment: .leading).padding(16)
-            .background {
-                let shape = RoundedRectangle(cornerRadius: PanelGeometry.cardRadius)
-                if reduceTransparency { shape.fill(Color(nsColor: .controlBackgroundColor)) }
-                shape.fill(LinearGradient(colors: [palette.accent.opacity(0.15), palette.accent.opacity(0.05)],
-                                          startPoint: .topLeading, endPoint: .bottomTrailing))
-                shape.strokeBorder(contrast == .increased ? Color.primary : palette.accent.opacity(0.20), lineWidth: 1)
-            }
+    var body: some View {
+        Image(systemName: symbol).resizable().scaledToFit().symbolRenderingMode(.hierarchical)
+            .fontWeight(.medium).frame(width: size * 0.7, height: size * 0.7)
+            .foregroundStyle(.white).frame(width: size, height: size)
+            .background(color, in: RoundedRectangle(cornerRadius: size * 0.28))
+            .accessibilityHidden(true)
     }
 }
 
@@ -181,7 +184,7 @@ struct PanelRowSurface: ViewModifier {
 
     func body(content: Content) -> some View {
         content.padding(.horizontal, 8).padding(.vertical, 6).frame(minHeight: 40)
-            .background(palette.primaryText.opacity(isEnabled ? (pressed ? 0.14 : hovered ? 0.09 : 0) : 0),
+            .background(isEnabled ? (pressed ? palette.module : hovered ? palette.hover : .clear) : .clear,
                         in: RoundedRectangle(cornerRadius: 11))
             .contentShape(RoundedRectangle(cornerRadius: 11))
     }
@@ -222,12 +225,15 @@ struct PanelButtonStyle: ButtonStyle {
             configuration.label
                 .font(.system(size: 12, weight: prominent ? .semibold : .regular))
                 .padding(.horizontal, 10).frame(minWidth: 28, minHeight: 28)
-                .foregroundStyle(prominent && isEnabled ? (palette.isDark ? Color.black : .white) : palette.mutedText)
+                .foregroundStyle(prominent && isEnabled ? (palette.isDark ? Color.black : .white) : palette.primaryText)
                 .background {
                     RoundedRectangle(cornerRadius: 9)
-                        .fill(prominent && isEnabled ? palette.accent : palette.primaryText.opacity(isEnabled ? (configuration.isPressed ? 0.18 : hovered ? 0.12 : 0.10) : 0.10))
+                        .fill(prominent && isEnabled ? palette.accent : isEnabled && hovered ? palette.hover : palette.field)
                 }
-                .opacity(isEnabled ? 1 : 0.55)
+                .overlay {
+                    if !prominent { RoundedRectangle(cornerRadius: 9).strokeBorder(palette.separator, lineWidth: 0.5) }
+                }
+                .opacity(isEnabled ? (configuration.isPressed ? 0.65 : 1) : 0.55)
                 .onHover { hovered = $0 }
         }
     }
@@ -246,7 +252,8 @@ struct PanelIconButtonStyle: ButtonStyle {
         @State private var hovered = false
         var body: some View {
             configuration.label.frame(width: size.width, height: size.height)
-                .background(palette.primaryText.opacity(isEnabled ? (configuration.isPressed ? 0.18 : hovered ? 0.12 : 0) : 0), in: RoundedRectangle(cornerRadius: 9))
+                .background(isEnabled && hovered ? palette.hover : .clear, in: RoundedRectangle(cornerRadius: 9))
+                .opacity(configuration.isPressed ? 0.65 : 1)
                 .contentShape(Rectangle()).onHover { hovered = $0 }
         }
     }
@@ -256,13 +263,34 @@ struct DetailFacts: View {
     @Environment(\.comboPalette) private var palette
     let facts: [(String, String)]
     var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], alignment: .leading, spacing: 8) {
+        VStack(spacing: 0) {
             ForEach(facts.indices, id: \.self) { index in
                 HStack(spacing: 6) {
                     Text(facts[index].0).foregroundStyle(palette.mutedText)
-                    Text(facts[index].1)
-                }.font(.system(size: 11)).accessibilityElement(children: .combine)
+                    Spacer(minLength: 16)
+                    Text(facts[index].1).monospacedDigit().multilineTextAlignment(.trailing)
+                }.font(.system(size: 12)).frame(minHeight: 38).accessibilityElement(children: .combine)
+                if index < facts.count - 1 { Rectangle().fill(palette.separator).frame(height: 0.5) }
             }
+        }
+    }
+}
+
+struct DetailFooter: View {
+    @Environment(\.comboPalette) private var palette
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Rectangle().fill(palette.separator).frame(height: 0.5)
+            Button(action: action) {
+                HStack {
+                    Text(title)
+                    Spacer()
+                    Image(systemName: "arrow.up.right").font(.system(size: 11))
+                }.font(.system(size: 12)).frame(minHeight: 30).contentShape(Rectangle())
+            }.buttonStyle(.plain).foregroundStyle(palette.accent).pointerStyle(.link)
         }
     }
 }

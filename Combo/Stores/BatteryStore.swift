@@ -7,6 +7,7 @@ import IOKit.ps
     @Published var charging = false
     @Published var plugged = false
     @Published var health = "未提供"
+    @Published var maximumCapacity: Int?
     @Published var lowPowerMode = false
     @Published var onAC: Bool?
     @Published var hasInternalBattery = false
@@ -14,35 +15,20 @@ import IOKit.ps
     @Published var isCharged: Bool?
     @Published var limitBlocked: Bool?
     @Published var chargeLimit: ChargeLimit = .unknown
-    @Published var displayThreshold: Int {
+    @Published var displayEnabled: Bool {
         didSet {
-            if displayThreshold != 0, !(20...80).contains(displayThreshold) {
-                displayThreshold = min(80, max(20, displayThreshold))
-                return
-            }
-            defaults.set(displayThreshold, forKey: "batteryDisplayThreshold")
-            if displayThreshold > 0 { lastDisplayThreshold = displayThreshold }
-            onDisplayThresholdChange?()
-        }
-    }
-    @Published private(set) var lastDisplayThreshold: Int {
-        didSet { defaults.set(lastDisplayThreshold, forKey: "batteryLastDisplayThreshold") }
-    }
-    var displayEnabled: Bool {
-        get { displayThreshold > 0 }
-        set {
-            if !newValue, displayThreshold > 0 { lastDisplayThreshold = displayThreshold }
-            displayThreshold = newValue ? lastDisplayThreshold : 0
+            defaults.set(displayEnabled, forKey: "batteryDisplayEnabled")
+            onDisplayChange?()
         }
     }
     private let defaults: UserDefaults
-    @Published var energyAppLimit: Int { didSet { defaults.set(EnergyApps.displayLimit(energyAppLimit), forKey: "energyAppLimit") } }
+    private let capacityReader = BatteryCapacityReader()
     let energyApps = EnergyApps()
     let powerMode = PowerModeControl()
     let chargeControl = ChargeControl()
     var onUpdate: (() -> Void)?
     var onPowerChange: (() -> Void)?
-    var onDisplayThresholdChange: (() -> Void)?
+    var onDisplayChange: (() -> Void)?
     private var powerChange = PowerChange()
     private var batterySource: CFRunLoopSource?
     private var powerObserver: NSObjectProtocol?
@@ -63,13 +49,7 @@ import IOKit.ps
     }
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        let savedThreshold = defaults.object(forKey: "batteryDisplayThreshold") as? Int ?? 20
-        let threshold = savedThreshold == 0 ? 0 : min(80, max(20, savedThreshold))
-        displayThreshold = threshold
-        lastDisplayThreshold = threshold > 0 ? threshold : min(80, max(20, defaults.object(forKey: "batteryLastDisplayThreshold") as? Int ?? 20))
-        energyAppLimit = EnergyApps.displayLimit(defaults.object(forKey: "energyAppLimit") as? Int ?? 1)
-        defaults.set(displayThreshold, forKey: "batteryDisplayThreshold")
-        defaults.set(lastDisplayThreshold, forKey: "batteryLastDisplayThreshold")
+        displayEnabled = defaults.object(forKey: "batteryDisplayEnabled") as? Bool ?? true
     }
     func start() {
         batterySource = IOPSNotificationCreateRunLoopSource({ context in
@@ -119,6 +99,7 @@ import IOKit.ps
             }
         }
         refreshChargeLimit()
+        capacityReader.refresh(hasInternalBattery: hasInternalBattery) { [weak self] value in self?.maximumCapacity = value }
         Task { await powerMode.refresh() }
         chargeControl.refresh()
         onUpdate?()
@@ -153,6 +134,7 @@ import IOKit.ps
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: timeout)
     }
     func stop() {
+        capacityReader.cancel()
         chargeControl.stop()
         energyApps.cancel()
         chargeLimitTimeout?.cancel()

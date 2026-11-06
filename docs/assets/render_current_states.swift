@@ -48,7 +48,7 @@ import ImageIO
         NSColor(srgbRed: 238/255, green: 238/255, blue: 241/255, alpha: 1).setFill()
         NSRect(x: 0, y: 0, width: 640, height: 190).fill()
         for (index, scene) in scenes.enumerated() {
-            let snapshot = Snapshot.demo(scene).preferringBattery(threshold: 50)
+            let snapshot = Snapshot.demo(scene).preferringBattery(enabled: true)
             IconRenderer.image(snapshot, animate: true, size: 110, phase: 0.3, dark: false)
                 .draw(in: NSRect(x: CGFloat(index)*160+25, y: 55, width: 110, height: 110))
             let label = NSAttributedString(string: scene.rawValue, attributes: [
@@ -70,7 +70,7 @@ import ImageIO
         }
         CGImageDestinationSetProperties(gif, [kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFLoopCount: 0]] as CFDictionary)
         var transition = IconTransition()
-        let start = Snapshot.demo(clip.from).preferringBattery(threshold: 50)
+        let start = Snapshot.demo(clip.from).preferringBattery(enabled: true)
         transition.update(IconContent(start), at: 0, reducedMotion: start.reducedMotion)
         for index in 0..<count {
             let time = Double(index) / fps
@@ -83,7 +83,7 @@ import ImageIO
             if entered && (scene == .plug || scene == .unplug) && time >= 9.7 {
                 snapshot.centerEvent = nil
             }
-            snapshot = snapshot.preferringBattery(threshold: 50)
+            snapshot = snapshot.preferringBattery(enabled: true)
             transition.update(IconContent(snapshot), at: time, reducedMotion: snapshot.reducedMotion)
             let canvas = NSImage(size: NSSize(width: 240, height: 260))
             canvas.lockFocus()

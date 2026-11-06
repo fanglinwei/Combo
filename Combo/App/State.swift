@@ -115,9 +115,9 @@ struct Snapshot {
     var wifiConnecting = false
     var batteryPreferred = false
     var networkSymbol: String? = nil
-    func preferringBattery(threshold: Int) -> Snapshot {
-        guard symbol == "wifi" || symbol.isEmpty, let battery, battery.isFinite, (0...1).contains(battery),
-              battery < Double(threshold) / 100 else { return self }
+    func preferringBattery(enabled: Bool) -> Snapshot {
+        guard enabled, symbol == "wifi" || symbol.isEmpty, let battery, battery.isFinite, (0...1).contains(battery),
+              battery < 0.2 else { return self }
         var result = self
         result.networkSymbol = symbol
         result.symbol = ""
@@ -173,11 +173,6 @@ func resolveTransport(pathAvailable: Bool?, interfaces: [String]) -> String {
 func volumeHintActive(changedAt: TimeInterval?, now: TimeInterval) -> Bool {
     guard let changedAt else { return false }
     return now >= changedAt && now - changedAt < 2
-}
-
-func menuBarRestoreKeys(original: [String: Bool], current: [String: Bool], keys: Set<String>) -> [String]? {
-    guard keys.isSubset(of: Set(original.keys)), keys.isSubset(of: Set(current.keys)) else { return nil }
-    return keys.sorted().filter { original[$0] != current[$0] }
 }
 
 /// 引导浮层的落点：水平居中于真实状态栏图标，并夹在该屏可见范围内。

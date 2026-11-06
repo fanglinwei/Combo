@@ -7,7 +7,7 @@ import dnssd
 ///
 /// 未路由的 AirPlay 设备不在 CoreAudio 设备表里（系统行为），所以只能靠 Bonjour 发现；
 /// 这里**只发现、不建立路由**——建立路由需要 AVOutputDevice，而系统没给出可用的构造入口
-/// （见 docs/airplay-homepod-icon-research.md §5）。因此列表里这些设备标"未连接"，
+/// （见 docs/engineering/audio.md「AirPlay 路由与附近发现」）。因此列表里这些设备标"未连接"，
 /// 点按跳系统声音设置由用户选择。
 struct DiscoveredAirPlay: Identifiable, Equatable {
     /// Bonjour 实例名（即房间/设备名，同一网络内唯一）。

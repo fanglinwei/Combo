@@ -52,20 +52,20 @@ enum SystemPermissionAlert {
     @Published var panelVisible = false
     /// 权限请求覆盖整个等待过程；本地网络额外检查系统授权窗口，不能把 waiting 当成用户已拒绝。
     var permissionPromptActive: Bool {
-        wifi.isRequestingLocation || wifi.isRequestingSystemPassword
+        wifi.isRequestingLocation
             || audio.bluetoothPermission.isRequestingPermission
             || isSystemPermissionAlertVisible()
     }
     private let isSystemPermissionAlertVisible: () -> Bool
-    /// 引导第 1 步把浮层指向真实菜单栏图标；面板打开或离开该步即收起。
+    /// 欢迎页把浮层指向真实菜单栏图标；面板打开或离开欢迎页即收起。
     @Published var menuBarPointer = false
     /// 面板窗口真正上屏后才置真。内容入场必须等它，不能用 panelVisible：
     /// 后者在 hosting view 安装前就翻真，新视图首帧即已是真值，onChange 不会触发（卡片会一直不出现）。
     @Published var panelRevealed = false
     @Published var panelExpanded = false
-    /// Which section's detail window is open, if any. The panel and the detail window both read it.
+    @Published var panelSettingsFocusRequested = false
+    /// The page currently shown inside the menu-bar panel; nil is the overview.
     @Published var detailSection: PanelSection?
-    @Published var detailRevealed = false
     private var hotspotActivity: AnyCancellable?
     private var nearbyAirPlayActivity: AnyCancellable?
     private var bluetoothActivity: AnyCancellable?
@@ -74,22 +74,13 @@ enum SystemPermissionAlert {
     @Published var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
     @Published var screenActive = true
     @Published var observation: LocalizedText = "系统监听初始化中"
-    @Published var menuDiagnostic: LocalizedText = "尚未检测；不会自动请求授权"
-    @Published var checkingMenus = false
-    @Published var showMenuPermission = false
-    @Published var menuAccessGranted = AXIsProcessTrusted()
-    @Published var menuPermissionMessage: LocalizedText = ""
-    @Published var foldExperimentMessage: LocalizedText = "折叠实验已暂停：曾同时隐藏 Combo 图标。"
-    let foldExperiment = MenuFoldExperiment()
     private var volumeHint: Task<Void, Never>?
     private var centerHint = CenterHint()
     private var centerHintTask: Task<Void, Never>?
-    private var wifiChange: AnyCancellable?
     private var lastVolumeChange: TimeInterval?
     private var observers: [NSObjectProtocol] = []
     private let network = NetworkStatus()
-    let wifi = WiFiControl()
-    let menuSetup = MenuBarSetup()
+    let wifi: WiFiControl
     var snapshot: Snapshot {
         var result = snapshot(for: scene)
         if scene != .live, let event = result.centerEvent {
@@ -101,14 +92,17 @@ enum SystemPermissionAlert {
         return result
     }
     func snapshot(for scene: Scene) -> Snapshot {
-        var result = (scene == .live ? live : Snapshot.demo(scene)).preferringBattery(threshold: battery.displayThreshold)
+        var result = (scene == .live ? live : Snapshot.demo(scene)).preferringBattery(enabled: battery.displayEnabled)
         if scene == .live {
             result.centerEvent = centerHint.active(at: ProcessInfo.processInfo.systemUptime)
             result.eventSerial = centerHint.serial
         }
         return result
     }
-    init(audio audioStore: AudioStore? = nil, isSystemPermissionAlertVisible: (() -> Bool)? = nil) {
+    private let monitorsSystem: Bool
+    init(audio audioStore: AudioStore? = nil, isSystemPermissionAlertVisible: (() -> Bool)? = nil, monitorsSystem: Bool = true) {
+        self.monitorsSystem = monitorsSystem
+        wifi = WiFiControl(observesLocationAuthorization: monitorsSystem)
         self.audio = audioStore ?? AudioStore()
         self.isSystemPermissionAlertVisible = isSystemPermissionAlertVisible ?? SystemPermissionAlert.isVisible
         animate = UserDefaults.standard.object(forKey: "animate") as? Bool ?? true
@@ -120,7 +114,7 @@ enum SystemPermissionAlert {
             self.updateObservation()
         }
         battery.onPowerChange = { [weak self] in self?.showCenterHint(.power) }
-        battery.onDisplayThresholdChange = { [weak self] in self?.objectWillChange.send() }
+        battery.onDisplayChange = { [weak self] in self?.objectWillChange.send() }
         audio.onUpdate = { [weak self] in
             guard let self else { return }
             self.live.volume = self.audio.volume
@@ -142,11 +136,8 @@ enum SystemPermissionAlert {
             self?.mediaVisible = state.visible
             self?.mediaControlsAvailable = state.controlsAvailable
         }
+        guard monitorsSystem else { return }
         mediaPlayback.setEnabled(true)
-        wifiChange = wifi.$connecting.dropFirst().sink { [weak self] connecting in
-            self?.live.wifiConnecting = connecting
-            if !connecting { self?.network.refresh() }
-        }
         hotspotActivity = Publishers.CombineLatest3($panelVisible, $screenActive, wifi.$powerOn)
             .map { visible, active, power in visible && active && power == true }
             .removeDuplicates()
@@ -175,12 +166,13 @@ enum SystemPermissionAlert {
                 Task { @MainActor in
                     self?.screenActive = active
                     self?.mediaPlayback.setEnabled(active)
-                    if active { self?.audio.invalidateRoute(); self?.refresh() } else { self?.foldExperiment.release() }
+                    if active { self?.audio.invalidateRoute(); self?.refresh() }
                 }
             })
         }
     }
     func refresh() {
+        guard monitorsSystem else { return }
         reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         login = SMAppService.mainApp.status == .enabled
         battery.refreshBattery(); audio.refreshAudio(); audio.refreshOutputs(); network.refresh(); wifi.refresh(); audio.bluetoothPermission.refresh()
@@ -198,13 +190,14 @@ enum SystemPermissionAlert {
     @discardableResult func openSystemSettings(_ section: String) -> Bool {
         let extensionID: String
         switch section {
+        case "menu": extensionID = "com.apple.ControlCenter-Settings.extension?MenuBar"
         case "wifi": extensionID = "com.apple.wifi-settings-extension"
         case "battery": extensionID = "com.apple.Battery-Settings.extension"
         case "local-network": extensionID = "com.apple.preference.security?Privacy_LocalNetwork"
         default: extensionID = "com.apple.Sound-Settings.extension"
         }
         guard let url = URL(string: "x-apple.systempreferences:\(extensionID)"), NSWorkspace.shared.open(url) else {
-            message = "无法打开系统设置；请手动进入相应的 Wi‑Fi、电池或声音页面。"
+            message = "无法打开系统设置；请手动进入相应页面。"
             return false
         }
         message = ""
@@ -247,16 +240,15 @@ enum SystemPermissionAlert {
         catch { message = "登录项设置未完成：\(error.localizedDescription)" }
         login = SMAppService.mainApp.status == .enabled
     }
-    func resetDisplay() { animate = true; battery.displayThreshold = 20 }
+    func resetDisplay() { animate = true; battery.displayEnabled = true }
     func stop() {
         mediaPlayback.stop()
-        centerHintTask?.cancel(); sceneExpiry?.cancel(); wifiChange?.cancel()
+        centerHintTask?.cancel(); sceneExpiry?.cancel()
         battery.stop()
         audio.stop()
         hotspotActivity?.cancel(); hotspots.stop()
         nearbyAirPlayActivity?.cancel(); audio.setNearbyDiscoveryActive(false)
         bluetoothActivity?.cancel()
-        foldExperiment.release()
         clearVolumeHint(); network.stop()
         observers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
     }

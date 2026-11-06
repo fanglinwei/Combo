@@ -1,0 +1,62 @@
+import AppKit
+import SwiftUI
+@testable import Combo
+
+/// A visual tool: render every settings page without requesting permissions or changing system settings.
+@main struct RenderSettings {
+    @MainActor static func main() throws {
+        let app = NSApplication.shared
+        app.setActivationPolicy(.accessory)
+        if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"), let icon = NSImage(contentsOf: url) {
+            app.applicationIconImage = icon
+            icon.setName(NSImage.applicationIconName)
+        }
+        let defaults = UserDefaults.standard
+        let keys = [OnboardingState.completedKey, "appearanceMode", Localization.preferenceKey]
+        let saved = keys.map { ($0, defaults.object(forKey: $0)) }
+        defer { for (key, value) in saved { defaults.set(value, forKey: key) }; Localization.shared.refresh() }
+        defaults.set(true, forKey: OnboardingState.completedKey)
+        let store = Store(monitorsSystem: false)
+        defer { store.stop() }
+        let out = URL(fileURLWithPath: CommandLine.arguments.dropFirst().first ?? "build/settings-previews", isDirectory: true)
+        try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+        var count = 0
+        for language in [AppLanguage.simplifiedChinese, .english] {
+            Localization.shared.selection = language
+            for dark in [false, true] {
+                for frameSize in [NSSize(width: 560, height: 640), NSSize(width: 560, height: 560)] {
+                    let size = NSWindow.contentRect(forFrameRect: NSRect(origin: .zero, size: frameSize),
+                                                    styleMask: [.titled, .closable, .miniaturizable, .resizable]).size
+                    for page in Page.allCases {
+                        let variants = language == .english && dark && frameSize.height == 560 ? [false, true] : [false]
+                        for accessible in variants {
+                            let view = SettingsView(store: store, page: page) { _ in }
+                                .environment(\.colorScheme, dark ? .dark : .light)
+                                .environment(\.dynamicTypeSize, accessible ? .accessibility3 : .large)
+                            let hosting = NSHostingView(rootView: view)
+                            hosting.frame = NSRect(origin: .zero, size: size)
+                            let window = NSWindow(contentRect: hosting.frame, styleMask: .borderless, backing: .buffered, defer: false)
+                            window.isReleasedWhenClosed = false
+                            window.backgroundColor = NSColor(ComboPalette.settings(isDark: dark).canvasTop)
+                            window.appearance = NSAppearance(named: accessible ? .accessibilityHighContrastDarkAqua : dark ? .darkAqua : .aqua)
+                            window.contentView = hosting
+                            window.setFrameOrigin(NSPoint(x: -9000, y: -9000))
+                            window.orderFrontRegardless()
+                            hosting.layoutSubtreeIfNeeded()
+                            RunLoop.current.run(until: Date().addingTimeInterval(0.08))
+                            guard let rep = hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds) else { throw Failure.render }
+                            hosting.cacheDisplay(in: hosting.bounds, to: rep)
+                            guard let png = rep.representation(using: .png, properties: [:]) else { throw Failure.render }
+                            let name = "\(language.rawValue)-\(dark ? "dark" : "light")-\(Int(size.width))-\(page.id)\(accessible ? "-large-text-contrast" : "").png"
+                            try png.write(to: out.appendingPathComponent(name))
+                            window.orderOut(nil)
+                            count += 1
+                        }
+                    }
+                }
+            }
+        }
+        print("Rendered \(count) settings previews → \(out.path)")
+    }
+    enum Failure: Error { case render }
+}

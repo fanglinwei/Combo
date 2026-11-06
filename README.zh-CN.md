@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/fanglinwei/Combo"><img src="https://img.shields.io/badge/GitHub-Combo-181717?style=flat-square&amp;logo=github&amp;logoColor=white" alt="GitHub"></a>
-  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-v1.2.0-007EC6?style=flat-square" alt="版本 v1.2.0"></a>
+  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/UI-1.3.0%20preview-007EC6?style=flat-square" alt="1.3.0 界面预览"></a>
   <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/downloads-Releases-44CC11?style=flat-square" alt="GitHub Releases 下载入口"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-007EC6?style=flat-square" alt="MIT 开源协议"></a>
   <a href="#系统要求与安装"><img src="https://img.shields.io/badge/platform-macOS%2026%2B-999999?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="macOS 26 或更新版本"></a>
@@ -26,7 +26,7 @@
   <a href="https://github.com/fanglinwei/Combo/issues">反馈问题</a>
 </p>
 
-Combo 是一款 macOS 菜单栏应用，让你查看电量、连接 Wi-Fi、调节音量和控制媒体播放。
+Combo 是一款 macOS 菜单栏应用，让你查看电量与 Wi-Fi 信息、调节音量和控制媒体播放。
 
 Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用户，让工作与音乐在菜单栏中自然相伴。
 
@@ -40,32 +40,36 @@ Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用�
 
 [静态预览](docs/assets/combo-menu-bar-preview.png)
 
-### Combo 面板
+### 1.3.0 界面预览
 
-<p align="center">
-  <img src="docs/assets/combo-panel-now-playing.png" width="420" alt="Combo 媒体播放中的主面板，展示封面、曲目信息、播放控制、电池、Wi-Fi 与音量">
-</p>
+新版以一体式玻璃面板集中呈现媒体、电池、Wi-Fi 与声音；电池、网络和声音详情共用返回导航与系统设置入口。设置改用顶部「通用／外观／关于」工具栏，引导帮助你找到菜单栏入口，并反馈面板打开与收起的状态。
 
-Combo 面板将 macOS 的 Wi-Fi、电池和声音控制集中在一处，方便连接网络、查看电量、调整支持的电池选项，以及调节音量和切换输出设备。
+| 总览面板 · 深色 | 设置窗口 · 浅色 |
+| :---: | :---: |
+| <img src="docs/assets/ui-1.3.0/panel.jpg" width="352" alt="1.3.0 总览设计稿：媒体播放、电池、Wi-Fi、AirPods 电量与音量"> | <img src="docs/assets/ui-1.3.0/settings.jpg" width="420" alt="1.3.0 浅色设置设计稿：顶部工具栏、显示模式、33 种图标效果入口和显示偏好"> |
+
+以上图片截自最新设计稿，使用示例数据；英文 README 也保留稿件原有中文。新 AppIcon 采用蓝白底座、电量弧、Wi-Fi 双弧和圆弧排列的四条音乐柱。
+
+[设计说明与全部详情截图](docs/design/liquid-glass/README.md) · [可交互总设计稿](docs/design/liquid-glass/index.html)（下载后用浏览器打开） · [AppIcon 源稿与尺寸预览](docs/assets/brand/liquid-glass/README.md)
 
 ### 菜单栏图标动效
 
-| 连接 Wi-Fi | 充电与播放 | 使用 AirPods 听音乐 | 调节 AirPods 音量 |
-| :---: | :---: | :---: | :---: |
-| <img src="docs/assets/states/connecting.gif" width="120" alt="连接时 Wi-Fi 图形放大并持续脉冲"> | <img src="docs/assets/states/charging.gif" width="120" alt="绿色电量弧、充电标记与播放音柱同时显示"> | <img src="docs/assets/states/airpods.gif" width="120" alt="中央显示 AirPods 图形，底部音柱随固定播放动效循环变化"> | <img src="docs/assets/states/adjusting.gif" width="120" alt="临时音量数字显示后恢复 AirPods 图形"> |
+| 充电与播放 | 使用 AirPods 听音乐 | 调节 AirPods 音量 |
+| :---: | :---: | :---: |
+| <img src="docs/assets/states/charging.gif" width="120" alt="绿色电量弧、充电标记与播放音柱同时显示"> | <img src="docs/assets/states/airpods.gif" width="120" alt="中央显示 AirPods 图形，底部音柱随固定播放动效循环变化"> | <img src="docs/assets/states/adjusting.gif" width="120" alt="临时音量数字显示后恢复 AirPods 图形"> |
 
-动图使用应用自身的图标绘制逻辑与演示数据合成。更多示例见[图标状态图集](docs/combo-current-states.md)。
+动图使用应用自身的图标绘制逻辑与演示数据合成。更多示例见[图标状态图集](docs/product/icon-gallery.md)。
 
 ## 功能
 
 - **状态图标**：外圈显示电量，中央显示网络或音频设备，底部显示音量或播放状态。低电量变红，充电时变绿。
 - **电池**：查看电量、充电状态、健康信息和可读取的充电上限，切换支持的能耗模式。接通电源且手动充电上限暂停充电时，可用「立即充满电」临时解除上限，之后由 macOS 管理恢复。
-- **Wi-Fi**：开关 Wi-Fi、浏览和连接网络，使用已保存的密码，或选择在本机记住密码。个人热点和企业认证通过 macOS Wi-Fi 设置完成连接。
+- **Wi-Fi**：查看当前网络、附近网络、信号与安全信息。点击网络或个人热点打开 macOS Wi-Fi 设置，连接与开关均在系统中完成。
 - **声音与 AirPods**：切换输出、调节音量和静音；在设备支持时查看 AirPods 电量、切换降噪等模式。可查找附近 AirPlay 设备，并通过 macOS 声音设置连接。
 - **媒体控制**：查看曲目、封面和来源应用，控制上一首、播放／暂停和下一首，也可打开来源应用。需要播放器向 macOS 提供媒体信息和对应控制。
-- **个性化**：三种主题色、深浅外观、中英界面和登录时启动。播放音柱按固定节奏循环，可关闭动效，并遵循系统的「减少动态效果」设置。设置中提供 16 种图标预览；主动开始菜单栏演示后，关闭设置即可结束。
+- **个性化**：深浅外观、中英界面和登录时启动。播放音柱按固定节奏循环，可关闭动效，并遵循系统的「减少动态效果」设置。「外观」提供实时菜单栏预览和独立的 33 种效果预览，可查看状态说明与变体。
 
-部分功能取决于设备和 macOS 版本，详见[兼容性说明](#兼容性说明)；授权与密码存储见[权限与隐私](#权限与隐私)。
+部分功能取决于设备和 macOS 版本，详见[兼容性说明](#兼容性说明)；授权说明见[权限与隐私](#权限与隐私)。
 
 ## 系统要求与安装
 
@@ -77,7 +81,7 @@ Combo 面板将 macOS 的 Wi-Fi、电池和声音控制集中在一处，方便�
 
 在 [GitHub Releases](https://github.com/fanglinwei/Combo/releases) 查看已发布的安装包和版本说明。
 
-**1.2.0 安装包正在准备，目前尚未发布可下载的 Release 资源。** 安装包发布前，请使用下方的[源码构建方式](#从源码构建)。下载时请查看对应版本说明中的架构支持和签名状态。
+**此处展示 1.3.0 的界面更新；仓库应用版本目前仍为 `1.3.0 / 103`。** 安装包是否可用以 Releases 为准；开发版本可按下方[源码构建方式](#从源码构建)运行。下载前请核对对应版本的架构支持和签名状态。
 
 ### 手动下载安装
 
@@ -157,17 +161,17 @@ Release 安装包发布后，可按以下步骤安装：
 3. 按提示输入 Mac 登录密码，随后重新执行第 4 步的签名校验命令。
 4. 校验通过后，再从「应用程序」打开 Combo；如仍被拦截，回到第 2 步。校验仍失败时，请反馈错误或从源码构建。
 
-本地重新签名可能导致定位、蓝牙或辅助功能等权限需要重新授权。它不能替代 Developer ID 签名与 Apple 公证，也不保证系统升级或覆盖安装后不再提示。签名方法参考 [Apple 的代码签名说明](https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac)。
+本地重新签名可能导致定位或蓝牙等权限需要重新授权。它不能替代 Developer ID 签名与 Apple 公证，也不保证系统升级或覆盖安装后不再提示。签名方法参考 [Apple 的代码签名说明](https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac)。
 
 </details>
 
 ## 快速开始
 
-1. **打开面板。** 启动 Combo，点击菜单栏图标。首次使用可跟随引导，也可从「设置 → 通用」重新查看。
+1. **打开面板。** 启动 Combo，点击菜单栏图标。首次使用只需一屏了解图标操作，点击「开始使用」即可；也可从「设置 → 关于」重新查看。
 2. **使用所需功能。** 选择电池、Wi-Fi 或声音，或控制当前媒体播放；按需授予相关权限。
-3. **调整偏好。** 点击齿轮设置外观、语言和登录时启动；「菜单栏与控制」提供手动隐藏系统图标的指引。
+3. **调整偏好。** 点击齿轮设置外观、语言和登录时启动；「通用」提供系统 Wi-Fi 设置入口，「外观」提供电量显示偏好；系统图标隐藏图片与帮助统一放在「关于」。
 
-关闭设置窗口后，Combo 继续运行。系统图标设置仅在你明确请求时恢复。
+关闭设置窗口后，Combo 继续运行。系统图标由你在 macOS 设置中手动管理。
 
 ## 权限与隐私
 
@@ -180,13 +184,11 @@ Release 安装包发布后，可按以下步骤安装：
 | 定位 | 按 macOS 要求，显示 Wi-Fi 名称、扫描附近网络。 |
 | 蓝牙 | 识别已连接音频设备，使用支持的耳机电量与聆听控制。 |
 | 本地网络 | 启用附近 AirPlay 发现后，查找本地设备。 |
-| 钥匙串 | 使用已保存的 Wi-Fi 密码，或记住手动输入的密码。 |
-| 辅助功能 | 可选的系统图标显示设置记录、恢复与菜单诊断。 |
 | 管理员授权 | 修改当前电源类型的能耗模式。 |
 
-**Wi-Fi 密码**：手动输入的密码只在连接成功且选择记住后，保存在本机 Combo 钥匙串中，可随时删除。系统保存的密码仅用于所选网络的当次连接，不复制到 Combo 存储。取消或拒绝访问后，本次运行会停止后续系统密码请求。
+**Wi-Fi 密码**：连接在系统 Wi-Fi 设置中完成，Combo 不读取或保存 Wi-Fi 密码，也不请求相关钥匙串授权。
 
-**辅助功能是可选权限**：基本状态显示无需此权限。授权本身不会改变系统图标；隐藏由你手动完成，恢复记录需要明确操作。
+系统图标隐藏仅提供图片指引。Combo 不读取、记录或恢复这些设置，也不请求辅助功能权限。
 
 ## 兼容性说明
 
@@ -204,7 +206,7 @@ Release 安装包发布后，可按以下步骤安装：
 
 媒体播放、AirPods、AirPlay 路由详情、个人热点及部分电池功能使用私有系统接口，可能随 macOS 更新变化。无法取得信息或执行操作时，Combo 会显示不可用状态，或保留相关系统设置入口。
 
-实现和设备说明：[电池控制](docs/battery-controls.md)、[声音与 AirPods](docs/airpods-audio-feasibility.md)、[AirPlay](docs/airplay-homepod-icon-research.md)、[个人热点](docs/mobile-hotspot-api-feasibility.md)。
+实现和设备说明：[电池控制](docs/engineering/battery.md)、[声音与 AirPods](docs/engineering/audio.md#airpods)、[AirPlay](docs/engineering/audio.md#airplay)、[个人热点](docs/engineering/network.md#hotspot)。完整分类见[开发维护文档索引](docs/README.md)。
 
 ## 常见问题
 
@@ -220,13 +222,9 @@ Release 安装包发布后，可按以下步骤安装：
 
 请检查上方的权限与兼容性说明。部分能力需要支持的设备或经过验证的特定系统构建。无法直接操作时，可以使用对应的系统设置入口。
 
-**辅助功能开关已开启，Combo 仍提示无法访问？**
-
-先退出并重新打开应用。如果重新构建或移动了本地签名的副本，请在权限列表中移除旧 Combo，再添加当前正在运行的副本。
-
 **退出 Combo 后，系统图标会自动回来吗？**
 
-如果有初始记录，请使用 Combo 的明确恢复操作；也可以在 macOS 设置中重新打开这些图标。退出应用不会自动恢复记录值。
+请在 macOS 菜单栏设置中手动重新勾选。退出 Combo 不会改变系统图标设置。
 
 ## 从源码构建
 

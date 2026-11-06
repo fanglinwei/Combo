@@ -45,7 +45,7 @@ struct EnergyReply: Decodable {
     init(helperURL: URL = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/ComboEnergyHelper")) {
         self.helperURL = helperURL
     }
-    static func displayLimit(_ value: Int) -> Int { min(3, max(1, value)) }
+    static let displayLimit = 3
 
     func refresh() {
         guard process == nil else { return }

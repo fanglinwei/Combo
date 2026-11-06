@@ -34,7 +34,7 @@ func airPodsDragPosition(selected: Int?, count: Int, width: Double,
     guard let selected, count > 1, (0..<count).contains(selected),
           width.isFinite, width > 0, startX.isFinite, startY.isFinite, translation.isFinite else { return nil }
     let column = width / Double(count)
-    guard (2...46).contains(startY), abs(startX - column * (Double(selected) + 0.5)) <= 31 else { return nil }
+    guard (3...34).contains(startY), abs(startX - column * (Double(selected) + 0.5)) <= column / 2 - 3 else { return nil }
     return min(Double(count - 1), max(0, Double(selected) + translation / column))
 }
 

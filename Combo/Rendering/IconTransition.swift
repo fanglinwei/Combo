@@ -330,4 +330,4 @@ struct PanelHighlightTransition {
     }
 }
 
-// Pixel-measured from Tests/WiFiReference.png, in the menu-bar renderer's 100 × 100 coordinates.
+// Pixel-measured from Tests/Fixtures/WiFiReference.png, in the menu-bar renderer's 100 × 100 coordinates.

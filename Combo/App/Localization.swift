@@ -68,9 +68,6 @@ struct LocalizedText: ExpressibleByStringInterpolation {
     init(_ resolve: @escaping () -> String) { self.resolve = resolve }
     var string: String { resolve() }
     var isEmpty: Bool { string.isEmpty }
-    static func joined(_ values: [LocalizedText], separator: String) -> LocalizedText {
-        LocalizedText { values.map(\.string).joined(separator: separator) }
-    }
 }
 
 func LKey(_ key: String) -> String { L(String.LocalizationValue(key)) }

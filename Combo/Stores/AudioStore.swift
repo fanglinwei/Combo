@@ -57,7 +57,8 @@ struct OutputChoice: Identifiable {
         L(isRouteInfoUnavailable ? "连接状态未知 · 在系统声音设置中查看" : "在系统声音设置中选择")
     }
 
-    init(discovery: AirPlayDiscovery? = nil, routeProbe: AirPlayRouteProbe? = nil) {
+    init(discovery: AirPlayDiscovery? = nil, routeProbe: AirPlayRouteProbe? = nil, initialOutputID: AudioDeviceID = 0) {
+        device = initialOutputID
         self.discovery = discovery ?? AirPlayDiscovery()
         self.routeProbe = routeProbe ?? AirPlayRouteProbe()
         self.routeProbe.update = { [weak self] request, info in

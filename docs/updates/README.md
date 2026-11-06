@@ -1,19 +1,12 @@
-# Combo 更新源
+# Combo 更新源目录
 
-已上线固定地址：`https://fanglinwei.github.io/Combo/updates/appcast.xml`。
+本目录保存 GitHub Pages 使用的静态更新资源，维护流程与签名恢复见 [更新发布维护](../release/updates.md)。
 
-2026-10-08 部署结果：Pages 已构建成功。首次检查发现账号主页旧域名继承导致 HTTP 重定向；用户额外授权解除旧绑定后，固定 Pages HTTPS 地址已验证返回与本地完全一致的 XML。接入使用此固定地址，raw 仓库地址仅作诊断参考，见首次准备记录。
+固定客户端地址为 [HTTPS appcast](https://fanglinwei.github.io/Combo/updates/appcast.xml)。本地清单已含 `1.1.0 / 101`、`1.2.0 / 102`；线上内容和 Pages 来源在发布时重新核验，不以本地文件或构建成功代替匿名 HTTPS 读取。
 
-托管使用公开仓库 `fanglinwei/Combo` 的 GitHub Pages，当前来源为 `feature/update` 分支的 `/docs`；合入 `main` 后再将来源迁移到 `main`，公开 URL 保持不变。不要删除仍作为 Pages 来源的分支。`docs/.nojekyll` 使该目录以静态资源发布。
+- `appcast.xml`：客户端订阅源，最后发布；安装包位于 GitHub Releases。
+- `notes/Combo-版本-arm64.html`：版本固定说明，先于清单上线；现有绝对 URL 不随文档整理迁移。
+- `public-ed-key.txt`：公开 EdDSA 公钥，被客户端配置及准备/验证工具使用；私钥、加密备份和恢复密码不放进此目录。
+- 上级 `docs/.nojekyll`：保留静态发布配置。
 
-`appcast.xml` 已提交到远程仓库，当前只是初始骨架，没有版本条目。首个更新版本使用 Sparkle 官方 `generate_appcast` 生成经过验证的条目；不能以 GitHub Release 标签自动代替清单。
-
-安装包位于 GitHub Releases，版本固定更新说明放在本目录的 `notes/`。发布时先上线安装包与说明，最后上线清单。
-
-公钥可以公开；私钥、加密私钥备份及恢复密码绝不能放进此目录。`public-ed-key.txt` 已保存公钥；客户端接入时将其配置为 `SUPublicEDKey`。
-
-签名工具必须指定钥匙串账户 `combo-updates`，不要使用默认的 `ed25519` 账户。准备记录与备份恢复说明见 [首次准备记录](../sparkle-setup-record.md)。
-
-本次提交、推送与 Pages 启用已获得用户授权并执行；以后发布仍按项目 Git 规则获得对应操作授权。Pages 构建成功不等于公开更新地址可用，不能跳过 HTTPS 读取检查。
-
-维护流程见 [接入与发布清单](../sparkle-release-checklist.md)。
+保持更新源、公钥与既有说明路径稳定。发布包先上线，清单最后上线；已公开包不可覆盖，后续 build 必须递增。

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Combo · 总设计稿</title>
+  <style>
+    :root { color-scheme: light dark; font: 13px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; color: light-dark(#20252d, #f6f8fc); background: light-dark(#f5f6f8, #191a1d); }
+    * { box-sizing: border-box; }
+    body { margin: 0; height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+    header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; padding: 14px 20px; border-bottom: 1px solid light-dark(rgb(41 57 78 / .14), rgb(255 255 255 / .16)); }
+    h1 { margin: 0; font-size: 15px; font-weight: 600; }
+    nav { display: flex; flex-wrap: wrap; gap: 4px; }
+    nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 5px 12px; color: light-dark(#414b59, #d2d9e5); text-decoration: none; border-radius: 8px; cursor: pointer; }
+    nav a:hover { background: light-dark(rgb(41 57 78 / .06), rgb(255 255 255 / .08)); }
+    nav a[aria-current="page"] { color: light-dark(#ffffff, #252629); background: light-dark(#3b3b3d, #ededee); }
+    iframe { display: block; width: 100%; height: 100%; min-height: 0; border: 0; }
+    @media (pointer: coarse) { nav a { min-height: 44px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Combo · 总设计稿</h1>
+    <nav aria-label="设计稿页面">
+      <a href="#panel" aria-controls="design-preview" aria-current="page">面板与详情</a>
+      <a href="#settings" aria-controls="design-preview">设置</a>
+      <a href="#onboarding" aria-controls="design-preview">使用引导</a>
+    </nav>
+  </header>
+  <iframe id="design-preview" src="combo-panel-liquid-glass.html" title="面板与详情设计稿"></iframe>
+  <script>
+    const designs = {
+      panel: { file: 'combo-panel-liquid-glass.html', title: '面板与详情设计稿' },
+      settings: { file: 'combo-settings-liquid-glass.html', title: '设置设计稿' },
+      onboarding: { file: 'combo-onboarding-liquid-glass.html', title: '使用引导设计稿' }
+    };
+    const preview = document.getElementById('design-preview');
+    function showDesign() {
+      const requested = location.hash.slice(1);
+      const key = Object.hasOwn(designs, requested) ? requested : 'panel';
+      const design = designs[key];
+      if (preview.getAttribute('src') !== design.file) preview.src = design.file;
+      preview.title = design.title;
+      document.querySelectorAll('nav a').forEach(link => {
+        link.setAttribute('aria-current', link.hash === `#${key}` ? 'page' : 'false');
+      });
+    }
+    window.addEventListener('hashchange', showDesign);
+    showDesign();
+  </script>
+</body>
+</html>
