@@ -16,6 +16,7 @@ enum Motion {
     static let cardShow: TimeInterval = 0.2
     static let cardStep: TimeInterval = 0.03     // 四张卡片的完整入场为 290ms
     static let detailResize: TimeInterval = 0.18  // 内容变化时的高度缓动，防止高度瞬跳
+    static let settingsResize: TimeInterval = 0.3 // 固定标题栏位置，内容高度无回弹收敛
     static let reducedFade: TimeInterval = 0.12   // 减弱动态：只淡入，不位移不缩放
 
     static func animation(_ duration: Double) -> Animation {
@@ -46,6 +47,7 @@ struct ComboPalette {
     var panelGlass: Color { themeColor(isDark ? 0x1D222B : 0xF4F7FC).opacity(isDark ? 0.80 : 0.76) }
     var panelRim: Color { .white.opacity(isDark ? 0.28 : 0.72) }
     var settingsCanvas: Color { themeColor(isDark ? 0x202631 : 0xF4F8FD).opacity(isDark ? 0.87 : 0.83) }
+    var onboardingGlass: Color { themeColor(isDark ? 0x1D222B : 0xF4F7FC).opacity(isDark ? 0.88 : 0.84) }
     var settingsContent: Color { isDark ? themeColor(0x0F1620).opacity(0.24) : .white.opacity(0.24) }
     var settingsToolbar: Color { .white.opacity(isDark ? 0.035 : 0.16) }
     let canvasTop: Color

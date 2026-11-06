@@ -8,6 +8,53 @@ extension IntegrationTests {
     struct SettingsLayoutTests {
         @Test
         @MainActor
+        func testHelpDisclosureLayoutAcrossStatesAndPalettes() async throws {
+            for dark in [false, true] {
+                for expanded in [false, true] {
+                    var contentWidth: CGFloat = 0
+                    let palette = ComboPalette.settings(isDark: dark)
+                    let view = DisclosureGroup(isExpanded: .constant(expanded)) {
+                        Text("A long help description that must wrap within the inset content area without widening the settings window.")
+                            .font(.system(size: 11)).fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { contentWidth = $0 }
+                    } label: {
+                        HStack(spacing: 11) {
+                            CategoryIcon(symbol: "book", color: palette.iconBlue)
+                            Text("Getting started")
+                        }
+                    }
+                    .disclosureGroupStyle(SettingsHelpDisclosureStyle(reduceMotion: true))
+                    .environment(\.comboPalette, palette)
+                    .foregroundStyle(palette.primaryText)
+                    .frame(width: 500).fixedSize(horizontal: false, vertical: true)
+                    let hosting = NSHostingView(rootView: view)
+                    let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: 500, height: 160),
+                                          styleMask: .borderless, backing: .buffered, defer: false)
+                    window.isReleasedWhenClosed = false
+                    defer { window.close(); window.contentView = nil }
+                    window.contentView = hosting
+                    window.orderFrontRegardless()
+                    try await Task.sleep(for: .milliseconds(80))
+                    hosting.layoutSubtreeIfNeeded()
+                    #expect(hosting.fittingSize.width == 500)
+                    if expanded {
+                        #expect(contentWidth == 430, "Help text must have 35pt insets on both sides")
+                        #expect(hosting.fittingSize.height > 66, "Expanded content and its bottom spacing must be visible")
+                    } else {
+                        #expect(contentWidth == 0, "Collapsed help must hide its content")
+                        #expect(hosting.fittingSize.height == 50, "24pt icon plus 13pt vertical padding")
+                    }
+                    let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
+                    hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+                    let png = try #require(bitmap.representation(using: .png, properties: [:]))
+                    Attachment.record(png, named: "help-\(dark ? "dark" : "light")-\(expanded ? "expanded" : "collapsed").png")
+                }
+            }
+        }
+
+        @Test
+        @MainActor
         func testAllPagesAcrossLanguagesPalettesAndWindowSizes() async throws {
             try await renderPages(accessible: false)
         }
@@ -16,6 +63,51 @@ extension IntegrationTests {
         @MainActor
         func testAllPagesWithLargeTextAndHighContrast() async throws {
             try await renderPages(accessible: true)
+        }
+
+        @Test
+        @MainActor
+        func testHeightResizeInterruptionAndReducedMotion() async throws {
+            let store = Store(monitorsSystem: false)
+            defer { store.stop() }
+            store.reduceMotion = true
+            let delegate = AppDelegate(store: store)
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: SettingsLayout.width, height: 600),
+                                  styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            defer { window.close() }
+            delegate.configureSettingsWindow(window)
+            let screen = try #require(window.screen?.visibleFrame)
+            window.setFrameTopLeftPoint(NSPoint(x: screen.midX - SettingsLayout.width / 2, y: screen.maxY - 20))
+            window.orderFrontRegardless()
+            let top = window.frame.maxY
+            let chrome = window.frame.height - window.contentLayoutRect.height
+            delegate.updateSettingsContentHeight(280)
+            try await Task.sleep(for: .milliseconds(50))
+            #expect(abs(window.frame.height - (280 + chrome)) < 1)
+            #expect(abs(window.frame.maxY - top) < 1)
+
+            store.reduceMotion = false
+            delegate.updateSettingsContentHeight(520)
+            try await Task.sleep(for: .milliseconds(70))
+            #expect(window.frame.height > 280 + chrome && window.frame.height < 520 + chrome,
+                    "Window growth must have intermediate frames: \(window.frame)")
+            let interrupted = window.frame.height
+            delegate.updateSettingsContentHeight(340)
+            try await Task.sleep(for: .milliseconds(20))
+            #expect(abs(window.frame.height - interrupted) < 100, "Retarget from the current visible height")
+            try await Task.sleep(for: .milliseconds(400))
+            #expect(abs(window.frame.height - (340 + chrome)) < 1, "The latest height must win")
+            #expect(abs(window.frame.maxY - top) < 1, "Keep the titlebar stationary")
+
+            store.reduceMotion = true
+            delegate.updateSettingsContentHeight(10_000)
+            try await Task.sleep(for: .milliseconds(50))
+            #expect(window.frame.minY >= screen.minY - 1 && window.frame.maxY <= screen.maxY + 1,
+                    "Long content must fit the available screen")
+            delegate.updateSettingsContentHeight(280)
+            try await Task.sleep(for: .milliseconds(50))
+            #expect(abs(window.frame.height - (280 + chrome)) < 1, "Reduced Motion resizes immediately")
         }
 
         @MainActor
@@ -45,7 +137,8 @@ extension IntegrationTests {
                                                        styleMask: [.titled, .closable, .miniaturizable, .resizable]).size
                         for page in Page.allCases {
                             let name = "\(language.rawValue)-\(dark ? "dark" : "light")-\(Int(size.width))-\(page.id)\(accessible ? "-large-text-contrast" : "")"
-                            let view = SettingsView(store: store, page: page) { _ in }
+                            var measuredHeight: CGFloat = 0
+                            let view = SettingsView(store: store, page: page, contentHeightChanged: { measuredHeight = $0 }) { _ in }
                                 .defaultAppStorage(defaults)
                                 .environment(\.colorScheme, dark ? .dark : .light)
                                 .environment(\.dynamicTypeSize, accessible ? .accessibility3 : .large)
@@ -61,6 +154,8 @@ extension IntegrationTests {
                             window.orderFrontRegardless()
                             try await Task.sleep(for: .milliseconds(80))
                             hosting.layoutSubtreeIfNeeded()
+                            #expect(measuredHeight > 200 && measuredHeight < 700,
+                                    "Report the selected page's natural content height: \(measuredHeight), \(name)")
                             #expect(window.frame.size == size, "Settings must fit the requested window: \(name)")
                             #expect(hosting.frame.size == size, "Settings must not enlarge the content view: \(name)")
                             let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds), "Missing settings bitmap: \(name)")

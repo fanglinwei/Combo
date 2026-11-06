@@ -591,3 +591,8 @@
 "连接与开关由 macOS 管理。" = "Connections and Wi-Fi power are managed by macOS.";
 
 "输出设备" = "Output Devices";
+"菜单栏右上角" = "Right of the menu bar";
+"找不到菜单栏图标？" = "Cannot find the menu bar icon?";
+"面板已收起，随时可以再次打开" = "The panel is closed. Open it again anytime.";
+"准备好后，点击「开始使用」结束引导。" = "When you are ready, click Get Started to finish the guide.";
+"面板会从图标下方展开。" = "The panel opens below the icon.";

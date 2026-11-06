@@ -28,7 +28,7 @@ enum Page: String, CaseIterable, Identifiable {
 enum SettingsLayout {
     static let width: CGFloat = 560
     static let height: CGFloat = 640
-    static let minHeight: CGFloat = 560
+    static let minHeight: CGFloat = 240
 }
 
 struct SettingsView: View {
@@ -38,16 +38,23 @@ struct SettingsView: View {
     @ObservedObject var battery: BatteryStore
     let setGuideOnTop: (Bool) -> Void
     let closeGuide: () -> Void
+    let contentHeightChanged: (CGFloat) -> Void
+    let guideHeightChanged: (CGFloat) -> Void
 
-    init(store: Store, page: Page = .general, closeGuide: @escaping () -> Void = {}, setGuideOnTop: @escaping (Bool) -> Void) {
+    init(store: Store, page: Page = .general, closeGuide: @escaping () -> Void = {},
+         contentHeightChanged: @escaping (CGFloat) -> Void = { _ in },
+         guideHeightChanged: @escaping (CGFloat) -> Void = { _ in }, setGuideOnTop: @escaping (Bool) -> Void) {
         self.store = store
         self.battery = store.battery
         self.setGuideOnTop = setGuideOnTop
         self.closeGuide = closeGuide
+        self.contentHeightChanged = contentHeightChanged
+        self.guideHeightChanged = guideHeightChanged
         _page = State(initialValue: page)
     }
 
     @State private var page: Page
+    @State private var contentHeights: [Page: CGFloat] = [:]
     @State private var reset = false
     @State private var showingOnboarding = false
     @State private var showingIconPreview = false
@@ -61,11 +68,12 @@ struct SettingsView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     private var palette: ComboPalette { ComboPalette.settings(isDark: colorScheme == .dark) }
     private var guideVisible: Bool { !onboardingCompleted || showingOnboarding }
+    private var contentHeight: CGFloat? { guideVisible ? nil : contentHeights[page] }
 
     var body: some View {
         Group {
             if guideVisible {
-                OnboardingView(store: store) {
+                OnboardingView(store: store, contentHeightChanged: guideHeightChanged) {
                     closeGuide()
                     onboardingCompleted = true
                     showingOnboarding = false
@@ -81,11 +89,20 @@ struct SettingsView: View {
                 }
             }
         }
-        .frame(minWidth: SettingsLayout.width).tint(palette.accent)
+        .frame(minWidth: guideVisible ? OnboardingLayout.width : SettingsLayout.width).tint(palette.accent)
         .font(.system(size: 13)).foregroundStyle(palette.primaryText).controlSize(.small)
         .background(reduceTransparency ? palette.canvasTop : .clear)
+        .containerBackground(for: .window) {
+            if reduceTransparency { palette.canvasTop }
+            else if guideVisible {
+                GlassBackdrop(blur: 32).overlay(palette.onboardingGlass)
+            } else { GlassBackdrop(blur: 34).overlay(palette.settingsCanvas) }
+        }
         .onAppear { setGuideOnTop(guideVisible) }
         .onChange(of: guideVisible) { _, visible in setGuideOnTop(visible) }
+        .onChange(of: contentHeight) { _, height in
+            if let height { contentHeightChanged(height) }
+        }
         .onChange(of: store.login) { _, enabled in if enabled { loginFeedback = "" } }
         .alert(L("恢复显示偏好？"), isPresented: $reset) {
             Button(L("取消"), role: .cancel) {}
@@ -96,26 +113,31 @@ struct SettingsView: View {
         .environment(\.comboPalette, palette)
     }
 
-    @ViewBuilder private func settingsPage(_ item: Page) -> some View {
-        if item == .appearance && showingIconPreview {
-            IconPreviewView(store: store) {
-                showingIconPreview = false
-                previewButtonFocused = true
-            }
-        } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    switch item {
-                    case .general: general
-                    case .appearance: appearance
-                    case .about: about
+    private func settingsPage(_ item: Page) -> some View {
+        ScrollView {
+            Group {
+                if item == .appearance && showingIconPreview {
+                    IconPreviewView(store: store) {
+                        showingIconPreview = false
+                        previewButtonFocused = true
                     }
-                }.padding(.horizontal, 30).padding(.top, 26).padding(.bottom, 24)
-                    .frame(maxWidth: 640, alignment: .leading).frame(maxWidth: .infinity)
-                    .background(HoverScrollerBridge(accent: NSColor(palette.accent)))
-            }.scrollBounceBehavior(.basedOnSize)
-                .accessibilityIdentifier("settings-\(item.id)")
-        }
+                    .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    VStack(alignment: .leading, spacing: 24) {
+                        switch item {
+                        case .general: general
+                        case .appearance: appearance
+                        case .about: about
+                        }
+                    }.padding(.horizontal, 30).padding(.top, 26).padding(.bottom, 24)
+                        .frame(maxWidth: 640, alignment: .leading).frame(maxWidth: .infinity)
+                        .background(HoverScrollerBridge(accent: NSColor(palette.accent)))
+                }
+            }
+            .onGeometryChange(for: CGFloat.self) { ceil($0.size.height) } action: { contentHeights[item] = $0 }
+        }.scrollBounceBehavior(.basedOnSize)
+            .clipped()
+            .accessibilityIdentifier("settings-\(item.id)")
     }
 
     private func groupHeader(_ title: String) -> some View {
@@ -240,10 +262,10 @@ struct SettingsView: View {
             Button(L("打开菜单栏设置")) {
                 if !store.openSystemSettings("menu") { settingsErrors["menu"] = "无法打开菜单栏设置，请手动进入系统设置。" }
                 else { settingsErrors["menu"] = nil }
-            }.buttonStyle(PanelButtonStyle())
+            }.buttonStyle(.link)
             if let error = settingsErrors["menu"] { note(error.string) }
             note(L("请确认系统图标已隐藏，Combo 图标仍在。如需重新显示，请在系统设置中重新勾选。"))
-        }.padding(.top, 12)
+        }
     }
 
     private func guideScreenshot(_ title: String, image: String) -> some View {
@@ -292,18 +314,25 @@ struct SettingsView: View {
             }
             updateSettings
             VStack(alignment: .leading, spacing: 0) {
+                separator
                 DisclosureGroup {
                     VStack(alignment: .leading, spacing: 12) {
                         note(L("回顾菜单栏图标的基本操作。"))
-                        Button(L("查看引导")) { showingOnboarding = true }.buttonStyle(PanelButtonStyle())
-                    }.padding(.vertical, 12)
+                        Button(L("查看引导")) { showingOnboarding = true }.buttonStyle(.link)
+                    }
                 } label: {
-                    Label { Text(L("使用引导")) } icon: { CategoryIcon(symbol: "book.closed", color: palette.iconBlue) }
-                }.padding(.vertical, 12)
+                    HStack(spacing: 11) {
+                        CategoryIcon(symbol: "book", color: palette.iconBlue)
+                        Text(L("使用引导"))
+                    }
+                }
                 separator
                 DisclosureGroup { iconGuide } label: {
-                    Label { Text(L("系统图标隐藏指引")) } icon: { CategoryIcon(symbol: "menubar.rectangle", color: palette.iconSlate) }
-                }.padding(.vertical, 12)
+                    HStack(spacing: 11) {
+                        CategoryIcon(symbol: "menubar.rectangle", color: palette.iconSlate)
+                        Text(L("系统图标隐藏指引"))
+                    }
+                }
                 separator
                 DisclosureGroup {
                     VStack(alignment: .leading, spacing: 12) {
@@ -311,12 +340,47 @@ struct SettingsView: View {
                         note(L("仅显示向 macOS 报告播放状态的应用。静音时显示静音图标；开启“减少动态效果”后，播放音柱保持静止。"))
                         note(L("更新检查会连接 GitHub 获取版本信息；不上传本机状态，也不发送系统概况。"))
                         note(store.observation.string)
-                        Button(L("刷新本机状态")) { store.refresh() }.buttonStyle(PanelButtonStyle())
-                    }.padding(.vertical, 12)
+                        Button(L("刷新本机状态")) { store.refresh() }.buttonStyle(.link)
+                    }
                 } label: {
-                    Label { Text(L("隐私与状态边界")) } icon: { CategoryIcon(symbol: "checkmark.shield", color: palette.iconGreen) }
-                }.padding(.vertical, 12)
-            }.font(.system(size: 13))
+                    HStack(spacing: 11) {
+                        CategoryIcon(symbol: "checkmark.shield", color: palette.iconGreen)
+                        Text(L("隐私与状态边界"))
+                    }
+                }
+                separator
+            }.disclosureGroupStyle(SettingsHelpDisclosureStyle(reduceMotion: store.reduceMotion))
+        }
+    }
+}
+
+struct SettingsHelpDisclosureStyle: DisclosureGroupStyle {
+    @Environment(\.comboPalette) private var palette
+    let reduceMotion: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(reduceMotion ? nil : Motion.animation(Motion.detailResize)) {
+                    configuration.isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 11) {
+                    configuration.label
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12)).foregroundStyle(palette.mutedText)
+                        .rotationEffect(.degrees(configuration.isExpanded ? 90 : 0))
+                        .frame(width: 12).accessibilityHidden(true)
+                }.font(.system(size: 12)).padding(.vertical, 13)
+                    .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+            }.buttonStyle(.plain)
+                .accessibilityValue(configuration.isExpanded ? L("已展开") : L("已收起"))
+            if configuration.isExpanded {
+                configuration.content
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 35).padding(.bottom, 16)
+            }
         }
     }
 }

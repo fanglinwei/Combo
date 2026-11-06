@@ -31,13 +31,16 @@ extension IntegrationTests {
             UserDefaults.standard.set(true, forKey: OnboardingState.completedKey)
             defer { UserDefaults.standard.set(previousGuide, forKey: OnboardingState.completedKey) }
             let store = Store(monitorsSystem: false)
+            store.reduceMotion = true
             defer { store.stop() }
             let delegate = AppDelegate(store: store)
             delegate.openSettings()
             try await Task.sleep(for: .milliseconds(180))
             let window = try #require(delegate.settings)
             defer { window.close(); window.contentView = nil }
-            #expect(window.frame.size == NSSize(width: 560, height: 640), "Settings frame: \(window.frame)")
+            #expect(window.frame.width == SettingsLayout.width
+                    && window.frame.height >= SettingsLayout.minHeight
+                    && window.frame.height < SettingsLayout.height, "Settings must fit the General page: \(window.frame)")
             // The isolated AppKit host has no SwiftUI Settings scene to enforce content minimums.
             window.setFrameOrigin(NSPoint(x: -9000, y: -9000))
             store.scene = .music

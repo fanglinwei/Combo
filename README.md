@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/fanglinwei/Combo"><img src="https://img.shields.io/badge/GitHub-Combo-181717?style=flat-square&amp;logo=github&amp;logoColor=white" alt="GitHub"></a>
-  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-v1.2.0-007EC6?style=flat-square" alt="Version v1.2.0"></a>
+  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/UI-1.3.0%20preview-007EC6?style=flat-square" alt="1.3.0 UI preview"></a>
   <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/downloads-Releases-44CC11?style=flat-square" alt="Downloads on GitHub Releases"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-007EC6?style=flat-square" alt="MIT License"></a>
   <a href="#requirements-and-installation"><img src="https://img.shields.io/badge/platform-macOS%2026%2B-999999?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="macOS 26 or later"></a>
@@ -40,13 +40,21 @@ Combo is designed primarily for people who work on a MacBook and love listening 
 
 [Static preview](docs/assets/combo-menu-bar-preview.png)
 
-### Combo panel
+### 1.3.0 UI preview
+
+The updated glass panel groups media, battery, Wi-Fi, and sound in one surface. Detail pages share back navigation and system settings links. Settings uses a General / Appearance / About toolbar, and the welcome guide helps you find the menu bar icon and try opening and closing the panel.
+
+| Overview · dark | Settings · light |
+| :---: | :---: |
+| <img src="docs/assets/ui-1.3.0/panel.jpg" width="352" alt="1.3.0 overview design showing media, battery, Wi-Fi, AirPods battery and volume"> | <img src="docs/assets/ui-1.3.0/settings.jpg" width="420" alt="1.3.0 light settings design with a toolbar, appearance options and access to 33 icon effects"> |
 
 <p align="center">
-  <img src="docs/assets/combo-panel-now-playing-en.png" width="420" alt="Combo main panel during media playback, showing artwork, track details, playback controls, battery, Wi-Fi, and volume">
+  <img src="docs/assets/ui-1.3.0/onboarding.jpg" width="760" alt="1.3.0 welcome design showing the menu bar entry point, instructions and Get Started button">
 </p>
 
-The Combo panel brings macOS Wi-Fi, battery, and sound controls together, so you can check networks and battery levels, adjust supported battery options, change volume, and switch audio outputs in one place.
+These images are captured from the latest design mockups with sample data; their original Chinese labels are retained. The new AppIcon combines a blue and white base, battery arc, Wi-Fi arcs, and four music bars arranged along a curve.
+
+[Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](docs/design/liquid-glass/index.html) (download and open in a browser) · [AppIcon source and size previews](docs/assets/brand/liquid-glass/README.md)
 
 ### Menu bar icon in motion
 
@@ -63,7 +71,7 @@ These GIFs use the app's own icon renderer and demo data. See the [icon gallery]
 - **Wi-Fi**: View the current network, nearby networks, signal strength, and security. Click a network or Personal Hotspot to open macOS Wi-Fi settings, where you connect and turn Wi-Fi on or off.
 - **Sound and AirPods**: Switch outputs, adjust volume, and mute. On supported devices, check AirPods battery levels and change noise control modes. Find nearby AirPlay devices and connect through macOS Sound settings.
 - **Media controls**: View the track, artwork, and source app; use previous, play/pause, and next, or open the source app. The player must provide media information and the relevant controls to macOS.
-- **Personalization**: Light and dark appearances, English and Simplified Chinese, and launch at login. Playback bars follow a fixed loop; animations can be disabled and respect Reduce Motion. Settings includes one live status preview that reflects your display preferences.
+- **Personalization**: Light and dark appearances, English and Simplified Chinese, and launch at login. Playback bars follow a fixed loop; animations can be disabled and respect Reduce Motion. Appearance includes a live menu bar preview and a separate gallery of 33 icon effects with descriptions and variants.
 
 Some features depend on your device and macOS version. See [Compatibility](#compatibility) for support details and [Permissions and privacy](#permissions-and-privacy) for access details.
 
@@ -77,7 +85,7 @@ Some features depend on your device and macOS version. See [Compatibility](#comp
 
 [Visit GitHub Releases](https://github.com/fanglinwei/Combo/releases) for published packages and release notes.
 
-**The 1.2.0 package is being prepared; no release assets are currently published.** Until a package is available, use the [source build instructions](#build-from-source). Check the release notes for the package's supported architecture and signing status when downloading.
+**This page previews the 1.3.0 UI; the app version in the repository is still `1.2.0 / 102`.** Check Releases for available packages, or use the [source build instructions](#build-from-source) for the development version. Verify the package's architecture and signing status before downloading.
 
 ### Manual installation
 
@@ -163,9 +171,9 @@ Local re-signing may require granting Location or Bluetooth access again. It doe
 
 ## Getting started
 
-1. **Open the panel.** Launch Combo and click its menu bar icon. The one-page welcome shows the basic interaction; click Get Started to finish. Revisit it in Settings → About & Help.
+1. **Open the panel.** Launch Combo and click its menu bar icon. The one-page welcome shows the basic interaction; click Get Started to finish. Revisit it in Settings → About.
 2. **Use what you need.** Choose Battery, Wi-Fi, or Sound, or control the current media session. Grant the permissions required for the features you use.
-3. **Set your preferences.** Click the gear button to choose appearance, language, and launch at login. General includes a system Wi-Fi settings link; Appearance & Animation includes battery display preferences. System icon hiding instructions and other help are in About & Help.
+3. **Set your preferences.** Click the gear button to choose appearance, language, and launch at login. General includes a system Wi-Fi settings link; Appearance includes battery display preferences. System icon hiding instructions and other help are in About.
 
 Closing settings keeps Combo running. System icons are managed manually in macOS settings.
 

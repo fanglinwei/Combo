@@ -166,7 +166,7 @@ struct PanelView: View {
                             }
                         }
                 }.buttonStyle(PanelIconButtonStyle(size: CGSize(width: 30, height: 30)))
-                    .focusable().focused($focusedControl, equals: .settings).accessibilityIdentifier("panel-settings")
+                    .focusable().focusEffectDisabled().focused($focusedControl, equals: .settings).accessibilityIdentifier("panel-settings")
                     .onKeyPress(.space, phases: .down) { _ in
                         DispatchQueue.main.async { showSettings() }
                         return .handled

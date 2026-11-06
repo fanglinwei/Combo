@@ -44,6 +44,9 @@ final class ComboPanel: NSPanel {
     private var returnToPanelAfterSettings = false
     private var settingsClose: AnyCancellable?
     private var settingsResize: AnyCancellable?
+    private var settingsContentHeight: CGFloat?
+    private var guideContentHeight: CGFloat?
+    private var settingsTargetFrame: NSRect?
     /// 引导这一步要不要压在别人上面；真正的层级由 applyGuideLevel 结合前台应用决定。
     private var guideWantsTop = false
     private var settingsFrameBeforeGuide: NSRect?
@@ -62,7 +65,8 @@ final class ComboPanel: NSPanel {
         buildApplicationMenu()
         #endif
         status = NSStatusBar.system.statusItem(withLength: 30)
-        status.button?.target = self; status.button?.action = #selector(togglePanel)
+        status.button?.target = self; status.button?.action = #selector(statusItemClicked)
+        status.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         status.button?.wantsLayer = true
         status.button?.layer?.cornerRadius = 12
         change = store.objectWillChange.sink { [weak self] _ in DispatchQueue.main.async { self?.updateIcon() } }
@@ -155,6 +159,40 @@ final class ComboPanel: NSPanel {
             status.button?.setAccessibilityLabel(description)
         }
     }
+    @objc func statusItemClicked() {
+        if let event = NSApp.currentEvent,
+           event.type == .rightMouseUp || event.modifierFlags.contains(.control) {
+            guard let button = status.button else { return }
+            if store.panelVisible { closePanel() }
+            makeStatusMenu().popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.minY), in: button)
+        } else {
+            togglePanel()
+        }
+    }
+
+    func makeStatusMenu() -> NSMenu {
+        let menu = NSMenu()
+        for (section, title) in [(PanelSection.battery, L("电池")), (.sound, L("音量")), (.wifi, L("Wi‑Fi"))] {
+            let item = menu.addItem(withTitle: title, action: #selector(openStatusDetail(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = section.rawValue
+        }
+        menu.addItem(.separator())
+        let settings = menu.addItem(withTitle: L("设置…"), action: #selector(openSettings), keyEquivalent: ",")
+        settings.target = self
+        menu.addItem(.separator())
+        let quit = menu.addItem(withTitle: L("退出 Combo"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        quit.target = NSApp
+        return menu
+    }
+
+    @objc func openStatusDetail(_ sender: NSMenuItem) {
+        guard let value = sender.representedObject as? String, let section = PanelSection(rawValue: value) else { return }
+        store.detailSection = section
+        if !store.panelVisible { togglePanel() }
+        panel?.makeKeyAndOrderFront(nil)
+    }
+
     @objc func togglePanel() {
         if store.panelVisible { closePanel() }
         else if let screen = status.button?.window?.screen ?? NSScreen.main {
@@ -457,6 +495,11 @@ final class ComboPanel: NSPanel {
     func settingsView() -> SettingsView {
         SettingsView(store: store, closeGuide: { [weak self] in
             self?.settings?.close()
+        }, contentHeightChanged: { [weak self] height in
+            self?.updateSettingsContentHeight(height)
+        }, guideHeightChanged: { [weak self] height in
+            self?.guideContentHeight = height
+            DispatchQueue.main.async { [weak self] in self?.updateSettingsLayout() }
         }) { [weak self] onTop in
             self?.setGuideOnTop(onTop)
         }
@@ -469,18 +512,50 @@ final class ComboPanel: NSPanel {
         DispatchQueue.main.async { [weak self] in self?.updateSettingsLayout() }
     }
 
+    func updateSettingsContentHeight(_ height: CGFloat) {
+        settingsContentHeight = height
+        // Geometry reporting runs inside SwiftUI layout; resize after that pass completes.
+        DispatchQueue.main.async { [weak self] in self?.updateSettingsLayout() }
+    }
+
     func updateSettingsLayout() {
         guard let window = settings else { return }
-        window.minSize = NSSize(width: SettingsLayout.width, height: SettingsLayout.minHeight)
+        let width = guideWantsTop ? OnboardingLayout.width : SettingsLayout.width
+        window.minSize = NSSize(width: width, height: SettingsLayout.minHeight)
+        window.titleVisibility = guideWantsTop ? .hidden : .visible
+        var frame = window.frame
+        frame.origin.x += (frame.width - width) / 2
+        frame.size.width = width
+        let screen = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame
+        let top = max(min(frame.maxY, screen?.maxY ?? frame.maxY),
+                      (screen?.minY ?? 0) + SettingsLayout.minHeight)
+        let available = top - (screen?.minY ?? (top - SettingsLayout.height))
         if guideWantsTop {
             if settingsFrameBeforeGuide == nil { settingsFrameBeforeGuide = window.frame }
-            var frame = window.frame
-            frame.origin.y += frame.height - 620
-            frame.size.height = 620
-            if window.frame != frame { window.setFrame(frame, display: true) }
-        } else if let frame = settingsFrameBeforeGuide {
-            if window.frame != frame { window.setFrame(frame, display: true) }
-            else if window.toolbar?.isVisible == true { settingsFrameBeforeGuide = nil }
+            let chrome = window.frame.height - window.contentLayoutRect.height
+            let height = guideContentHeight.map { $0 + chrome } ?? OnboardingLayout.height
+            frame.size.height = min(max(SettingsLayout.minHeight, height), available)
+            frame.origin.y = top - frame.height
+        } else if let height = settingsContentHeight {
+            let chrome = window.frame.height - window.contentLayoutRect.height
+            frame.size.height = min(max(SettingsLayout.minHeight, height + chrome), available)
+            frame.origin.y = top - frame.height
+            settingsFrameBeforeGuide = nil
+        } else if let previous = settingsFrameBeforeGuide {
+            frame = previous
+            if window.toolbar?.isVisible == true { settingsFrameBeforeGuide = nil }
+        }
+        if settingsTargetFrame != frame {
+            settingsTargetFrame = frame
+            if window.isVisible && !store.reduceMotion && !guideWantsTop {
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = Motion.settingsResize
+                    context.timingFunction = Motion.out
+                    window.animator().setFrame(frame, display: true)
+                }
+            } else {
+                window.setFrame(frame, display: true)
+            }
         }
         applyGuideLevel(window)
     }
@@ -495,6 +570,7 @@ final class ComboPanel: NSPanel {
         window.setFrame(NSRect(x: 0, y: 0, width: SettingsLayout.width, height: SettingsLayout.height), display: false)
         window.center()
         settings = window
+        settingsTargetFrame = nil
         // Keep SwiftUI's window delegate; observe closing without replacing it.
         settingsClose = NotificationCenter.default.publisher(for: NSWindow.willCloseNotification, object: window)
             .sink { [weak self] notification in self?.windowWillClose(notification) }

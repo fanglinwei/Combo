@@ -36,10 +36,6 @@ private struct ComboSettingsView: View {
         appDelegate.settingsView()
             .preferredColorScheme(appearanceMode.colorScheme)
             .frame(minWidth: SettingsLayout.width, minHeight: SettingsLayout.minHeight - titlebarHeight)
-            .containerBackground(for: .window) {
-                if reduceTransparency { palette.canvasTop }
-                else { GlassBackdrop(blur: 34).overlay(palette.settingsCanvas) }
-            }
             .toolbarBackground(reduceTransparency ? palette.canvasTop : palette.settingsToolbar, for: .windowToolbar)
             .background(SettingsWindowReader { window in
                 titlebarHeight = window.frame.height - window.contentLayoutRect.height

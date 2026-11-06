@@ -7,6 +7,61 @@ extension IntegrationTests {
     struct ApplicationMenuTests {
         @Test
         @MainActor
+        func testStatusMenuActionsAndLocalization() throws {
+            let store = Store(monitorsSystem: false)
+            defer { store.stop() }
+            let delegate = AppDelegate(store: store)
+            for (language, titles) in [
+                (AppLanguage.simplifiedChinese, ["电池", "音量", "Wi‑Fi", "设置…", "退出 Combo"]),
+                (AppLanguage.english, ["Battery", "Volume", "Wi‑Fi", "Settings…", "Quit Combo"])
+            ] {
+                Localization.shared.selection = language
+                let menu = delegate.makeStatusMenu()
+                let items = menu.items.filter { !$0.isSeparatorItem }
+                try #require(items.count == 5)
+                #expect(items.map(\.title) == titles)
+                #expect(items.prefix(3).map { $0.representedObject as? String } ==
+                        [PanelSection.battery.rawValue, PanelSection.sound.rawValue, PanelSection.wifi.rawValue])
+                #expect(items.prefix(3).allSatisfy { $0.action == #selector(AppDelegate.openStatusDetail(_:)) && $0.target === delegate })
+                #expect(items[3].action == #selector(AppDelegate.openSettings) && items[3].target === delegate)
+                #expect(items[3].keyEquivalent == "," && items[3].keyEquivalentModifierMask == .command)
+                #expect(items[4].action == #selector(NSApplication.terminate(_:)) && items[4].target === NSApp)
+                #expect(items[4].keyEquivalent == "q" && items[4].keyEquivalentModifierMask == .command)
+                var openings = 0
+                delegate.installSettingsAction { openings += 1 }
+                menu.performActionForItem(at: 4)
+                #expect(openings == 1)
+            }
+        }
+
+        @Test
+        @MainActor
+        func testStatusMenuOpensAndSwitchesDetails() async throws {
+            let fixture = PanelTestCase()
+            defer { fixture.cleanUp() }
+            let delegate = try await fixture.makeDelegate()
+            delegate.store.reduceMotion = true
+            let menu = delegate.makeStatusMenu()
+            for (index, section) in [PanelSection.battery, .sound, .wifi].enumerated() {
+                menu.performActionForItem(at: index)
+                try await Task.sleep(for: .milliseconds(300))
+                #expect(delegate.store.panelVisible && delegate.panel?.isVisible == true)
+                #expect(delegate.store.detailSection == section)
+            }
+            delegate.togglePanel()
+            try await Task.sleep(for: .milliseconds(300))
+            #expect(!delegate.store.panelVisible && delegate.store.detailSection == nil)
+            menu.performActionForItem(at: 1)
+            try await Task.sleep(for: .milliseconds(300))
+            #expect(delegate.store.panelVisible && delegate.store.detailSection == .sound)
+            delegate.togglePanel()
+            try await Task.sleep(for: .milliseconds(300))
+            delegate.statusItemClicked()
+            #expect(delegate.store.panelVisible && delegate.store.detailSection == nil)
+        }
+
+        @Test
+        @MainActor
         func testBilingualMenuActionsShortcutsAndAvailability() throws {
             let store = Store(monitorsSystem: false)
             defer { store.stop() }

@@ -1,15 +1,17 @@
-# Combo 品牌资源
+# Combo 品牌与 AppIcon
 
-当前主题为清爽天空蓝。Logo 保留开口电量弧与底部沿浅弧排列的四个圆点；中央 Wi-Fi 统一使用两条加粗圆头弧线和一个圆润倒三角，弧线间隙收紧，与菜单栏、设置页和网络列表保持相同轮廓。菜单栏图标仍按实时状态单色绘制，品牌 Logo 只用于应用身份。APP 图标使用明亮蓝色背景、中央双弧和底部四点，不跟随界面 Wi-Fi 样式调整。
+当前应用图标为 2026-11-06 已确认的蓝白玻璃稿：开口电量弧、Wi-Fi 双弧和沿圆弧排列的四条音乐柱。当前资源不再以历史候选字母命名。
 
-| 用途 | 颜色 |
+| 用途 | 资源 |
 | --- | --- |
-| 品牌主色 / 应用图标背景 | `#2992F2` |
-| 浅色界面强调色 / 实心按钮 | `#1473D0` |
-| 深色界面强调色 | `#78C6FF` |
-| 浅色背景 | `#F8FBFF` |
-| 深色背景 | `#17263C` |
+| 唯一可编辑 AppIcon 主稿 | [`liquid-glass/combo-app-icon.svg`](liquid-glass/combo-app-icon.svg) |
+| 尺寸导出、浅深背景预览与导出工具 | [`liquid-glass/`](liquid-glass/README.md) |
+| README 与设计素材引用的 1024px 分发件 | [`combo-app-icon.png`](combo-app-icon.png)，与主稿的 1024px PNG 完全一致 |
+| 原生应用资源 | [`AppIcon.appiconset`](../../../Combo/App/Media.xcassets/AppIcon.appiconset/Contents.json)，由 Xcode 编译打包 |
+| 透明静态标志 | [`combo-iris-logo.svg`](combo-iris-logo.svg)，保留音量圆点，用于透明标志及现有品牌检查 |
 
-`combo-iris-logo.svg` 是透明标志，`combo-iris-app-icon.svg` 是应用图标源文件。应用图标位于 `Combo/App/Media.xcassets/AppIcon.appiconset`，由 Xcode 编译并打包，`Tests/App/check-brand.sh` 检查打包结果。早期 PNG 生成工具已清理。`render.py` 生成设计预览及透明 Logo 的 SVG 和 PNG，直接复用原版 APP 图标，不覆盖应用图标资源；`combo-brand-preview.png` 是概念示意，不是 APP 截图。
+设置与引导读取原生应用图标；实时菜单栏图标由 `IconRenderer` 按本机状态绘制，独立于静态 AppIcon。品牌蓝色不规定界面按钮色；本版界面采用中性操作色与语义分类图标，颜色和几何以 `Combo/Views/Theme.swift` 为准。
 
-白字与浅色界面强调色对比度约 4.7:1；深色强调色与深色背景对比度约 8.2:1。危险和警告颜色保持独立语义。
+更新 AppIcon 时，先改唯一 SVG 主稿并运行现有 `render.cjs`，再同步 1024px 分发件、原生 10 个图标文件以及三份设计源稿及其导出版内嵌的图像。保留 PNG 的来源元数据，并执行 `Tests/App/check-brand.sh` 和适用的原生构建检查。
+
+旧候选、重复 SVG、未使用的 Logo 变体和旧品牌概念预览已移除。当前界面资料见 [1.3.0 设计说明](../../design/liquid-glass/README.md)，界面配图见 [配图来源](../ui-1.3.0/README.md)。

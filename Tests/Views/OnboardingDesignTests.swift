@@ -27,24 +27,29 @@ extension IntegrationTests {
                 Localization.shared.selection = language
                 for dark in [false, true] {
                     for accessible in [false, true] {
+                        store.battery.hasInternalBattery = !accessible
                         defaults.set(false, forKey: OnboardingState.completedKey)
-                        let view = SettingsView(store: store) { _ in }
+                        var contentHeight: CGFloat = 0
+                        let view = SettingsView(store: store, guideHeightChanged: { contentHeight = $0 }) { _ in }
                             .defaultAppStorage(defaults)
                             .environment(\.colorScheme, dark ? .dark : .light)
                             .environment(\.dynamicTypeSize, accessible ? .accessibility3 : .large)
+                            .background(ComboPalette.standard(isDark: dark).canvasTop)
                         let hosting = NSHostingView(rootView: view)
                         hosting.sizingOptions = []
-                        let size = NSSize(width: accessible ? 780 : 850, height: 598)
+                        let size = NSSize(width: OnboardingLayout.width, height: accessible ? 540 : 462)
                         let window = NSWindow(contentRect: NSRect(origin: NSPoint(x: -9000, y: -9000), size: size),
                                               styleMask: .borderless, backing: .buffered, defer: false)
                         window.isReleasedWhenClosed = false
                         defer { window.contentView = nil; window.close() }
                         window.appearance = NSAppearance(named: accessible ? (dark ? .accessibilityHighContrastDarkAqua : .accessibilityHighContrastAqua) : (dark ? .darkAqua : .aqua))
+                        window.backgroundColor = NSColor(ComboPalette.standard(isDark: dark).canvasTop)
                         window.contentView = hosting
                         window.orderFrontRegardless()
                         try await settle()
                         hosting.layoutSubtreeIfNeeded()
                         #expect(window.frame.size == size, "The welcome page must fit the settings window")
+                        #expect(contentHeight > 350 && contentHeight < 540, "Report the welcome content height: \(contentHeight)")
                         #expect(store.menuBarPointer, "The welcome page must point to the real menu-bar icon")
                         let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds), "Missing welcome bitmap")
                         hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
@@ -76,6 +81,41 @@ extension IntegrationTests {
             #expect(renders == 8)
         }
 
+        @Test
+        @MainActor
+        func testPanelFeedbackAfterOpeningAndClosing() async throws {
+            let store = Store(monitorsSystem: false)
+            store.reduceMotion = true
+            store.animate = false
+            store.screenActive = false
+            defer { store.stop() }
+            var completed = false
+            let hosting = NSHostingView(rootView: OnboardingView(store: store) { completed = true }
+                .background(ComboPalette.standard(isDark: false).canvasTop))
+            hosting.sizingOptions = []
+            let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: 600, height: 540),
+                                  styleMask: .borderless, backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            defer { window.contentView = nil; window.close() }
+            window.contentView = hosting
+            window.orderFrontRegardless()
+            try await settle()
+            let initial = try png(in: hosting)
+            store.panelVisible = true
+            try await settle()
+            let opened = try png(in: hosting)
+            #expect(!store.menuBarPointer)
+            store.panelVisible = false
+            try await settle()
+            let closed = try png(in: hosting)
+            #expect(initial != closed, "Closing the panel must retain the tried-panel feedback")
+            #expect(opened != closed, "Open and closed instructions must be distinct")
+            #expect(store.menuBarPointer)
+            attachPNG(closed, name: "panel-closed-welcome.png")
+            try pressKey("\r", code: 36, in: hosting)
+            #expect(completed, "Completion stays available after trying the panel")
+        }
+
         /// Exercise the actual launch path with fresh and completed installation preferences.
         @Test
         @MainActor
@@ -100,6 +140,8 @@ extension IntegrationTests {
             try await settle()
             let window = try #require(firstLaunch.settings, "Missing window prerequisite")
             #expect(window.isVisible && OnboardingState.showsGuide(), "A fresh installation must show the guide")
+            #expect(window.frame.width == OnboardingLayout.width && window.titleVisibility == .hidden,
+                    "The welcome window uses the design width and a title-free native titlebar")
             window.close()
             #expect(OnboardingState.showsGuide(),
                    "Closing an unfinished welcome page must show it on the next launch")
@@ -128,7 +170,7 @@ extension IntegrationTests {
 
         @Test
         @MainActor
-        func testGuideCompletionAndSettingsFrameRestoration() async throws {
+        func testGuideCompletionAndContentFittingSettings() async throws {
             let store = Store(monitorsSystem: false)
             store.screenActive = false
             store.reduceMotion = true
@@ -146,6 +188,7 @@ extension IntegrationTests {
             let hosting = try #require(window.contentView, "Missing settings content")
             window.orderOut(nil)
             try await settle()
+            let settingsHeight = window.frame.height
             let visibleFrame = try #require(window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame, "Missing visibleFrame prerequisite")
             for height in [min(CGFloat(870), visibleFrame.height), min(CGFloat(760), visibleFrame.height)] {
                 var original = window.frame
@@ -154,7 +197,7 @@ extension IntegrationTests {
                 window.setFrame(original, display: true)
                 defaults.set(false, forKey: OnboardingState.completedKey)
                 try await settle()
-                #expect(window.frame.height == 620 && window.frame.maxY == original.maxY,
+                #expect(window.frame.width == OnboardingLayout.width && window.frame.height < 580 && window.frame.maxY == original.maxY,
                         "Guide frame=\(window.frame), original=\(original), minimum=\(window.minSize)")
                 window.close()
                 delegate.openSettings()
@@ -164,11 +207,12 @@ extension IntegrationTests {
                 try await settle()
                 #expect(defaults.bool(forKey: OnboardingState.completedKey))
                 #expect(!window.isVisible, "Completing the guide must close the window without showing settings")
-                #expect(window.frame == original, "Completing the guide must restore the previous settings frame while hidden: frame=\(window.frame), original=\(original)")
+                #expect(window.frame.height == settingsHeight && window.frame.maxY == original.maxY,
+                        "Completing the guide must fit settings content while preserving the titlebar: \(window.frame)")
                 delegate.openSettings()
                 try await settle()
-                #expect(window.isVisible && window.frame == original,
-                       "Manually opening settings must restore the previous settings frame: visible=\(window.isVisible), frame=\(window.frame), expected=\(original)")
+                #expect(window.isVisible && window.frame.height == settingsHeight && window.frame.maxY == original.maxY,
+                       "Reopening settings must keep the content-fitting frame: \(window.frame)")
                 window.orderOut(nil)
             }
             window.contentView = nil
@@ -180,7 +224,7 @@ extension IntegrationTests {
         private func primaryVerticalBounds(in bitmap: NSBitmapImageRep, palette: ComboPalette) throws -> ClosedRange<Int> {
             let expected = try #require(NSColor(palette.accent).usingColorSpace(bitmap.colorSpace), "Missing expected prerequisite")
             var rows: [Int] = []
-            for y in max(0, bitmap.pixelsHigh - 160)..<bitmap.pixelsHigh {
+            for y in (bitmap.pixelsHigh / 2)..<bitmap.pixelsHigh {
                 for x in max(0, bitmap.pixelsWide - 400)..<bitmap.pixelsWide {
                     guard let color = bitmap.colorAt(x: x, y: y) else { continue }
                     if abs(color.redComponent - expected.redComponent) < 0.015 &&
@@ -194,6 +238,14 @@ extension IntegrationTests {
             let first = try #require(rows.first, "Missing guide primary-button pixels")
             let last = try #require(rows.last, "Missing guide primary-button pixels")
             return first...last
+        }
+
+        @MainActor
+        private func png(in view: NSView) throws -> Data {
+            view.layoutSubtreeIfNeeded()
+            let bitmap = try #require(view.bitmapImageRepForCachingDisplay(in: view.bounds))
+            view.cacheDisplay(in: view.bounds, to: bitmap)
+            return try #require(bitmap.representation(using: .png, properties: [:]))
         }
 
         @MainActor
