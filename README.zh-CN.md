@@ -48,10 +48,6 @@ Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用�
 | :---: | :---: |
 | <img src="docs/assets/ui-1.3.0/panel.jpg" width="352" alt="1.3.0 总览设计稿：媒体播放、电池、Wi-Fi、AirPods 电量与音量"> | <img src="docs/assets/ui-1.3.0/settings.jpg" width="420" alt="1.3.0 浅色设置设计稿：顶部工具栏、显示模式、33 种图标效果入口和显示偏好"> |
 
-<p align="center">
-  <img src="docs/assets/ui-1.3.0/onboarding.jpg" width="760" alt="1.3.0 引导设计稿：菜单栏入口指引、操作说明和开始使用按钮">
-</p>
-
 以上图片截自最新设计稿，使用示例数据；英文 README 也保留稿件原有中文。新 AppIcon 采用蓝白底座、电量弧、Wi-Fi 双弧和圆弧排列的四条音乐柱。
 
 [设计说明与全部详情截图](docs/design/liquid-glass/README.md) · [可交互总设计稿](docs/design/liquid-glass/index.html)（下载后用浏览器打开） · [AppIcon 源稿与尺寸预览](docs/assets/brand/liquid-glass/README.md)

@@ -48,10 +48,6 @@ The updated glass panel groups media, battery, Wi-Fi, and sound in one surface. 
 | :---: | :---: |
 | <img src="docs/assets/ui-1.3.0/panel.jpg" width="352" alt="1.3.0 overview design showing media, battery, Wi-Fi, AirPods battery and volume"> | <img src="docs/assets/ui-1.3.0/settings.jpg" width="420" alt="1.3.0 light settings design with a toolbar, appearance options and access to 33 icon effects"> |
 
-<p align="center">
-  <img src="docs/assets/ui-1.3.0/onboarding.jpg" width="760" alt="1.3.0 welcome design showing the menu bar entry point, instructions and Get Started button">
-</p>
-
 These images are captured from the latest design mockups with sample data; their original Chinese labels are retained. The new AppIcon combines a blue and white base, battery arc, Wi-Fi arcs, and four music bars arranged along a curve.
 
 [Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](docs/design/liquid-glass/index.html) (download and open in a browser) · [AppIcon source and size previews](docs/assets/brand/liquid-glass/README.md)
