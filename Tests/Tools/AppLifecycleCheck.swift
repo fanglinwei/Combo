@@ -18,6 +18,19 @@ import SwiftUI
                     guard condition else { throw NSError(domain: message, code: 1) }
                     print("PASS:", message)
                 }
+                @MainActor func checkLayout(_ window: NSWindow, width: CGFloat) async throws {
+                    for _ in 0..<20 where window.frame.width != width {
+                        try await Task.sleep(for: .milliseconds(100))
+                    }
+                    guard let screen = window.screen else { throw NSError(domain: "Missing window screen", code: 1) }
+                    try check(window.frame.width == width, "Window uses the current layout width (expected: \(width), frame: \(window.frame))")
+                    // SwiftUI applies the scene minimum and native toolbar constraints after the bridge.
+                    try check(window.minSize.width >= SettingsLayout.width && window.minSize.width <= width &&
+                              window.minSize.height >= SettingsLayout.minHeight && window.minSize.height <= window.frame.height,
+                              "Native minimum size respects the layout baseline (minimum: \(window.minSize), frame: \(window.frame))")
+                    try check(window.frame.height >= SettingsLayout.minHeight && window.frame.height <= screen.visibleFrame.height,
+                              "Content-fitting height stays within the screen")
+                }
                 @MainActor func settingsItem() throws -> (NSMenu, Int) {
                     guard let menu = NSApp.mainMenu?.items.first?.submenu else {
                         throw NSError(domain: "Missing application menu", code: 1)
@@ -34,10 +47,18 @@ import SwiftUI
                 try check(NSApp.activationPolicy() == (showsSettings ? .regular : .accessory), "Launch preserves Dock policy")
                 if fresh {
                     guard let guide = visible.first else { throw NSError(domain: "Missing guide window", code: 1) }
-                    try check(guide.frame.height == 620, "First-launch guide keeps its compact height (actual: \(guide.frame.height))")
-                    UserDefaults.standard.set(true, forKey: OnboardingState.completedKey)
-                    try await Task.sleep(for: .milliseconds(500))
-                    try check(guide.frame.height == 690, "Leaving guide restores settings height")
+                    try await checkLayout(guide, width: OnboardingLayout.width)
+                    guard let content = guide.contentView,
+                          let enter = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+                                                      windowNumber: guide.windowNumber, context: nil, characters: "\r",
+                                                      charactersIgnoringModifiers: "\r", isARepeat: false, keyCode: 36) else {
+                        throw NSError(domain: "Missing guide completion event", code: 1)
+                    }
+                    try check(content.performKeyEquivalent(with: enter), "Return completes the welcome page")
+                    try await Task.sleep(for: .seconds(1))
+                    try check(UserDefaults.standard.bool(forKey: OnboardingState.completedKey) && !guide.isVisible,
+                              "Completing the welcome page persists completion and closes the guide")
+                    try check(NSApp.activationPolicy() == .accessory, "Completing the guide returns to menu-bar-only behavior")
                 }
                 let (menu, index) = try settingsItem()
                 try check(menu.items.filter { $0.keyEquivalent == "," }.count == 1, "Exactly one Settings shortcut")
@@ -45,7 +66,9 @@ import SwiftUI
                 try check(menu.items.contains { $0.title == "Services" && $0.submenu === NSApp.servicesMenu }, "Native Services menu follows app language")
                 menu.performActionForItem(at: index)
                 try await Task.sleep(for: .milliseconds(500))
-                guard let window = NSApp.windows.first(where: { $0.title == "Combo Settings" }) else {
+                let settingsWindows = NSApp.windows.filter { $0.isVisible && $0.styleMask.contains(.titled) }
+                try check(settingsWindows.count == 1, "Exactly one settings scene opens")
+                guard let window = settingsWindows.first else {
                     throw NSError(domain: "Missing settings scene", code: 1)
                 }
                 try check(window.isVisible && NSApp.activationPolicy() == .regular, "Settings scene opens with Dock icon")
@@ -53,8 +76,8 @@ import SwiftUI
                 try check(openedMenu.items.filter { !$0.isSeparatorItem }.map(\.title) == [
                     "About Combo", "Settings…", "Check for Updates…", "Services", "Hide Combo", "Hide Others", "Show All", "Quit Combo"
                 ], "All application commands retain English titles after opening settings")
-                try check(window.frame.size == NSSize(width: 850, height: 690), "Settings keeps original size")
-                try check(window.minSize == NSSize(width: 780, height: 620), "Settings keeps original minimum size")
+                try await checkLayout(window, width: SettingsLayout.width)
+                try check(window.title == Page.general.title || window.title == L("Combo 设置"), "Settings window title uses English")
                 try check(window.delegate != nil && !(window.delegate is AppDelegate), "SwiftUI retains its window delegate")
                 window.miniaturize(nil)
                 try await Task.sleep(for: .milliseconds(500))
@@ -79,7 +102,7 @@ import SwiftUI
                 try check(chineseMenu.items.contains { $0.title == "设置…" }, "Settings command updates language")
                 try check(chineseMenu.items.contains { $0.title == "检查更新…" }, "Update command updates language")
                 try check(chineseMenu.items.contains { $0.title == "服务" && $0.submenu === NSApp.servicesMenu }, "Language changes keep native Services menu")
-                try check(window.title == "Combo 设置", "Settings window title updates language")
+                try check(window.title == Page.general.title || window.title == L("Combo 设置"), "Settings window title updates language")
                 try check(chineseMenu.items.filter { !$0.isSeparatorItem }.map(\.title) == [
                     "关于 Combo", "设置…", "检查更新…", "服务", "隐藏 Combo", "隐藏其他", "显示全部", "退出 Combo"
                 ], "All application commands update Chinese titles")
