@@ -12,6 +12,12 @@
 - 私有调用在签名后的短时子进程 `ComboChargeHelper` 中执行；每次调用最多等待 8 秒，不需要提权或常驻服务。
 - 仅调用 `temporarilyDisableMCL:`，不改写永久上限，不操作优化充电开关，不在退出时恢复；恢复由 macOS 管理。
 
+## 最大容量读取
+
+[BatteryCapacityReader.swift](../../Combo/Battery/BatteryCapacityReader.swift) 是最大容量读取的 module；interface 仅包含刷新与取消。刷新接收是否存在内置电池，并在主线程返回百分比或不可用。module 内部负责 `system_profiler` 的命令参数与语言环境、报告校验、重复请求合并、三秒超时和取消后的旧回调过滤；电池不可用时取消在途读取并返回不可用。
+
+[BatteryStore.swift](../../Combo/Stores/BatteryStore.swift) 只传入电池可用状态并发布结果，停止时取消读取。解析与进程状态不再暴露给 Store 的调用方。[BatteryCapacityTests.swift](../../Tests/Battery/BatteryCapacityTests.swift) 通过相同 interface 注入临时命令，覆盖合法与非法报告、命令失败与缺失、重复刷新、超时、取消和电池不可用；这些测试在无窗口的后台计划中运行。
+
 ## 低电量切换
 
 读取：`/usr/bin/pmset -g custom`。按电源类型使用 `-b` 或 `-c`，不使用会同时覆盖两者的 `-a`。模式值来自枚举，命令不拼接用户输入。程序不保存凭据，也不修改授权规则。

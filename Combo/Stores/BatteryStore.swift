@@ -22,7 +22,7 @@ import IOKit.ps
         }
     }
     private let defaults: UserDefaults
-    private let systemProfilerURL: URL
+    private let capacityReader = BatteryCapacityReader()
     let energyApps = EnergyApps()
     let powerMode = PowerModeControl()
     let chargeControl = ChargeControl()
@@ -34,8 +34,6 @@ import IOKit.ps
     private var powerObserver: NSObjectProtocol?
     private var chargeLimitProcess: Process?
     private var chargeLimitTimeout: DispatchWorkItem?
-    private var capacityProcess: Process?
-    private var capacityTimeout: DispatchWorkItem?
     var monitoringAvailable: Bool { batterySource != nil }
     var sourceText: String { onAC.map { $0 ? L("电源适配器") : L("电池") } ?? L("无法判断") }
     var statusText: String {
@@ -49,9 +47,8 @@ import IOKit.ps
         guard canRequestFullCharge(scene: scene), case .value(let limit) = chargeLimit else { return }
         chargeControl.request(expectedLimit: limit) { [weak self] in self?.refreshBattery() }
     }
-    init(defaults: UserDefaults = .standard, systemProfilerURL: URL = URL(fileURLWithPath: "/usr/sbin/system_profiler")) {
+    init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        self.systemProfilerURL = systemProfilerURL
         displayEnabled = defaults.object(forKey: "batteryDisplayEnabled") as? Bool ?? true
     }
     func start() {
@@ -102,49 +99,11 @@ import IOKit.ps
             }
         }
         refreshChargeLimit()
-        refreshMaximumCapacity()
+        capacityReader.refresh(hasInternalBattery: hasInternalBattery) { [weak self] value in self?.maximumCapacity = value }
         Task { await powerMode.refresh() }
         chargeControl.refresh()
         onUpdate?()
         if powerChanged { onPowerChange?() }
-    }
-    nonisolated static func parseMaximumCapacity(_ data: Data) -> Int? {
-        guard let report = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let items = report["SPPowerDataType"] as? [[String: Any]],
-              let health = items.compactMap({ $0["sppower_battery_health_info"] as? [String: Any] }).first,
-              let text = health["sppower_battery_health_maximum_capacity"] as? String,
-              text.hasSuffix("%"), let value = Int(text.dropLast()), (0...100).contains(value) else { return nil }
-        return value
-    }
-    func refreshMaximumCapacity() {
-        guard hasInternalBattery else { maximumCapacity = nil; return }
-        guard capacityProcess == nil else { return }
-        // Use macOS's health estimate; raw charge-capacity ratios are not the same measurement.
-        let process = Process(), pipe = Pipe()
-        process.executableURL = systemProfilerURL
-        process.arguments = ["SPPowerDataType", "-json", "-detailLevel", "mini", "-timeout", "2"]
-        process.standardOutput = pipe; process.standardError = FileHandle.nullDevice
-        var environment = ProcessInfo.processInfo.environment; environment["LC_ALL"] = "C"; process.environment = environment
-        process.terminationHandler = { [weak self] finished in
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let value = finished.terminationStatus == 0 ? Self.parseMaximumCapacity(data) : nil
-            Task { @MainActor in
-                guard let self, self.capacityProcess === finished else { return }
-                self.capacityTimeout?.cancel(); self.capacityTimeout = nil
-                self.capacityProcess = nil
-                self.maximumCapacity = self.hasInternalBattery ? value : nil
-            }
-        }
-        capacityProcess = process
-        do { try process.run() } catch { capacityProcess = nil; maximumCapacity = nil; return }
-        let timeout = DispatchWorkItem { [weak self, weak process] in
-            guard let self, let process, self.capacityProcess === process else { return }
-            self.maximumCapacity = nil
-            self.capacityProcess = nil; self.capacityTimeout = nil
-            if process.isRunning { process.terminate() }
-        }
-        capacityTimeout = timeout
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: timeout)
     }
     private func refreshChargeLimit() {
         guard chargeLimitProcess == nil else { return }
@@ -175,9 +134,7 @@ import IOKit.ps
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: timeout)
     }
     func stop() {
-        capacityTimeout?.cancel(); capacityTimeout = nil
-        if let capacityProcess, capacityProcess.isRunning { capacityProcess.terminate() }
-        capacityProcess = nil
+        capacityReader.cancel()
         chargeControl.stop()
         energyApps.cancel()
         chargeLimitTimeout?.cancel()

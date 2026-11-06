@@ -149,6 +149,10 @@
 		DB16B33130FA8876B06A60A6 /* IconPreviewScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F20FB357F70A3DEA669D9E9 /* IconPreviewScene.swift */; };
 		03D8E750E31BA60906C02A5A /* IconPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B4CD7B2FBDC031D294F7A9 /* IconPreviewView.swift */; };
 		12DE7937170DB65DFEDEBE35 /* IconPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B4CD7B2FBDC031D294F7A9 /* IconPreviewView.swift */; };
+		D9918BA92270C49C13DE8D9A /* BatteryCapacityReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87195CA84E4E6C07C5BF0E9 /* BatteryCapacityReader.swift */; };
+		944393F50B9D7FA86DA6EEA1 /* BatteryCapacityReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87195CA84E4E6C07C5BF0E9 /* BatteryCapacityReader.swift */; };
+		DFA8A599BC8D3270DB7B4FD9 /* BatteryCapacityReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87195CA84E4E6C07C5BF0E9 /* BatteryCapacityReader.swift */; };
+		818779FDEB11DC796C3B90D7 /* BatteryCapacityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F02CABCF5389C56D3D8AF0 /* BatteryCapacityTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -281,6 +285,8 @@
 		FCD9787317CD81809A73B66D /* PanelDismissTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PanelDismissTests.swift; sourceTree = "<group>"; };
 		4F20FB357F70A3DEA669D9E9 /* IconPreviewScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconPreviewScene.swift; sourceTree = "<group>"; };
 		C3B4CD7B2FBDC031D294F7A9 /* IconPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconPreviewView.swift; sourceTree = "<group>"; };
+		E87195CA84E4E6C07C5BF0E9 /* BatteryCapacityReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryCapacityReader.swift; sourceTree = "<group>"; };
+		43F02CABCF5389C56D3D8AF0 /* BatteryCapacityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryCapacityTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -432,6 +438,7 @@
 				75C41B7ADF98AFD51ACF29E9 /* ChargeControl.swift */,
 				B9833BCDE5F7EAD64C9BA2B3 /* ChargeHelper.m */,
 				89D8B2128427EB6D64D4651E /* EnergyApps.swift */,
+				E87195CA84E4E6C07C5BF0E9 /* BatteryCapacityReader.swift */,
 				A7C6E6FC3866A2286D6176F1 /* EnergyHelper.m */,
 				B60B17058C5CD734C5302FD1 /* PowerModeControl.swift */,
 			);
@@ -538,6 +545,7 @@
 			isa = PBXGroup;
 			children = (
 				3103F7A18872DFC3B4DEDC78 /* EnergyAppsTests.swift */,
+				43F02CABCF5389C56D3D8AF0 /* BatteryCapacityTests.swift */,
 				56365C8D37CC6FF675E89AC8 /* ChargeControlTests.swift */,
 			);
 			name = Battery;
@@ -866,12 +874,14 @@
 				67C9825B22EBF8E314BF8AE5 /* AirPlayDiscovery.swift in Sources */,
 				7D15CBC53FDD096FA7309E42 /* MediaPlayback.swift in Sources */,
 				FF9A2DB1E5592302C7C5E714 /* EnergyApps.swift in Sources */,
+				DFA8A599BC8D3270DB7B4FD9 /* BatteryCapacityReader.swift in Sources */,
 				C5C5B8786E2F208F9135C201 /* OnboardingState.swift in Sources */,
 				A8D34FB19AEF6B7F6ECEB1A4 /* StateTests.swift in Sources */,
 				BB421C369408D52FE21F511C /* OnboardingTests.swift in Sources */,
 				A33551CCE329D1D4D0CB9282 /* OutputDeviceTests.swift in Sources */,
 				2998ADB3B082039F7E5B7D4D /* MediaPlaybackTests.swift in Sources */,
 				7148876D3D448B98BA702790 /* EnergyAppsTests.swift in Sources */,
+				818779FDEB11DC796C3B90D7 /* BatteryCapacityTests.swift in Sources */,
 				D1F38D560F429DB0829BF73C /* WiFiControl.swift in Sources */,
 				1D35BA1853BDC19A3C5D8B74 /* HotspotControl.swift in Sources */,
 				9F9ECC8254F7C0CA27A2479A /* AudioVolume.swift in Sources */,
@@ -944,6 +954,7 @@
 				0DD0C0DE0000000000000006 /* AirPlayDiscovery.swift in Sources */,
 				3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */,
 				126858ABDF709C9A021EA8DC /* EnergyApps.swift in Sources */,
+				944393F50B9D7FA86DA6EEA1 /* BatteryCapacityReader.swift in Sources */,
 				F10C80F2ECA567F263086DC1 /* HotspotControl.swift in Sources */,
 				82EC1A0CE1BDECA3461169B8 /* IconTransition.swift in Sources */,
 				AFA2F91CCEE742DEAE9C0D76 /* WiFiIcon.swift in Sources */,
@@ -987,6 +998,7 @@
 				A627BDD7EFD0377036789FE8 /* AirPlayDiscovery.swift in Sources */,
 				E2AE1D571B0F9406BDAE2EE3 /* ChargeControl.swift in Sources */,
 				89FA0F2D68E43D5B438C82AC /* EnergyApps.swift in Sources */,
+				D9918BA92270C49C13DE8D9A /* BatteryCapacityReader.swift in Sources */,
 				824F916A9D264D5F77F96624 /* HotspotControl.swift in Sources */,
 				405580DCBF87D1A853347670 /* IconTransition.swift in Sources */,
 				03385503102379DEAB3E028D /* WiFiIcon.swift in Sources */,
