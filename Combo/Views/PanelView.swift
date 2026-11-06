@@ -64,11 +64,11 @@ struct PanelView: View {
     static let width: CGFloat = 352
     @Environment(\.colorScheme) private var colorScheme
     private var palette: ComboPalette { ComboPalette.standard(isDark: colorScheme == .dark) }
-    @ObservedObject var store: Store
-    @ObservedObject var battery: BatteryStore
-    @ObservedObject var audio: AudioStore
-    @ObservedObject var airpods: AirPodsControl
-    @ObservedObject var bluetoothPermission: BluetoothPermission
+    @ObservedObject private var store: Store
+    @ObservedObject private var battery: BatteryStore
+    @ObservedObject private var audio: AudioStore
+    @ObservedObject private var airpods: AirPodsControl
+    @ObservedObject private var bluetoothPermission: BluetoothPermission
     let showSettings: () -> Void
     let maxHeight: CGFloat
     let reportHeight: (CGFloat) -> Void
@@ -78,6 +78,18 @@ struct PanelView: View {
     private enum FocusTarget: Hashable { case section(PanelSection), back, settings }
     @FocusState private var focusedControl: FocusTarget?
     private var headerHeight: CGFloat { store.detailSection == nil ? 0 : 69 }
+
+    init(store: Store, airpods: AirPodsControl? = nil, showSettings: @escaping () -> Void,
+         maxHeight: CGFloat, reportHeight: @escaping (CGFloat) -> Void) {
+        self.store = store
+        battery = store.battery
+        audio = store.audio
+        self.airpods = airpods ?? store.audio.airpods
+        bluetoothPermission = store.audio.bluetoothPermission
+        self.showSettings = showSettings
+        self.maxHeight = maxHeight
+        self.reportHeight = reportHeight
+    }
 
     var body: some View {
         VStack(spacing: 0) {

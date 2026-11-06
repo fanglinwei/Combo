@@ -35,7 +35,7 @@ extension IntegrationTests {
                         store.battery.health = "良好"; store.battery.maximumCapacity = 91
                     }
                     var measured: CGFloat = 0
-                    let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: store.audio.airpods, bluetoothPermission: store.audio.bluetoothPermission,
+                    let view = PanelView(store: store,
                                          showSettings: {}, maxHeight: 900, reportHeight: { measured = $0 })
                         .defaultAppStorage(defaults).environment(\.colorScheme, dark ? .dark : .light)
                     let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: PanelView.width, height: 900), styleMask: .borderless, backing: .buffered, defer: false)
@@ -123,8 +123,7 @@ extension IntegrationTests {
             store.reduceMotion = false
             store.panelExpanded = false
             var heights: [CGFloat] = []
-            let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: control,
-                                 bluetoothPermission: store.audio.bluetoothPermission,
+            let view = PanelView(store: store, airpods: control,
                                  showSettings: {}, maxHeight: 900, reportHeight: { heights.append($0) })
             let window = NSWindow(contentRect: NSRect(x: -9000, y: -9000, width: PanelView.width, height: 900),
                                   styleMask: .borderless, backing: .buffered, defer: false)

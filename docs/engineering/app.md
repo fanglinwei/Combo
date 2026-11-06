@@ -7,6 +7,7 @@ Combo 使用现有 Xcode App target，最低 macOS 26；[ComboApp.swift](../../C
 - `@NSApplicationDelegateAdaptor` 创建唯一 [AppDelegate](../../Combo/App/AppDelegate.swift)，沿用它持有的 Store；启动、系统监听、更新驱动和退出清理继续使用现有路径。
 - SwiftUI `Settings` Scene 创建唯一设置窗口，复用 SettingsView；[ComboCommands](../../Combo/App/ComboCommands.swift) 声明关于、设置、更新、隐藏和退出命令，保留快捷键及更新可用性。原生 Services 菜单沿用系统对象，只同步标题语言。
 - 菜单栏继续使用 NSStatusItem；总览、详情和引导指针继续使用 AppKit 面板，保留定位、非激活、开合动画和外部点击关闭行为。
+- `PanelView` 的 interface 接收 Store、设置动作和高度测量约定，内部从同一 Store 建立电池、音频与蓝牙授权的观察关系。AirPods 读取保留独立注入的 seam，供临时 helper 验证异步展开；其他调用方无需重复传入 Store 已持有的子状态。
 
 ## 设置窗口桥接
 

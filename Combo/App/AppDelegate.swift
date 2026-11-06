@@ -219,8 +219,7 @@ final class ComboPanel: NSPanel {
             store.panelRevealed = false
             overviewHeight = 0
             let showSettings = { [weak self] in _ = self?.openSettings() }
-            let view = PanelView(store: store, battery: store.battery, audio: store.audio, airpods: store.audio.airpods, bluetoothPermission: store.audio.bluetoothPermission,
-                                 showSettings: showSettings, maxHeight: visible.height - 16,
+            let view = PanelView(store: store, showSettings: showSettings, maxHeight: visible.height - 16,
                                  reportHeight: { [weak self] value in self?.updatePanelHeight(value) })
             let window = panel ?? ComboPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
             window.appearance = selectedAppearance
