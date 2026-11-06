@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "id": "a2903a6b-d2f0-4398-b3f7-393b3a711545",
+      "name": "Default",
+      "options": {
+      }
+    }
+  ],
+  "defaultOptions": {
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:Combo.xcodeproj",
+        "identifier": "F25D75947F4C86EFDD66A88D",
+        "name": "ComboTests"
+      },
+      "parallelizable": false
+    }
+  ],
+  "version": 1
+}

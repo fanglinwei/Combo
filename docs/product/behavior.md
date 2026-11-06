@@ -151,7 +151,7 @@ Wi-Fi 正常使用两道圆头弧线与圆润倒三角；Wi-Fi 已关闭且没�
 
 ### 7. 验收与验证边界
 
-`./verify.sh` 覆盖构建、状态规则、Helper、图标和签名。设置回归包含默认开启、开关跨重启、恢复显示偏好、效果预览与返回、引导完成和内容适配；`Tests/Views/SettingsLayoutTests.swift` 检查离屏设置布局与文字渲染，`Tests/Tools/RenderSettings.swift` 保留按需预览导出；这些检查不代表真实授权或完整可访问性验收。
+`./verify.sh` 默认在后台覆盖构建、状态规则、Helper、图标和签名；窗口集成测试需要显式选择 `-testPlan ComboTests`，会显示窗口并可能切换焦点。完整计划中的设置回归包含默认开启、开关跨重启、恢复显示偏好、效果预览与返回、引导完成和内容适配；`Tests/Views/SettingsLayoutTests.swift` 检查离屏设置布局与文字渲染，`Tests/Tools/RenderSettings.swift` 保留按需预览导出；这些检查不代表真实授权或完整可访问性验收。
 
 以下事项仍需实机检查：
 

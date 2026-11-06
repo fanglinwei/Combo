@@ -1,6 +1,6 @@
 # 测试与检查入口
 
-在仓库根目录运行 `./verify.sh`：构建应用，运行共享 `ComboTests` scheme 的 96 个测试用例（全部使用 Swift Testing；61 个无宿主案例、35 个隔离宿主案例）和仍保留的 2 个独立自动检查入口，再验证签名和品牌资源。测试按功能模块分类，产物输出到 `build/checks/`。
+在仓库根目录运行 `./verify.sh`：构建应用，默认运行共享 `ComboTests` scheme 的 `ComboBackgroundTests` 计划（62 个无宿主 Swift Testing 案例）和仍保留的 2 个独立自动检查入口，再验证签名和品牌资源。默认不启动 Combo 或测试宿主窗口；窗口集成测试保留在显式选择的完整计划中。测试按功能模块分类，产物输出到 `build/checks/`。
 
 ```sh
 ./verify.sh
@@ -77,21 +77,25 @@ LiveState 删除已迁移的控制器检查和 ApplicationServices import，保�
 
 ## Xcode 单独运行
 
-选择共享 `ComboTests` scheme，按 ⌘U；或在仓库根目录执行：
+选择共享 `ComboTests` scheme 和默认的 `ComboBackgroundTests` 计划，按 ⌘U；或在仓库根目录执行：
 
 ```sh
 ./Tests/run.sh
-# 只运行指定案例：
-./Tests/run.sh -only-testing:ComboIntegrationTests/IntegrationTests/ApplicationMenuTests
+# 只运行指定后台案例：
+./Tests/run.sh -only-testing:ComboTests/StateTests
+# 仅在明确需要前台界面验收时运行完整计划（会弹窗并切换焦点）：
+./Tests/run.sh -testPlan ComboTests
+# 完整计划中的指定窗口案例：
+./Tests/run.sh -testPlan ComboTests -only-testing:ComboIntegrationTests/IntegrationTests/ApplicationMenuTests
 ```
 
 [run.sh](run.sh) 是命令行测试的共享入口，`verify.sh` 也通过它运行测试。同一用户、同一临时目录下的多个调用通过系统文件锁排队，避免多条 `xcodebuild` 各自启动一个 `ComboTestHost`。进程内串行配置只能约束单条命令，不能防止不同命令重叠。锁在运行器退出时自动释放，失败退出码和测试参数保持原样；可用 `python3 Tests/Tools/TestRunnerCheck.py` 验证入口的并发、失败与中断行为。
 
-设置窗口的 Dock 生命周期检查仍会短暂显示一个宿主图标，以验证打开、最小化、重开与关闭的真实行为。直接运行 `xcodebuild` 或 Xcode 的 ⌘U 不经过此文件锁，避免与命令行检查同时执行。
+默认计划不运行窗口、Dock 生命周期或焦点检查；这些覆盖应标为未验证。窗口集成验证可显式执行 `./Tests/run.sh -testPlan ComboTests`，其中的设置窗口生命周期检查会显示宿主图标及窗口，并可能抢占焦点。Xcode 会保留手动选择的计划，日常开发应选回 `ComboBackgroundTests`。直接运行 `xcodebuild` 或 Xcode 的 ⌘U 不经过此文件锁，避免与命令行检查同时执行。
 
-[ComboTests.xctestplan](ComboTests.xctestplan) 默认串行执行两个测试 bundle。`ComboTests` 无应用宿主，编译所需的 18 个现有生产源码文件，不启动 Combo 的 Store、权限监听或更新流程。Onboarding 使用独立随机偏好域验证首次显示与完成状态；EnergyApps 沿用临时 helper，保留失败、取消和超时覆盖；OutputDevice 保留系统图标存在性检查。这些 Swift 测试只加入 `ComboTests` target。AppUpdater 链接并随测试 bundle 嵌入 Sparkle，保持禁用真实更新；图标基准 PNG 从测试 bundle 读取，图像与 GIF 保存为结果附件。Network、AirPlay、AirPods 沿用注入和临时 helper；Wi-Fi 仅检查网络展示规则，不访问钥匙串或连接真实网络。充电的模拟案例使用 Swift Testing，打包 helper 的只读 `--status` 由 `ChargeHelperCheck.swift` 继续独立执行。
+[ComboBackgroundTests.xctestplan](ComboBackgroundTests.xctestplan) 默认只执行无宿主的 `ComboTests`；[ComboTests.xctestplan](ComboTests.xctestplan) 保留串行执行两个测试 bundle 的完整覆盖。`ComboTests` 无应用宿主，编译所需的 19 个现有生产源码文件，不启动 Combo 的 Store、权限监听或更新流程。Onboarding 使用独立随机偏好域验证首次显示与完成状态；BatteryCapacity 通过临时命令验证报告解析、失败、超时、重复刷新、取消及电池不可用，不启动 Store 或读取真实电池；EnergyApps 沿用临时 helper，保留失败、取消和超时覆盖；OutputDevice 保留系统图标存在性检查。这些 Swift 测试只加入 `ComboTests` target。AppUpdater 链接并随测试 bundle 嵌入 Sparkle，保持禁用真实更新；图标基准 PNG 从测试 bundle 读取，图像与 GIF 保存为结果附件。Network、AirPlay、AirPods 沿用注入和临时 helper；Wi-Fi 仅检查网络展示规则，不访问钥匙串或连接真实网络。充电的模拟案例使用 Swift Testing，打包 helper 的只读 `--status` 由 `ChargeHelperCheck.swift` 继续独立执行。
 
-`ComboIntegrationTests` 通过独立 `ComboTestHost` 承接本地化 4 例、设置 2 例、详情反馈 3 例、应用菜单 3 例、面板设计 4 例、引导设计 3 例、面板动画 1 例、面板关闭与退出清理 9 例、设置布局 2 例及 Store 通知 / 音量提示 / 启动隔离 / scope 清理 4 例。宿主编译 32 个共享生产 Swift 文件并复用本地化、权限描述和品牌资源；独立入口 [TestHostApp.swift](Support/TestHostApp.swift) 运行 AppKit 事件循环，不创建产品 AppDelegate / Store。`COMBO_TEST_HOST` 只用于宿主，启用测试用菜单及设置窗口；产品入口 [ComboApp.swift](../Combo/App/ComboApp.swift) 和 SwiftUI commands 不加入宿主。案例使用 `Store(monitorsSystem: false)`，Wi-Fi 替身禁用位置授权回调，避免真实系统变化覆盖测试状态；生产默认行为保持开启。设置案例关闭窗口并释放 SwiftUI 内容，所有 Store 在退出时停止。
+`ComboIntegrationTests` 通过独立 `ComboTestHost` 承接本地化 4 例、设置 2 例、详情反馈 3 例、应用菜单 3 例、面板设计 4 例、引导设计 3 例、面板动画 1 例、面板关闭与退出清理 9 例、设置布局 2 例及 Store 通知 / 音量提示 / 启动隔离 / scope 清理 4 例。宿主编译 33 个共享生产 Swift 文件并复用本地化、权限描述和品牌资源；独立入口 [TestHostApp.swift](Support/TestHostApp.swift) 运行 AppKit 事件循环，不创建产品 AppDelegate / Store。`COMBO_TEST_HOST` 只用于宿主，启用测试用菜单及设置窗口；产品入口 [ComboApp.swift](../Combo/App/ComboApp.swift) 和 SwiftUI commands 不加入宿主。案例使用 `Store(monitorsSystem: false)`，Wi-Fi 替身禁用位置授权回调，避免真实系统变化覆盖测试状态；生产默认行为保持开启。设置案例关闭窗口并释放 SwiftUI 内容，所有 Store 在退出时停止。
 
 [IntegrationTestCase.swift](Support/IntegrationTestCase.swift) 提供 `IntegrationTests` 串行 suite 和逐案例 `IntegrationTestScope` 状态恢复。每例先验证宿主 bundle ID；宿主尚无 Services 菜单时建立原生空菜单基线（AppKit 不支持将它设回 nil），再完整保存并恢复该宿主的偏好域（包括原域不存在的情况）、语言状态、应用激活策略及主菜单 / Services 菜单（包括原标题和原挂接位置）、应用图标与命名图像缓存。独立组件继续使用随机偏好域，不访问真实 Combo 的偏好域。两个 bundle 区分无宿主逻辑和需要主 bundle / AppKit 事件循环的集成行为；仍按目录分类测试，没有逐模块增加 target。
 
