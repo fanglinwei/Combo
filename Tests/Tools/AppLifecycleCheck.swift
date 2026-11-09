@@ -42,6 +42,15 @@ import SwiftUI
                     }
                     return (menu, index)
                 }
+                @MainActor func checkSettingsTabs(_ window: NSWindow) throws {
+                    let items = window.toolbar?.items.flatMap { item in
+                        (item as? NSToolbarItemGroup)?.subitems ?? [item]
+                    } ?? []
+                    for page in Page.allCases {
+                        let item = items.first { $0.label == page.title }
+                        try check(item?.image != nil, "Settings tab retains its title and icon: \(page.title)")
+                    }
+                }
                 let visible = NSApp.windows.filter { $0.isVisible && $0.styleMask.contains(.titled) }
                 try check(visible.count == (showsSettings ? 1 : 0), "Launch opens settings only for guide or --settings")
                 try check(NSApp.activationPolicy() == (showsSettings ? .regular : .accessory), "Launch preserves Dock policy")
@@ -77,6 +86,7 @@ import SwiftUI
                     "About Combo", "Settings…", "Check for Updates…", "Services", "Hide Combo", "Hide Others", "Show All", "Quit Combo"
                 ], "All application commands retain English titles after opening settings")
                 try await checkLayout(window, width: SettingsLayout.width)
+                try checkSettingsTabs(window)
                 try check(window.title == Page.general.title || window.title == L("Combo 设置"), "Settings window title uses English")
                 try check(window.delegate != nil && !(window.delegate is AppDelegate), "SwiftUI retains its window delegate")
                 window.miniaturize(nil)
@@ -96,6 +106,7 @@ import SwiftUI
                 menu.performActionForItem(at: index)
                 try await Task.sleep(for: .milliseconds(500))
                 try check(window.isVisible && NSApp.activationPolicy() == .regular, "Settings scene reopens after close")
+                try checkSettingsTabs(window)
                 Localization.shared.selection = .simplifiedChinese
                 try await Task.sleep(for: .milliseconds(500))
                 let (chineseMenu, _) = try settingsItem()
@@ -103,6 +114,7 @@ import SwiftUI
                 try check(chineseMenu.items.contains { $0.title == "检查更新…" }, "Update command updates language")
                 try check(chineseMenu.items.contains { $0.title == "服务" && $0.submenu === NSApp.servicesMenu }, "Language changes keep native Services menu")
                 try check(window.title == Page.general.title || window.title == L("Combo 设置"), "Settings window title updates language")
+                try checkSettingsTabs(window)
                 try check(chineseMenu.items.filter { !$0.isSeparatorItem }.map(\.title) == [
                     "关于 Combo", "设置…", "检查更新…", "服务", "隐藏 Combo", "隐藏其他", "显示全部", "退出 Combo"
                 ], "All application commands update Chinese titles")

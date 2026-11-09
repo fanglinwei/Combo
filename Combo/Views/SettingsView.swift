@@ -81,10 +81,12 @@ struct SettingsView: View {
             } else {
                 TabView(selection: $page) {
                     ForEach(Page.allCases) { item in
-                        settingsPage(item)
-                            .background(reduceTransparency ? .clear : palette.settingsContent)
-                            .tabItem { Label { Text(item.title) } icon: { Image(nsImage: item.toolbarImage(palette: palette)) } }
-                            .tag(item)
+                        Tab(value: item) {
+                            settingsPage(item)
+                                .background(reduceTransparency ? .clear : palette.settingsContent)
+                        } label: {
+                            Label { Text(item.title) } icon: { Image(nsImage: item.toolbarImage(palette: palette)) }
+                        }
                     }
                 }
             }
