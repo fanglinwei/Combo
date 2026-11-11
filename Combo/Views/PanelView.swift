@@ -364,7 +364,8 @@ private struct PanelMediaContent: View {
                             Text(track?.source ?? L("媒体来源")).lineLimit(1)
                         }.font(.system(size: 11)).foregroundStyle(palette.mutedText)
                             .frame(maxWidth: 105, minHeight: 28, alignment: .leading)
-                    }.buttonStyle(.plain).disabled(track?.bundleIdentifier == nil)
+                    }.buttonStyle(PanelIconButtonStyle(size: CGSize(width: 105, height: 28)))
+                        .disabled(track?.bundleIdentifier == nil).pointerStyle(.link)
                         .help(track?.source ?? L("媒体来源"))
                 }
         }

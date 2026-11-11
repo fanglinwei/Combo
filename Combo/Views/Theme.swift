@@ -44,8 +44,6 @@ struct ComboPalette {
     var selected: Color { .white.opacity(isDark ? 0.11 : 0.58) }
     var inset: Color { isDark ? .white.opacity(0.045) : themeColor(0x4B6A94).opacity(0.065) }
     var previewSurface: Color { .white.opacity(isDark ? 0.10 : 0.67) }
-    var panelGlass: Color { themeColor(isDark ? 0x1D222B : 0xF4F7FC).opacity(isDark ? 0.80 : 0.76) }
-    var panelRim: Color { .white.opacity(isDark ? 0.28 : 0.72) }
     var settingsCanvas: Color { themeColor(isDark ? 0x202631 : 0xF4F8FD).opacity(isDark ? 0.87 : 0.83) }
     var onboardingGlass: Color { themeColor(isDark ? 0x1D222B : 0xF4F7FC).opacity(isDark ? 0.88 : 0.84) }
     var settingsContent: Color { isDark ? themeColor(0x0F1620).opacity(0.24) : .white.opacity(0.24) }
@@ -133,11 +131,7 @@ struct PanelSurface: ViewModifier {
             if reduceTransparency {
                 content.background(palette.canvasTop, in: RoundedRectangle(cornerRadius: radius))
             } else {
-                content.background {
-                    GlassBackdrop(blur: 28).overlay(palette.panelGlass)
-                        .clipShape(RoundedRectangle(cornerRadius: radius))
-                        .overlay { RoundedRectangle(cornerRadius: radius).strokeBorder(palette.panelRim, lineWidth: 1) }
-                }
+                content.glassEffect(.regular, in: RoundedRectangle(cornerRadius: radius))
             }
         }.overlay {
             if contrast == .increased { RoundedRectangle(cornerRadius: radius).strokeBorder(Color.primary, lineWidth: 1) }
