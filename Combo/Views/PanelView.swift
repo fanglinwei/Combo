@@ -223,7 +223,8 @@ struct PanelView: View {
                     .monospacedDigit().frame(height: section == .wifi ? 24 : 27, alignment: .topLeading)
                 Text(section == .battery ? (store.scene == .live ? battery.statusText : L("演示数据")) : LKey(snapshot.network))
                     .font(.system(size: 11)).foregroundStyle(palette.mutedText).lineLimit(2).padding(.top, 4)
-            }.frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading).padding(.vertical, 3)
+            }.frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
+                .padding(.horizontal, 8).padding(.vertical, 6)
                 .contentShape(Rectangle())
                 .background(hoveredSection == section ? palette.hover : .clear, in: RoundedRectangle(cornerRadius: 8))
         }.buttonStyle(.plain).pointerStyle(.link).focused($focusedControl, equals: .section(section))
@@ -243,7 +244,7 @@ struct PanelView: View {
                     }
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundStyle(palette.mutedText)
-                }.frame(minHeight: 55).contentShape(Rectangle())
+                }.frame(minHeight: 55).padding(.horizontal, 8).padding(.vertical, 6).contentShape(Rectangle())
                     .background(hoveredSection == .sound ? palette.hover : .clear, in: RoundedRectangle(cornerRadius: 9))
             }.buttonStyle(.plain).pointerStyle(.link).focused($focusedControl, equals: .section(.sound))
                 .onHover { hoveredSection = $0 ? .sound : nil }.accessibilityLabel(L("声音详情"))
