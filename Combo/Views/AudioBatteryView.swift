@@ -10,7 +10,7 @@ struct AudioBatterySummary: View {
         VStack(spacing: detailed ? 20 : 18) {
             HStack(spacing: 34) {
                 ForEach(device.gauges(stale: stale)) { gauge in
-                    AudioBatteryGaugeView(gauge: gauge, diameter: detailed ? 64 : 44, reduceMotion: reduceMotion)
+                    AudioBatteryGaugeView(gauge: gauge, diameter: 40, reduceMotion: reduceMotion)
                 }
             }.frame(maxWidth: .infinity)
             if detailed && stale {
@@ -29,12 +29,10 @@ struct AudioBatteryGaugeView: View {
     var showsValue = false
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
-    @Environment(\.colorSchemeContrast) private var contrast
     @State private var hovered = false
     @State private var toggled = false
-    @FocusState private var focused: Bool
 
-    private var numeric: Bool { showsValue || hovered || focused || toggled || gauge.percent == nil }
+    private var numeric: Bool { showsValue || hovered || toggled || gauge.percent == nil }
     private var color: Color {
         switch gauge.level {
         case .low: rgb(0xFF3B41)
@@ -79,12 +77,8 @@ struct AudioBatteryGaugeView: View {
             }
             .contentShape(Circle())
         }
-        .buttonStyle(.plain).focusable().focused($focused)
+        .buttonStyle(.plain).focusable(false)
         .onHover { hovered = $0 }
-        .onKeyPress(.space) { toggled.toggle(); return .handled }
-        .overlay {
-            if focused { Circle().stroke(.primary, lineWidth: contrast == .increased ? 3 : 2).padding(-4).allowsHitTesting(false) }
-        }
         .animation(reduceMotion || systemReduceMotion ? nil : .easeOut(duration: 0.1), value: numeric)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(gauge.title)
