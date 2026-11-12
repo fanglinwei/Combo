@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/brand/combo-app-icon.png" width="112" alt="Combo 应用图标">
+  <img src="docs/design/liquid-glass/icons/combo-app-icon.png" width="112" alt="Combo 应用图标">
 </p>
 
 <h1 align="center">Combo</h1>
@@ -35,7 +35,7 @@ Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用�
 ### 菜单栏中的 Combo
 
 <p align="center">
-  <img src="docs/assets/combo-menu-bar-preview.gif" width="422" alt="Combo 位于 macOS 菜单栏中，中央显示已连接的 Wi-Fi，外圈显示电量，底部播放音柱循环变化">
+  <img src="docs/assets/combo-menu-bar-preview.gif" width="560" alt="来自设置 → 外观 → 效果预览的菜单栏横条，中央显示 Wi-Fi，外圈显示电量，底部音柱动态播放">
 </p>
 
 [静态预览](docs/assets/combo-menu-bar-preview.png)
@@ -50,7 +50,7 @@ Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用�
 
 以上图片截自最新设计稿，使用示例数据；英文 README 也保留稿件原有中文。新 AppIcon 采用蓝白底座、电量弧、Wi-Fi 双弧和圆弧排列的四条音乐柱。
 
-[设计说明与全部详情截图](docs/design/liquid-glass/README.md) · [可交互总设计稿](docs/design/liquid-glass/index.html)（下载后用浏览器打开） · [AppIcon 源稿与尺寸预览](docs/assets/brand/liquid-glass/README.md)
+[设计说明与全部详情截图](docs/design/liquid-glass/README.md) · [可交互总设计稿](docs/design/liquid-glass/index.html)（下载后用浏览器打开） · [AppIcon 源稿与尺寸预览](docs/design/liquid-glass/icons/app-icon.md)
 
 ### 菜单栏图标动效
 

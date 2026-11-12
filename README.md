@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/brand/combo-app-icon.png" width="112" alt="Combo app icon">
+  <img src="docs/design/liquid-glass/icons/combo-app-icon.png" width="112" alt="Combo app icon">
 </p>
 
 <h1 align="center">Combo</h1>
@@ -35,7 +35,7 @@ Combo is designed primarily for people who work on a MacBook and love listening 
 ### Combo in the macOS menu bar
 
 <p align="center">
-  <img src="docs/assets/combo-menu-bar-preview.gif" width="422" alt="Combo in the macOS menu bar, with connected Wi-Fi in the center, battery around the edge, and animated playback bars below">
+  <img src="docs/assets/combo-menu-bar-preview.gif" width="560" alt="Menu bar strip from Settings → Appearance → Preview, showing Wi-Fi in the center, battery around the edge, and animated playback bars below">
 </p>
 
 [Static preview](docs/assets/combo-menu-bar-preview.png)
@@ -50,7 +50,7 @@ The updated glass panel groups media, battery, Wi-Fi, and sound in one surface. 
 
 These images are captured from the latest design mockups with sample data; their original Chinese labels are retained. The new AppIcon combines a blue and white base, battery arc, Wi-Fi arcs, and four music bars arranged along a curve.
 
-[Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](docs/design/liquid-glass/index.html) (download and open in a browser) · [AppIcon source and size previews](docs/assets/brand/liquid-glass/README.md)
+[Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](docs/design/liquid-glass/index.html) (download and open in a browser) · [AppIcon source and size previews](docs/design/liquid-glass/icons/app-icon.md)
 
 ### Menu bar icon in motion
 

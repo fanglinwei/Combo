@@ -4,7 +4,7 @@
 
 | 分类 | 文档 | 内容 |
 | --- | --- | --- |
-| 界面设计 | [1.3.0 当前设计](design/liquid-glass/README.md) | 总览、三页详情、设置、引导、AppIcon 和 README 配图来源 |
+| 界面设计 | [1.3.0 当前设计](design/liquid-glass/README.md) | 总览、三页详情、设置、引导、AppIcon、中央／音频／充电图标及 README 配图来源 |
 | 产品规格 | [产品行为与设置](product/behavior.md) | 图标语义、优先级与时序、设置默认值、持久化、权限与恢复 |
 | 产品规格 | [图标状态示例](product/icon-gallery.md) | 原生图标演示 GIF、当前规则入口与重绘命令 |
 | 工程实现 | [应用入口与窗口](engineering/app.md) | SwiftUI App / Settings / Commands、AppKit 面板和测试宿主隔离 |
@@ -25,6 +25,6 @@
 
 ## 资源与验证入口
 
-[品牌说明](assets/brand/README.md) 管理唯一 AppIcon 主稿、原生导出及透明标志；[1.3.0 配图](assets/ui-1.3.0/README.md) 记录从当前设计稿截取的图片和来源。旧面板图、无引用概念预览、未采用候选及重复图标已清理；设计源稿、完整导出版、原生图标动图与历史审查证据保留。`assets/render_design.py` 仍作为 Wi-Fi 轮廓的历史几何参考保留，不作为当前 UI 配图入口。[更新源目录](updates/README.md) 保存部署资源，其清单、公钥、版本说明及 `.nojekyll` 不按知识文档移动。
+[界面设计目录](design/liquid-glass/README.md) 统一管理面板、设置、引导与 [图标设计汇总](design/liquid-glass/icons/README.md)；[1.3.0 配图](assets/ui-1.3.0/README.md) 记录从当前设计稿截取的图片和来源。历史审查截图、校验稿、旧透明标志、闲置 AirPods 素材及文档侧多余的图标副本已清理；保留当前设计源稿、完整导出版、原生图标动图及有效检查。`assets/render_design.py` 仍作为当前 Wi-Fi 轮廓的几何参考保留，不作为 UI 配图入口。[更新源目录](updates/README.md) 保存部署资源，其清单、公钥、版本说明及 `.nojekyll` 不按知识文档移动。
 
 自动检查入口为仓库根目录 `./verify.sh`，具体测试与实机命令见 [Tests/README.md](../Tests/README.md)。文档整理只检查内容、路径与引用，不代替运行应用、真实授权、设备控制或发布演练。

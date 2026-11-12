@@ -1,0 +1,329 @@
+[
+  {
+    "family": "AirPods 1/2",
+    "symbols": {
+      "device": "airpods",
+      "left": "airpod.left",
+      "right": "airpod.right",
+      "case": "airpods.chargingcase.fill"
+    },
+    "minimumMacOS": {
+      "device": "11.0",
+      "left": "11.0",
+      "right": "11.0",
+      "case": "12.0"
+    }
+  },
+  {
+    "family": "AirPods 3",
+    "symbols": {
+      "device": "airpods.gen3",
+      "left": "airpod.gen3.left",
+      "right": "airpod.gen3.right",
+      "case": "airpods.gen3.chargingcase.wireless.fill"
+    },
+    "minimumMacOS": {
+      "device": "12.1",
+      "left": "12.1",
+      "right": "12.1",
+      "case": "12.1"
+    }
+  },
+  {
+    "family": "AirPods 4",
+    "symbols": {
+      "device": "airpods.gen4",
+      "left": "airpods.gen4.left",
+      "right": "airpods.gen4.right",
+      "case": "airpods.gen4.chargingcase.wireless.fill"
+    },
+    "minimumMacOS": {
+      "device": "15.2",
+      "left": "15.2",
+      "right": "15.2",
+      "case": "15.2"
+    }
+  },
+  {
+    "family": "AirPods Pro 1",
+    "symbols": {
+      "device": "airpods.pro.gen1",
+      "left": "airpods.pro.gen1.left",
+      "right": "airpods.pro.gen1.right",
+      "case": "airpods.pro.gen1.chargingcase.wireless.fill"
+    },
+    "minimumMacOS": {
+      "device": "27.0",
+      "left": "27.0",
+      "right": "27.0",
+      "case": "27.0"
+    }
+  },
+  {
+    "family": "AirPods Pro 2",
+    "symbols": {
+      "device": "airpods.pro",
+      "left": "airpods.pro.left",
+      "right": "airpods.pro.right",
+      "case": "airpods.pro.chargingcase.wireless.fill"
+    },
+    "minimumMacOS": {
+      "device": "15.0",
+      "left": "15.0",
+      "right": "15.0",
+      "case": "15.0"
+    }
+  },
+  {
+    "family": "AirPods Pro 3",
+    "symbols": {
+      "device": "airpods.pro.gen3",
+      "left": "airpods.pro.gen3.left",
+      "right": "airpods.pro.gen3.right",
+      "case": "airpods.pro.gen3.chargingcase.wireless.fill"
+    },
+    "minimumMacOS": {
+      "device": "27.0",
+      "left": "27.0",
+      "right": "27.0",
+      "case": "27.0"
+    }
+  },
+  {
+    "family": "AirPods Max",
+    "symbols": {
+      "device": "airpods.max"
+    },
+    "minimumMacOS": {
+      "device": "15.0"
+    }
+  },
+  {
+    "family": "Powerbeats Pro",
+    "symbols": {
+      "device": "beats.powerbeats.pro",
+      "left": "beats.powerbeats.pro.left",
+      "right": "beats.powerbeats.pro.right",
+      "case": "beats.powerbeats.pro.chargingcase.fill"
+    },
+    "minimumMacOS": {
+      "device": "15.0",
+      "left": "15.0",
+      "right": "15.0",
+      "case": "15.0"
+    }
+  },
+  {
+    "family": "Powerbeats Pro 2",
+    "symbols": {
+      "device": "beats.powerbeats.pro.2",
+      "left": "beats.powerbeats.pro.2.left",
+      "right": "beats.powerbeats.pro.2.right",
+      "case": "beats.powerbeats.pro.2.chargingcase.fill"
+    },
+    "minimumMacOS": {
+      "device": "15.5",
+      "left": "15.5",
+      "right": "15.5",
+      "case": "15.5"
+    }
+  },
+  {
+    "family": "Beats Fit Pro",
+    "symbols": {
+      "device": "beats.fitpro",
+      "left": "beats.fitpro.left",
+      "right": "beats.fitpro.right",
+      "case": "beats.fitpro.chargingcase.fill"
+    },
+    "minimumMacOS": {
+      "device": "14.0",
+      "left": "14.0",
+      "right": "14.0",
+      "case": "14.0"
+    }
+  },
+  {
+    "family": "Beats Studio Buds",
+    "symbols": {
+      "device": "beats.studiobuds",
+      "left": "beats.studiobuds.left",
+      "right": "beats.studiobuds.right",
+      "case": "beats.studiobuds.chargingcase.fill"
+    },
+    "minimumMacOS": {
+      "device": "12.0",
+      "left": "15.0",
+      "right": "15.0",
+      "case": "12.0"
+    }
+  },
+  {
+    "family": "Beats Studio Buds +",
+    "symbols": {
+      "device": "beats.studiobuds.plus",
+      "left": "beats.studiobuds.plus.left",
+      "right": "beats.studiobuds.plus.right",
+      "case": "beats.studiobuds.plus.chargingcase.fill"
+    },
+    "minimumMacOS": {
+      "device": "15.0",
+      "left": "15.0",
+      "right": "15.0",
+      "case": "15.0"
+    }
+  },
+  {
+    "family": "Beats Solo Buds",
+    "symbols": {
+      "device": "beats.solobuds",
+      "left": "beats.solobuds.left",
+      "right": "beats.solobuds.right",
+      "case": "beats.solobuds.chargingcase.fill"
+    },
+    "minimumMacOS": {
+      "device": "14.6",
+      "left": "14.6",
+      "right": "14.6",
+      "case": "14.6"
+    }
+  },
+  {
+    "family": "Beats 头戴式",
+    "symbols": {
+      "device": "beats.headphones"
+    },
+    "minimumMacOS": {
+      "device": "12.0"
+    }
+  },
+  {
+    "family": "Beats 颈挂式",
+    "symbols": {
+      "device": "beats.earphones"
+    },
+    "minimumMacOS": {
+      "device": "12.0"
+    }
+  },
+  {
+    "family": "Powerbeats",
+    "symbols": {
+      "device": "beats.powerbeats",
+      "left": "beats.powerbeats.left",
+      "right": "beats.powerbeats.right"
+    },
+    "minimumMacOS": {
+      "device": "12.0",
+      "left": "13.3",
+      "right": "13.3"
+    }
+  },
+  {
+    "family": "Powerbeats 3",
+    "symbols": {
+      "device": "beats.powerbeats3",
+      "left": "beats.powerbeats3.left",
+      "right": "beats.powerbeats3.right"
+    },
+    "minimumMacOS": {
+      "device": "12.0",
+      "left": "13.3",
+      "right": "13.3"
+    }
+  },
+  {
+    "family": "Beats Pill",
+    "symbols": {
+      "device": "beats.pill.fill"
+    },
+    "minimumMacOS": {
+      "device": "14.6"
+    }
+  },
+  {
+    "family": "通用头戴式",
+    "symbols": {
+      "device": "headphones"
+    },
+    "minimumMacOS": {
+      "device": "10.15"
+    }
+  },
+  {
+    "family": "通用真无线",
+    "symbols": {
+      "device": "earbuds",
+      "left": "earbud.left",
+      "right": "earbud.right",
+      "case": "earbuds.case.fill"
+    },
+    "minimumMacOS": {
+      "device": "12.0",
+      "left": "26.0",
+      "right": "26.0",
+      "case": "12.0"
+    }
+  },
+  {
+    "family": "通用入耳式",
+    "symbols": {
+      "device": "earbuds.in.ear",
+      "left": "earbuds.in.ear.left",
+      "right": "earbuds.in.ear.right",
+      "case": "earbuds.case.fill"
+    },
+    "minimumMacOS": {
+      "device": "26.0",
+      "left": "26.0",
+      "right": "26.0",
+      "case": "12.0"
+    }
+  },
+  {
+    "family": "通用无柄式",
+    "symbols": {
+      "device": "earbuds.stemless",
+      "left": "earbuds.stemless.left",
+      "right": "earbuds.stemless.right",
+      "case": "earbuds.case.fill"
+    },
+    "minimumMacOS": {
+      "device": "26.0",
+      "left": "26.0",
+      "right": "26.0",
+      "case": "12.0"
+    }
+  },
+  {
+    "family": "通用骨传导",
+    "symbols": {
+      "device": "earbuds.bone.conduction",
+      "left": "earbuds.bone.conduction.left",
+      "right": "earbuds.bone.conduction.right"
+    },
+    "minimumMacOS": {
+      "device": "26.0",
+      "left": "26.0",
+      "right": "26.0"
+    }
+  },
+  {
+    "family": "助听设备",
+    "symbols": {
+      "device": "hearingdevice.ear"
+    },
+    "minimumMacOS": {
+      "device": "12.0"
+    }
+  },
+  {
+    "family": "通用蓝牙音箱",
+    "symbols": {
+      "device": "hifispeaker.fill"
+    },
+    "minimumMacOS": {
+      "device": "10.15"
+    }
+  }
+]

@@ -4,6 +4,7 @@ cd "${0:A:h}"
 export DEVELOPER_DIR="${COMBO_DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 ./build.sh "$@"
 python3 Tests/Views/PanelLocalizationCheck.py
+python3 Tests/Views/DesignAssetsCheck.py
 SDK="$(xcrun --sdk macosx --show-sdk-path)"
 TARGET="$(uname -m)-apple-macosx26.0"
 APP="$(xcodebuild -project Combo.xcodeproj -scheme Combo -configuration Debug -destination "platform=macOS,arch=$(uname -m)" -showBuildSettings -json "$@" | python3 -c 'import json,sys; s=json.load(sys.stdin)[0]["buildSettings"]; print(s["TARGET_BUILD_DIR"] + "/" + s["FULL_PRODUCT_NAME"])')"

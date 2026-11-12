@@ -1,0 +1,334 @@
+[
+  {
+    "group": "网络",
+    "label": "Wi-Fi 已连接",
+    "symbol": "wifi",
+    "minimumMacOS": "10.15"
+  },
+  {
+    "group": "网络",
+    "label": "Wi-Fi 已关闭",
+    "symbol": "wifi.slash",
+    "minimumMacOS": "10.15"
+  },
+  {
+    "group": "网络",
+    "label": "网络异常",
+    "symbol": "wifi.exclamationmark",
+    "minimumMacOS": "10.15"
+  },
+  {
+    "badge": "checkmark.circle",
+    "group": "电源与数值",
+    "label": "已接通电源",
+    "symbol": "powerplug.portrait.fill",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "badge": "xmark.circle",
+    "group": "电源与数值",
+    "label": "已拔下电源",
+    "symbol": "powerplug.portrait.fill",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "charging": "true",
+    "group": "电源与数值",
+    "label": "充电中",
+    "symbol": "wifi",
+    "minimumMacOS": "10.15"
+  },
+  {
+    "group": "底部状态",
+    "label": "静音",
+    "muted": "true",
+    "symbol": "airpods.pro",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "group": "底部状态",
+    "label": "播放中",
+    "playing": "true",
+    "symbol": "airpods.pro",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "group": "电源与数值",
+    "label": "电量数字",
+    "number": "76",
+    "symbol": ""
+  },
+  {
+    "group": "网络",
+    "label": "网络数据不可用",
+    "symbol": "minus",
+    "minimumMacOS": "10.15"
+  },
+  {
+    "audio": "true",
+    "group": "AirPods",
+    "label": "AirPods 1/2",
+    "symbol": "airpods",
+    "minimumMacOS": "11.0"
+  },
+  {
+    "audio": "true",
+    "group": "AirPods",
+    "label": "AirPods 3",
+    "symbol": "airpods.gen3",
+    "minimumMacOS": "12.1"
+  },
+  {
+    "audio": "true",
+    "group": "AirPods",
+    "label": "AirPods 4",
+    "symbol": "airpods.gen4",
+    "minimumMacOS": "15.2"
+  },
+  {
+    "audio": "true",
+    "group": "AirPods",
+    "label": "AirPods Pro 1",
+    "symbol": "airpods.pro.gen1",
+    "minimumMacOS": "27.0"
+  },
+  {
+    "audio": "true",
+    "group": "AirPods",
+    "label": "AirPods Pro 2",
+    "symbol": "airpods.pro",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "audio": "true",
+    "group": "AirPods",
+    "label": "AirPods Pro 3",
+    "symbol": "airpods.pro.gen3",
+    "minimumMacOS": "27.0"
+  },
+  {
+    "audio": "true",
+    "group": "AirPods",
+    "label": "AirPods Max",
+    "symbol": "airpods.max",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Powerbeats Pro",
+    "symbol": "beats.powerbeats.pro",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Powerbeats Pro 2",
+    "symbol": "beats.powerbeats.pro.2",
+    "minimumMacOS": "15.5"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Beats Fit Pro",
+    "symbol": "beats.fitpro",
+    "minimumMacOS": "14.0"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Beats Studio Buds",
+    "symbol": "beats.studiobuds",
+    "minimumMacOS": "12.0"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Beats Studio Buds +",
+    "symbol": "beats.studiobuds.plus",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Beats Solo Buds",
+    "symbol": "beats.solobuds",
+    "minimumMacOS": "14.6"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Beats 头戴式",
+    "symbol": "beats.headphones",
+    "minimumMacOS": "12.0"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Beats 颈挂式",
+    "symbol": "beats.earphones",
+    "minimumMacOS": "12.0"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Powerbeats",
+    "symbol": "beats.powerbeats",
+    "minimumMacOS": "12.0"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Powerbeats 3",
+    "symbol": "beats.powerbeats3",
+    "minimumMacOS": "12.0"
+  },
+  {
+    "audio": "true",
+    "group": "Beats",
+    "label": "Beats Pill",
+    "symbol": "beats.pill.fill",
+    "minimumMacOS": "14.6"
+  },
+  {
+    "audio": "true",
+    "group": "通用音频设备",
+    "label": "通用头戴式",
+    "symbol": "headphones",
+    "minimumMacOS": "10.15"
+  },
+  {
+    "audio": "true",
+    "group": "通用音频设备",
+    "label": "通用真无线",
+    "symbol": "earbuds",
+    "minimumMacOS": "12.0"
+  },
+  {
+    "audio": "true",
+    "group": "通用音频设备",
+    "label": "通用入耳式",
+    "symbol": "earbuds.in.ear",
+    "minimumMacOS": "26.0"
+  },
+  {
+    "audio": "true",
+    "group": "通用音频设备",
+    "label": "通用无柄式",
+    "symbol": "earbuds.stemless",
+    "minimumMacOS": "26.0"
+  },
+  {
+    "audio": "true",
+    "group": "通用音频设备",
+    "label": "通用骨传导",
+    "symbol": "earbuds.bone.conduction",
+    "minimumMacOS": "26.0"
+  },
+  {
+    "audio": "true",
+    "group": "通用音频设备",
+    "label": "助听设备",
+    "symbol": "hearingdevice.ear",
+    "minimumMacOS": "12.0"
+  },
+  {
+    "audio": "true",
+    "group": "通用音频设备",
+    "label": "通用蓝牙音箱",
+    "symbol": "hifispeaker.fill",
+    "minimumMacOS": "10.15"
+  },
+  {
+    "connecting": "true",
+    "group": "网络",
+    "label": "Wi-Fi 连接中",
+    "symbol": "wifi",
+    "minimumMacOS": "10.15"
+  },
+  {
+    "group": "电源与数值",
+    "label": "音量数值",
+    "number": "50",
+    "symbol": "",
+    "volume": "true"
+  },
+  {
+    "group": "电源与数值",
+    "label": "音量为零",
+    "muted": "true",
+    "number": "0",
+    "symbol": "",
+    "volume": "true"
+  },
+  {
+    "group": "电源与数值",
+    "label": "音量不可用",
+    "number": "—",
+    "symbol": "",
+    "volume": "true"
+  },
+  {
+    "group": "电源与数值",
+    "label": "满电数值",
+    "number": "100",
+    "symbol": ""
+  },
+  {
+    "group": "电源与数值",
+    "label": "电量不可用",
+    "number": "—",
+    "symbol": ""
+  },
+  {
+    "group": "AirPlay 与车载",
+    "label": "Apple TV",
+    "symbol": "appletv.fill",
+    "minimumMacOS": "11.0"
+  },
+  {
+    "group": "AirPlay 与车载",
+    "label": "HomePod",
+    "symbol": "homepod.fill",
+    "minimumMacOS": "11.0"
+  },
+  {
+    "group": "AirPlay 与车载",
+    "label": "HomePod mini",
+    "symbol": "homepod.mini.fill",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "group": "AirPlay 与车载",
+    "label": "其他 AirPlay 输出",
+    "symbol": "airplay.audio",
+    "minimumMacOS": "15.0"
+  },
+  {
+    "group": "AirPlay 与车载",
+    "label": "车载音频",
+    "symbol": "car.fill",
+    "minimumMacOS": "10.15"
+  },
+  {
+    "group": "输出列表参考",
+    "label": "内置扬声器",
+    "scope": "输出列表使用，当前不在菜单栏中央显示",
+    "symbol": "laptopcomputer",
+    "minimumMacOS": "11.0"
+  },
+  {
+    "group": "输出列表参考",
+    "label": "显示器音频",
+    "scope": "输出列表使用，当前不在菜单栏中央显示",
+    "symbol": "display",
+    "minimumMacOS": "11.0"
+  },
+  {
+    "group": "输出列表参考",
+    "label": "其他音频输出",
+    "scope": "输出列表使用，当前不在菜单栏中央显示",
+    "symbol": "speaker.wave.2.fill",
+    "minimumMacOS": "11.0"
+  }
+]
