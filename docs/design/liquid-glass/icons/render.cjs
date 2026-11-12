@@ -4,9 +4,13 @@ const sharp = require('sharp');
 
 async function render() {
   const svg = fs.readFileSync(path.join(__dirname, 'combo-app-icon.svg'));
-  for (const size of [16, 32, 64, 128, 256, 512, 1024]) {
-    await sharp(svg).resize(size, size).png().toFile(path.join(__dirname, `combo-app-icon-${size}.png`));
+  const catalog = path.resolve(__dirname, '../../../../Combo/App/Media.xcassets/AppIcon.appiconset');
+  const { images } = JSON.parse(fs.readFileSync(path.join(catalog, 'Contents.json'), 'utf8'));
+  for (const { filename, size, scale } of images) {
+    const pixels = parseInt(size, 10) * parseInt(scale, 10);
+    await sharp(svg).resize(pixels, pixels).png().toFile(path.join(catalog, filename));
   }
+  fs.copyFileSync(path.join(catalog, 'icon_512x512@2x.png'), path.join(__dirname, 'combo-app-icon.png'));
   const icon = 'data:image/svg+xml;base64,' + svg.toString('base64');
   const image = (x, y, size) => `<image x="${x}" y="${y}" width="${size}" height="${size}" href="${icon}"/>`;
   const preview = `<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="950" viewBox="0 0 1440 950">
@@ -24,9 +28,9 @@ async function render() {
     }).join('')}
   </svg>`;
   await sharp(Buffer.from(preview)).png().toFile(path.join(__dirname, 'preview.png'));
-  const metadata = await sharp(path.join(__dirname, 'combo-app-icon-1024.png')).metadata();
+  const metadata = await sharp(path.join(__dirname, 'combo-app-icon.png')).metadata();
   if (metadata.width !== 1024 || metadata.height !== 1024 || !metadata.hasAlpha) throw new Error('Invalid icon dimensions or transparency');
-  const { data, info } = await sharp(path.join(__dirname, 'combo-app-icon-1024.png')).raw().toBuffer({ resolveWithObject: true });
+  const { data, info } = await sharp(path.join(__dirname, 'combo-app-icon.png')).raw().toBuffer({ resolveWithObject: true });
   for (const [x, y] of [[512, 227], [512, 422], [355, 680]]) {
     const offset = (y * info.width + x) * info.channels;
     if (Math.min(...data.subarray(offset, offset + 3)) < 200 || data[offset + 3] !== 255) throw new Error('Power arc, Wi-Fi or music columns are missing');

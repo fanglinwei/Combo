@@ -1,6 +1,6 @@
 # Combo 图标状态示例
 
-图示于 2026-11-06 使用当前原生绘图工具重新生成；当前参数与规则以 [产品行为](behavior.md) 和 [设置规格](behavior.md#settings) 为准。设置的「外观」提供实时菜单栏预览和独立的 33 种效果总览；内部 `Scene` 演示场景继续用于测试和图集生成。33 种效果来自独立预览数据，不与本页 16 个基础场景逐项对应。本机状态由电量、网络、音频和临时提示实时组合，无法用一张固定图代表。以下 19 个循环 GIF 使用应用的 `Snapshot.demo`、`IconContent`、`IconTransition` 和 `IconRenderer` 绘制：16 个场景各展示一次进入，再补连接成功、连接失败和取消静音。画面是确定性的演示数据，没有修改真实系统状态。
+图示于 2026-11-06 使用当前原生绘图工具重新生成；当前参数与规则以 [产品行为](behavior.md) 和 [设置规格](behavior.md#settings) 为准。设置的「外观」提供实时菜单栏预览和独立的 51 种效果总览；内部 `Scene` 演示场景继续用于测试和图集生成。按[中央图标汇总](../design/liquid-glass/icons/central.md)展开 30 类音频设备及 Wi-Fi 连接中状态；3 个输出列表参考图标不作为中央状态。51 种效果来自独立预览数据，不与本页 16 个基础场景逐项对应。本机状态由电量、网络、音频和临时提示实时组合，无法用一张固定图代表。以下 19 个循环 GIF 使用应用的 `Snapshot.demo`、`IconContent`、`IconTransition` 和 `IconRenderer` 绘制：16 个场景各展示一次进入，再补连接成功、连接失败和取消静音。画面是确定性的演示数据，没有修改真实系统状态。
 
 ## 状态如何叠加
 
@@ -12,6 +12,8 @@
 | 动效 | 普通播放音柱按 1.2 秒循环；开启“减少动态效果”后停在固定形态。关闭 Combo 的播放动效后，播放时保留音量点。 |
 
 当前同级不同状态和降级使用约 0.23 秒中心交叉淡变；升优先级按状态进入通用或网络专用入场，具体见 [产品时序](behavior.md#central-priority)。GIF 使用固定的起始与目标快照，不能覆盖所有实时打断场景。减少动态效果下中央切换约 **0.16 秒**，只淡化、不缩放。网络连接有专门的放大和 Wi-Fi 形变；连接未结束时持续脉冲。音量提示按最后调整后约 **2 秒**结束；电源完整入场约 **9.2 秒**结束，被打断或同级切换时遵循当前过渡规则。下列 GIF 为确定性演示数据，使用播放动效开启与深色外观；设置不同或实时数据不同，组合结果也会不同。
+
+效果总览独立列出设计稿的全部 30 类设备：AirPods 各代、11 类 Beats、7 类通用音频设备，以及 AirPlay 与车载设备；Wi-Fi 连接中也独立列出。设备场景复用实际中央符号选择与绘制逻辑，保留现有放大、位置、数字和转场处理；实时型号仍由可靠设备身份决定，预览不新增型号识别规则。「播放音柱」使用 AirPods Pro 2 示例输出，动态与减少动态效果变体均保留中央设备符号，只改变底部音柱。内置扬声器、显示器与其他有线输出仍仅使用输出列表图标。
 
 浅色外观使用同一套图形与状态规则，四个代表状态如下：
 
@@ -134,7 +136,7 @@ AirPods 播放中调到 75%：中央临时显示 `75`，底部显示三颗亮点
 | 位置 | 当前分支 |
 | --- | --- |
 | 主面板 | 总览；电池、Wi-Fi、声音三个详情页。 |
-| 设置窗口 | 顶部工具栏的通用、外观、关于三页；外观可跟随系统、浅色或深色，并进入 33 种效果总览。 |
+| 设置窗口 | 顶部工具栏的通用、外观、关于三页；外观可跟随系统、浅色或深色，并进入 51 种效果总览。 |
 | 系统图标隐藏指引 | 隐藏前后图片、按设备说明手动取消勾选，并打开菜单栏设置；用户人工核对。 |
 | 个人热点与高耗能应用 | 读取中、不可用、可用；可用但列表为空时各有空状态说明。 |
 | 充电上限 | 读取中、无法判断、未检测到活动上限、具体百分比、多个限制冲突。 |
@@ -152,7 +154,7 @@ AirPods 播放中调到 75%：中央临时显示 `75`，底部显示三颗亮点
 
 ```sh
 mkdir -p build
-xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -target arm64-apple-macosx26.0 -swift-version 5 -parse-as-library Combo/App/Localization.swift Combo/App/State.swift Combo/Audio/OutputDevice.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift docs/assets/render_current_states.swift -o build/render-current-states
+xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -target arm64-apple-macosx26.0 -swift-version 5 -parse-as-library Combo/App/Localization.swift Combo/App/State.swift Combo/Audio/OutputDevice.swift Combo/Rendering/AppIcons.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift docs/assets/render_current_states.swift -o build/render-current-states
 ./build/render-current-states
 ```
 

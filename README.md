@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/brand/combo-app-icon.png" width="112" alt="Combo app icon">
+  <img src="docs/design/liquid-glass/icons/combo-app-icon.png" width="112" alt="Combo app icon">
 </p>
 
 <h1 align="center">Combo</h1>
@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/fanglinwei/Combo"><img src="https://img.shields.io/badge/GitHub-Combo-181717?style=flat-square&amp;logo=github&amp;logoColor=white" alt="GitHub"></a>
-  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/UI-1.3.0%20preview-007EC6?style=flat-square" alt="1.3.0 UI preview"></a>
+  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-1.3.1-007EC6?style=flat-square" alt="Combo 1.3.1"></a>
   <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/downloads-Releases-44CC11?style=flat-square" alt="Downloads on GitHub Releases"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-007EC6?style=flat-square" alt="MIT License"></a>
   <a href="#requirements-and-installation"><img src="https://img.shields.io/badge/platform-macOS%2026%2B-999999?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="macOS 26 or later"></a>
@@ -35,7 +35,7 @@ Combo is designed primarily for people who work on a MacBook and love listening 
 ### Combo in the macOS menu bar
 
 <p align="center">
-  <img src="docs/assets/combo-menu-bar-preview.gif" width="422" alt="Combo in the macOS menu bar, with connected Wi-Fi in the center, battery around the edge, and animated playback bars below">
+  <img src="docs/assets/combo-menu-bar-preview.gif" width="560" alt="Menu bar strip from Settings → Appearance → Preview, showing Wi-Fi in the center, battery around the edge, and animated playback bars below">
 </p>
 
 [Static preview](docs/assets/combo-menu-bar-preview.png)
@@ -48,9 +48,9 @@ The updated glass panel groups media, battery, Wi-Fi, and sound in one surface. 
 | :---: | :---: |
 | <img src="docs/assets/ui-1.3.0/panel.jpg" width="352" alt="1.3.0 overview design showing media, battery, Wi-Fi, AirPods battery and volume"> | <img src="docs/assets/ui-1.3.0/settings.jpg" width="420" alt="1.3.0 light settings design with a toolbar, appearance options and access to 33 icon effects"> |
 
-These images are captured from the latest design mockups with sample data; their original Chinese labels are retained. The new AppIcon combines a blue and white base, battery arc, Wi-Fi arcs, and four music bars arranged along a curve.
+These images preserve the 1.3.0 design snapshot with sample data; their original Chinese labels are retained. The new AppIcon combines a blue and white base, battery arc, Wi-Fi arcs, and four music bars arranged along a curve.
 
-[Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](docs/design/liquid-glass/index.html) (download and open in a browser) · [AppIcon source and size previews](docs/assets/brand/liquid-glass/README.md)
+[Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](docs/design/liquid-glass/index.html) (download and open in a browser) · [Icon design summary](docs/design/liquid-glass/icons/README.md)
 
 ### Menu bar icon in motion
 
@@ -65,9 +65,9 @@ These GIFs use the app's own icon renderer and demo data. See the [icon gallery]
 - **Status icon**: Battery around the edge, network or audio device in the center, and volume or playback below. Low battery turns red; charging turns green.
 - **Battery**: Check charge, charging status, health, and any readable charging limit, or switch supported energy modes. While plugged in with charging paused by a manual limit, **Charge to Full Now** can temporarily lift that limit; macOS manages its restoration.
 - **Wi-Fi**: View the current network, nearby networks, signal strength, and security. Click a network or Personal Hotspot to open macOS Wi-Fi settings, where you connect and turn Wi-Fi on or off.
-- **Sound and AirPods**: Switch outputs, adjust volume, and mute. On supported devices, check AirPods battery levels and change noise control modes. Find nearby AirPlay devices and connect through macOS Sound settings.
+- **Sound and AirPods**: Switch outputs, adjust volume, and mute. On supported Bluetooth devices, view battery rings for the device, earbuds, and case; supported AirPods also offer noise control modes. Device symbols are shared across the menu bar, battery rings, and output list, with a brief hint when the output changes. Find nearby AirPlay devices and connect through macOS Sound settings.
 - **Media controls**: View the track, artwork, and source app; use previous, play/pause, and next, or open the source app. The player must provide media information and the relevant controls to macOS.
-- **Personalization**: Light and dark appearances, English and Simplified Chinese, and launch at login. Playback bars follow a fixed loop; animations can be disabled and respect Reduce Motion. Appearance includes a live menu bar preview and a separate gallery of 33 icon effects with descriptions and variants.
+- **Personalization**: Light and dark appearances, English and Simplified Chinese, and launch at login. Playback bars follow a fixed loop; animations can be disabled and respect Reduce Motion. Appearance includes a live menu bar preview and a separate gallery of 51 icon effects with descriptions and variants.
 
 Some features depend on your device and macOS version. See [Compatibility](#compatibility) for support details and [Permissions and privacy](#permissions-and-privacy) for access details.
 
@@ -81,11 +81,11 @@ Some features depend on your device and macOS version. See [Compatibility](#comp
 
 [Visit GitHub Releases](https://github.com/fanglinwei/Combo/releases) for published packages and release notes.
 
-**This page previews the 1.3.0 UI; the app version in the repository is still `1.3.1 / 104`.** Check Releases for available packages, or use the [source build instructions](#build-from-source) for the development version. Verify the package's architecture and signing status before downloading.
+**The repository app version is `1.3.1 / 104`.** Screenshots above preserve the 1.3.0 design; the [design summary](docs/design/liquid-glass/README.md) also covers the current icon and battery designs. Check Releases for available packages, or use the [source build instructions](#build-from-source) for the development version. Verify the package's architecture and signing status before downloading.
 
 ### Manual installation
 
-Once a release package has been published:
+To install a published release:
 
 1. Download the package for your Mac from [Releases](https://github.com/fanglinwei/Combo/releases). For Apple Silicon, choose a package identified as `arm64` or Apple Silicon. Intel support is currently unverified; use an Intel package only if the release explicitly provides and supports it.
 2. Extract the `.zip`, or open the `.dmg`, according to the published package format.
@@ -230,7 +230,7 @@ Turn them back on manually in macOS menu bar settings. Quitting Combo does not c
 
 ### Development environment
 
-Use a full Xcode installation with the macOS 26 SDK or later. The current development environment is **Xcode 27.0**. The project uses Swift, SwiftUI, AppKit, and bundled Objective-C/C helpers; it has no third-party Swift package dependencies.
+Use a full Xcode installation with the macOS 26 SDK or later. The current development environment is **Xcode 27.0**. The project uses Swift, SwiftUI, AppKit, and bundled Objective-C/C helpers; it uses Sparkle 2.10.0 for software updates through Swift Package Manager.
 
 ```sh
 git clone https://github.com/fanglinwei/Combo.git
@@ -262,7 +262,7 @@ Build products are in Xcode's DerivedData under `Build/Products/Debug` or `Build
 ./verify.sh
 ```
 
-This script builds Debug and runs the project's state, localization, icon, panel, network, battery, media, and helper checks, followed by code-signature and brand-resource verification. Real device connections, hardware-specific controls, and system permission dialogs also need manual validation.
+This script builds Debug and runs the background test plan for state, localization, icons, network, battery, media, and helpers, followed by code-signature and brand-resource verification. It does not launch the app or cover window, focus, and visual interactions. Real device connections, hardware-specific controls, and system permission dialogs also need manual validation.
 
 ## Feedback and contributions
 

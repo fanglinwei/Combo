@@ -24,6 +24,8 @@ enum IconPreviewGroup: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String { LKey(rawValue) }
 
+    static var sceneCount: Int { allCases.reduce(0) { $0 + $1.scenes.count } }
+
     var scenes: [IconPreviewScene] {
         func scene(_ title: String, _ condition: String, _ description: String, _ configure: (inout Snapshot) -> Void = { _ in }) -> IconPreviewScene {
             var snapshot = Snapshot.demo(.wired)
@@ -31,25 +33,46 @@ enum IconPreviewGroup: String, CaseIterable, Identifiable {
             return IconPreviewScene(titleKey: title, conditionKey: condition, descriptionKey: description,
                                     variants: [IconPreviewVariant(titleKey: "默认", snapshot: snapshot)])
         }
-        func device(_ title: String, _ condition: String, _ description: String, _ kind: OutputDeviceKind) -> IconPreviewScene {
-            scene(title, condition, description) { $0.deviceKind = kind; $0.output = LocalizedText { LKey(title) } }
+        func device(_ title: String, _ condition: String, _ description: String, _ kind: OutputDeviceKind,
+                    families: [(String, AudioIconFamily)] = []) -> [IconPreviewScene] {
+            let models: [(String, AudioIconFamily?)] = families.isEmpty
+                ? [(title, nil)] : families.map { ($0.0, $0.1) }
+            return models.map { name, family in
+                scene(name, condition, description) {
+                    $0.deviceKind = kind
+                    $0.audioIconFamily = family
+                    $0.output = LocalizedText { LKey(name) }
+                }
+            }
         }
         switch self {
         case .network:
             return [
                 scene("Wi-Fi 正常", "Wi-Fi 连接", "已识别为 Wi-Fi 连接；中央不区分信号强弱。") { $0.symbol = "wifi"; $0.network = "Wi-Fi" },
+                scene("Wi-Fi 正在连接", "Wi-Fi 连接", "连接中使用原有 Wi-Fi 放大与脉冲，连接完成后恢复当前中央内容。") {
+                    $0.symbol = "wifi"; $0.network = "Wi-Fi 正在连接"; $0.wifiConnecting = true
+                },
                 scene("Wi-Fi 已关闭", "无线接口已关闭", "Wi-Fi 已关闭时，中央显示带斜线的 Wi-Fi。") { $0.symbol = "wifi.slash"; $0.network = "Wi-Fi 已关闭" },
                 scene("无可用网络路径", "没有可用网络路径", "系统未报告可用网络路径，中央显示 Wi-Fi 与感叹号。") { $0.symbol = "exclamationmark"; $0.network = "无可用路径" },
                 scene("等待识别", "读取中或类型不确定", "仍在读取，或连接类型不确定时，中央显示短横线。") { $0.symbol = "minus"; $0.network = "正在读取" }
             ]
         case .devices:
             return [
-                device("AirPods Pro", "蓝牙 · 默认输出", "当前默认输出为 AirPods Pro。", .bluetooth(.airPodsPro)),
-                device("AirPods", "蓝牙 · 默认输出", "当前默认输出为 AirPods。", .bluetooth(.airPods)),
+                device("AirPods Pro", "蓝牙 · 默认输出", "当前默认输出为 AirPods Pro。", .bluetooth(.airPodsPro),
+                       families: [("AirPods Pro 2", .airPodsPro2), ("AirPods Pro 1", .airPodsPro1), ("AirPods Pro 3", .airPodsPro3)]),
+                device("AirPods", "蓝牙 · 默认输出", "当前默认输出为 AirPods。", .bluetooth(.airPods),
+                       families: [("AirPods 1/2", .airPods), ("AirPods 3", .airPods3), ("AirPods 4", .airPods4)]),
                 device("AirPods Max", "蓝牙 · 默认输出", "当前默认输出为 AirPods Max。", .bluetooth(.airPodsMax)),
-                device("Beats 耳机", "蓝牙 · 默认输出", "当前默认输出被识别为 Beats 耳机。", .bluetooth(.beats)),
+                device("Beats 耳机", "蓝牙 · 默认输出", "预览 Beats 耳机与音箱的对应型号图标。", .bluetooth(.beats),
+                       families: [("Beats 头戴式", .beatsHeadphones), ("Powerbeats Pro", .powerbeatsPro),
+                                  ("Powerbeats Pro 2", .powerbeatsPro2), ("Beats Fit Pro", .beatsFitPro),
+                                  ("Beats Studio Buds", .beatsStudioBuds), ("Beats Studio Buds +", .beatsStudioBudsPlus),
+                                  ("Beats Solo Buds", .beatsSoloBuds), ("Beats 颈挂式", .beatsEarphones),
+                                  ("Powerbeats", .powerbeats), ("Powerbeats 3", .powerbeats3), ("Beats Pill", .beatsPill)]),
                 device("通用蓝牙耳机", "通用或未识别的耳机", "当前默认输出为蓝牙耳机，或蓝牙设备型号未知。", .bluetooth(.headphones)),
-                device("入耳式耳机", "蓝牙 · 默认输出", "当前默认输出被识别为蓝牙入耳式耳机。", .bluetooth(.earbuds)),
+                device("入耳式耳机", "蓝牙 · 默认输出", "预览通用真无线、入耳式、无柄式与骨传导耳机图标。", .bluetooth(.earbuds),
+                       families: [("通用真无线", .earbuds), ("通用入耳式", .inEar),
+                                  ("通用无柄式", .stemless), ("通用骨传导", .boneConduction)]),
                 device("蓝牙音箱", "蓝牙 · 默认输出", "当前默认输出被识别为蓝牙音箱。", .bluetooth(.speaker)),
                 device("车载音频", "蓝牙 · 默认输出", "当前默认输出被识别为蓝牙车载音频。", .bluetooth(.car)),
                 device("助听设备", "蓝牙 · 默认输出", "当前默认输出被识别为蓝牙助听设备。", .bluetooth(.hearingAid)),
@@ -57,7 +80,7 @@ enum IconPreviewGroup: String, CaseIterable, Identifiable {
                 device("HomePod", "AirPlay · 默认输出", "当前默认 AirPlay 输出为 HomePod。", .airPlay(.homePod)),
                 device("HomePod mini", "AirPlay · 默认输出", "当前默认 AirPlay 输出为 HomePod mini。", .airPlay(.homePodMini)),
                 device("通用 AirPlay", "其他或未识别的接收端", "当前默认输出为第三方或型号未知的 AirPlay 设备。", .airPlay(.other))
-            ]
+            ].flatMap { $0 }
         case .power:
             var charging = scene("充电", "正在充电", "正在充电时始终显示绿色电量弧和闪电。") { $0.charging = true; $0.plugged = true }
             let levels: [(String, Double?, String)] = [
@@ -83,7 +106,12 @@ enum IconPreviewGroup: String, CaseIterable, Identifiable {
                 scene("拔出电源提示", "刚断开电源", "断开电源时短暂显示插头与叉，随后恢复。此处定格展示提示。") { $0.centerEvent = .power }
             ]
         case .audio:
-            var playing = scene("播放音柱", "正在播放且已开启音柱", "媒体正在播放，且已开启播放音柱。") { $0.playing = true }
+            var playing = scene("播放音柱", "正在播放且已开启音柱", "媒体正在播放，且已开启播放音柱。") {
+                $0.playing = true
+                $0.deviceKind = .bluetooth(.airPodsPro)
+                $0.audioIconFamily = .airPodsPro2
+                $0.output = "AirPods Pro（示例）"
+            }
             var reduced = playing.variants[0].snapshot
             reduced.reducedMotion = true
             playing.variants = [IconPreviewVariant(titleKey: "动态", snapshot: playing.variants[0].snapshot, detailKey: "按固定节奏播放，不读取真实声音；系统减少动态效果时自动静止。"),

@@ -1,0 +1,126 @@
+[
+  {
+    "family": "airPods",
+    "productIDs": [
+      8194,
+      8207
+    ]
+  },
+  {
+    "family": "airPods3",
+    "productIDs": [
+      8211
+    ]
+  },
+  {
+    "family": "airPods4",
+    "productIDs": [
+      8217,
+      8219,
+      8222,
+      8224,
+      8220
+    ]
+  },
+  {
+    "family": "airPodsPro1",
+    "productIDs": [
+      8206
+    ]
+  },
+  {
+    "family": "airPodsPro2",
+    "productIDs": [
+      8212,
+      8228
+    ]
+  },
+  {
+    "family": "airPodsPro3",
+    "productIDs": [
+      8231,
+      8232
+    ]
+  },
+  {
+    "family": "airPodsMax",
+    "productIDs": [
+      8202,
+      8223,
+      8237
+    ]
+  },
+  {
+    "family": "powerbeatsPro",
+    "productIDs": [
+      8203
+    ]
+  },
+  {
+    "family": "powerbeatsPro2",
+    "productIDs": [
+      8221
+    ]
+  },
+  {
+    "family": "beatsFitPro",
+    "productIDs": [
+      8210,
+      8239
+    ]
+  },
+  {
+    "family": "beatsStudioBuds",
+    "productIDs": [
+      8209
+    ]
+  },
+  {
+    "family": "beatsStudioBudsPlus",
+    "productIDs": [
+      8214
+    ]
+  },
+  {
+    "family": "beatsSoloBuds",
+    "productIDs": [
+      8230
+    ]
+  },
+  {
+    "family": "beatsHeadphones",
+    "productIDs": [
+      8204,
+      8198,
+      8201,
+      8215,
+      8229,
+      8248
+    ]
+  },
+  {
+    "family": "beatsEarphones",
+    "productIDs": [
+      8208,
+      8197
+    ]
+  },
+  {
+    "family": "powerbeats",
+    "productIDs": [
+      8205
+    ]
+  },
+  {
+    "family": "powerbeats3",
+    "productIDs": [
+      8195
+    ]
+  },
+  {
+    "family": "beatsPill",
+    "productIDs": [
+      8218
+    ]
+  }
+]

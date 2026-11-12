@@ -6,6 +6,178 @@ import SwiftUI
 final class IconTransitionTests {
     @Test
     @MainActor
+    func testOutputHintsOverrideResidentStatesAndRestoreLatestContent() throws {
+        _ = NSApplication.shared
+        let kinds: [OutputDeviceKind] = [.builtIn, .display, .other, .bluetooth(.airPodsPro), .airPlay(.homePod)]
+        for reducedMotion in [false, true] {
+            for kind in kinds {
+                var snapshot = Snapshot(battery: 0.12, symbol: "exclamationmark", output: "Test Output",
+                                        deviceKind: kind, centerEvent: .output, eventSerial: 1, wifiConnecting: true)
+                let hint = IconContent(snapshot.preferringBattery(enabled: true))
+                #expect(hint.priority == 4 && hint.event == .output && hint.text.isEmpty)
+                #expect(hint.glyph == OutputDeviceClassifier.glyph(for: kind))
+                #expect(snapshot.centerHintText.contains("Test Output"))
+                var animation = IconTransition()
+                animation.update(wifi, at: 0, reducedMotion: reducedMotion)
+                animation.update(hint, at: 1, reducedMotion: reducedMotion)
+                let entered = animation.frame(at: 2)
+                #expect(entered.layers.last?.content == hint)
+                #expect(entered.layers.last?.emphasis == (reducedMotion ? 0 : 1))
+                let center = IconTransition.Frame(layers: entered.layers, peripheral: 0, ringOpacity: 0)
+                for dark in [false, true] {
+                    for size: CGFloat in [22, 100] {
+                        let image = IconRenderer.image(snapshot, animate: false, size: size, dark: dark, transition: center)
+                        let data = try #require(image.tiffRepresentation)
+                        let pixels = try #require(NSBitmapImageRep(data: data))
+                        var ink = 0.0
+                        for y in 0..<pixels.pixelsHigh {
+                            for x in 0..<pixels.pixelsWide {
+                                let alpha = try #require(pixels.colorAt(x: x, y: y)).alphaComponent
+                                ink += alpha
+                                if x == 0 || y == 0 || x == pixels.pixelsWide - 1 || y == pixels.pixelsHigh - 1 {
+                                    #expect(alpha < 0.01, "Output hints must fit the canvas without clipping")
+                                }
+                            }
+                        }
+                        #expect(ink > 0, "Every existing output glyph must render in P4")
+                    }
+                }
+                var next = hint
+                next.eventSerial += 1
+                #expect(!hint.sameState(as: next), "A second output with the same glyph is still a new P4 event")
+                animation.update(next, at: 3, reducedMotion: reducedMotion)
+                #expect(animation.isAnimating(at: 3.08))
+                snapshot.centerEvent = nil
+                animation.update(IconContent(snapshot), at: 10, reducedMotion: reducedMotion)
+                #expect(animation.frame(at: 11).layers.last?.content.kind == .connecting)
+                snapshot.wifiConnecting = false
+                snapshot.symbol = "wifi"
+                animation.update(IconContent(snapshot.preferringBattery(enabled: true)), at: 12, reducedMotion: reducedMotion)
+                let settled = animation.frame(at: 13)
+                #expect(settled.layers.last?.content.kind == .battery)
+                #expect(settled.peripheral == 1 && settled.ringOpacity == 1)
+            }
+        }
+    }
+
+    @Test
+    func testInterruptedTransitionsRetainPresentation() {
+        let cases: [(IconContent, IconContent, IconContent, Double)] = [
+            (wifi, content(.connecting), wifi, 2),
+            (wifi, battery, content(.airpods), 2),
+            (battery, content(.airpods), battery, 1.1),
+            (battery, content(.airpods), content(.plug), 1.1),
+            (battery, content(.airpods), content(.adjusting), 1.1),
+            (battery, content(.airpods), content(.connecting), 1.1)
+        ]
+        for (initial, first, replacement, time) in cases {
+            var animation = IconTransition()
+            animation.update(initial, at: 0, reducedMotion: false)
+            animation.update(first, at: 1, reducedMotion: false)
+            let before = animation.frame(at: time)
+            animation.update(replacement, at: time, reducedMotion: false)
+            let after = animation.frame(at: time)
+            let visible = after.layers.filter { $0.opacity > 0 }
+            #expect(before.layers.count == visible.count)
+            for (old, new) in zip(before.layers, visible) {
+                #expect(old.content == new.content)
+                #expect(old.opacity == new.opacity && old.scale == new.scale && old.emphasis == new.emphasis,
+                       "An interruption must retain the currently displayed size and opacity")
+                #expect(old.loadingPhase == new.loadingPhase)
+            }
+            #expect(before.peripheral == after.peripheral && before.ringOpacity == after.ringOpacity &&
+                    before.ringProgress == after.ringProgress)
+        }
+    }
+
+    @Test
+    func testConnectionCompletionRestoresPeripheralsWithoutUpdates() {
+        for reducedMotion in [false, true] {
+            for result in [Scene.wifi, .wifiOff, .offline, .wired, .low] {
+                var animation = IconTransition()
+                animation.update(content(.connecting), at: 0, reducedMotion: reducedMotion)
+                let before = animation.frame(at: 1)
+                animation.update(content(result), at: 1, reducedMotion: reducedMotion)
+                let duration = reducedMotion ? IconTransition.Timing.reduced : IconTransition.Timing.centerCrossfade
+                let middle = animation.frame(at: 1 + duration / 2)
+                #expect(abs(middle.peripheral - (before.peripheral + 1) / 2) < 0.0001)
+                #expect(abs(middle.ringOpacity - (before.ringOpacity + 1) / 2) < 0.0001)
+                #expect(!animation.isAnimating(at: 1 + duration + 0.001))
+                let settled = animation.frame(at: 10)
+                #expect(settled.layers.count == 1 && settled.layers.first?.content == content(result))
+                #expect(settled.layers.first?.scale == 1 && settled.layers.first?.emphasis == 0)
+                #expect(settled.peripheral == 1 && settled.ringOpacity == 1 && settled.ringProgress == 1,
+                       "The draw-only menu-bar timer must finish restoration without another state update")
+                animation.update(content(result), at: 10, reducedMotion: reducedMotion)
+                let refreshed = animation.frame(at: 10)
+                #expect(refreshed.peripheral == settled.peripheral && refreshed.ringOpacity == settled.ringOpacity)
+            }
+        }
+    }
+
+    @Test
+    func testEventsResumeConnectionAcrossRepeatedUpdates() {
+        for reducedMotion in [false, true] {
+            for event in [Scene.plug, .adjusting] {
+                var animation = IconTransition()
+                animation.update(content(.connecting), at: 0, reducedMotion: reducedMotion)
+                animation.update(content(event), at: 1, reducedMotion: reducedMotion)
+                animation.update(content(.connecting), at: 2, reducedMotion: reducedMotion)
+                for index in 0...120 {
+                    let time = 2 + Double(index) / 60
+                    let before = animation.frame(at: time)
+                    animation.update(content(.connecting), at: time, reducedMotion: reducedMotion)
+                    let after = animation.frame(at: time)
+                    #expect(before.layers.count == after.layers.count)
+                    #expect(before.layers.last?.opacity == after.layers.last?.opacity &&
+                            before.layers.last?.scale == after.layers.last?.scale &&
+                            before.layers.last?.emphasis == after.layers.last?.emphasis)
+                    #expect(before.peripheral == after.peripheral && before.ringOpacity == after.ringOpacity,
+                           "Preview frame updates must not restart or cancel connection restoration")
+                }
+                let longConnection = animation.frame(at: 30)
+                #expect(longConnection.layers.count == 1 && longConnection.layers.first?.content.kind == .connecting)
+                #expect(longConnection.layers.first?.emphasis == (reducedMotion ? 0 : 1))
+                #expect(longConnection.peripheral == (reducedMotion ? 1 : 0))
+                #expect(longConnection.ringOpacity == (reducedMotion ? 1 : 0))
+                #expect(animation.isAnimating(at: 30) == !reducedMotion)
+                if !reducedMotion {
+                    #expect(longConnection.layers.first?.loadingPhase != animation.frame(at: 30.2).layers.first?.loadingPhase)
+                }
+            }
+        }
+    }
+
+    @Test
+    @MainActor
+    func testNetworkCrossfadeKeepsGlyphShape() throws {
+        _ = NSApplication.shared
+        var animation = IconTransition()
+        animation.update(wifi, at: 0, reducedMotion: false)
+        animation.update(content(.wifiOff), at: 1, reducedMotion: false)
+        let middle = animation.frame(at: 1.5)
+        #expect(middle.layers.count == 2 && middle.layers.allSatisfy { abs($0.opacity - 0.5) < 0.0001 },
+               "Enlarged network glyphs must crossfade together instead of flipping")
+        for elapsed in [0.31, 0.4, 0.5, 0.6, 0.69] {
+            for layer in animation.frame(at: 1 + elapsed).layers {
+                for dark in [false, true] {
+                    for size: CGFloat in [22, 100] {
+                        var opaque = layer
+                        opaque.opacity = 1
+                        let sampled = IconTransition.Frame(layers: [opaque], peripheral: 0, ringOpacity: 0)
+                        let reference = IconTransition.Frame(layers: [.init(content: layer.content, emphasis: 1)], peripheral: 0, ringOpacity: 0)
+                        let actualImage = IconRenderer.image(Snapshot(), animate: false, size: size, dark: dark, transition: sampled)
+                        let expectedImage = IconRenderer.image(Snapshot(), animate: false, size: size, dark: dark, transition: reference)
+                        #expect(try #require(actualImage.tiffRepresentation) == #require(expectedImage.tiffRepresentation),
+                               "Every crossfade layer must retain its full glyph geometry in both appearances")
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    @MainActor
     func testCenterCrossfadeAndBottomReversal() throws {
         _ = NSApplication.shared
         var central = IconTransition()
@@ -224,7 +396,7 @@ final class IconTransitionTests {
                "Volume timeout must crossfade to current playback state")
         var events = CenterHint()
         for reducedMotion in [false, true] {
-            for event in [CenterEvent.power, .volume] {
+            for event in [CenterEvent.power, .volume, .output] {
                 let duration = IconTransition.Timing.eventDuration(event: event, reducedMotion: reducedMotion)
                 let compactAt = event == .volume || reducedMotion ? 0.16 : 4.2
                 let expiresAt = event == .volume ? 3 : 1 + compactAt + 5
@@ -281,13 +453,11 @@ final class IconTransitionTests {
         for name in ["airpods.pro", "airplay.audio", "appletv", "homepod", "homepod.mini", "hifispeaker", "car", "earbuds", "speaker.fill", "speaker.wave.1.fill", "speaker.wave.2.fill", "speaker.wave.3.fill", "questionmark"] {
             #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil, "Missing symbol: \(name)")
         }
-        #expect(DeviceGlyphImage.symbolName("definitely-not-a-symbol") == DeviceGlyphImage.fallbackName,
-               "An unresolvable SF Symbol must fall back instead of leaving a blank center")
-        #expect(DeviceGlyphImage.fallbackName == "headphones", "The shared fallback is the generic headphones symbol")
-        let resolvedFallback = DeviceGlyphImage.resolve("definitely-not-a-symbol")
-        #expect(resolvedFallback.name == DeviceGlyphImage.fallbackName && resolvedFallback.image != nil,
-               "The resolved image and SwiftUI name must use the same visible fallback")
-        func glyphImage(_ glyph: DeviceGlyph, dark: Bool = true) -> NSImage {
+        let resolvedFallback = AppIcons.resolve(.audio(.airPodsPro3), load: { name in
+            name == "headphones" ? NSImage(systemSymbolName: name, accessibilityDescription: nil) : nil
+        })
+        #expect(resolvedFallback?.name == "headphones" && resolvedFallback?.image != nil)
+        func glyphImage(_ glyph: AppIcon, dark: Bool = true) -> NSImage {
             var content = IconContent(kind: .headphones)
             content.glyph = glyph
             let frame = IconTransition.Frame(layers: [.init(content: content)], peripheral: 0, ringOpacity: 0)
@@ -328,23 +498,25 @@ final class IconTransitionTests {
                 }
             }
         }
-        let fallbackPixels = (try #require(glyphImage(.fallback).tiffRepresentation))
-        for glyph in [DeviceGlyph.symbol("definitely-not-a-symbol"), .asset("definitely-not-an-asset")] {
-            #expect((try #require(glyphImage(glyph).tiffRepresentation)) == fallbackPixels,
-                   "Missing symbols and assets must render exactly the shared fallback")
-        }
         for dark in [true, false, true] {
-            let glyphData = try #require(glyphImage(.symbol("airpods.pro"), dark: dark).tiffRepresentation)
+            let glyphData = try #require(glyphImage(.audio(.airPodsPro2), dark: dark).tiffRepresentation)
             let pixels = try #require(NSBitmapImageRep(data: glyphData))
             var brightness = 0.0, ink = 0.0
+            var minX = pixels.pixelsWide, maxX = -1
             for y in 0..<pixels.pixelsHigh {
                 for x in 0..<pixels.pixelsWide {
                     let pixelColor = try #require(pixels.colorAt(x: x, y: y))
                     let color = try #require(pixelColor.usingColorSpace(.sRGB))
                     brightness += color.redComponent * color.alphaComponent
                     ink += color.alphaComponent
+                    if color.alphaComponent > 0.05 {
+                        minX = min(minX, x)
+                        maxX = max(maxX, x)
+                    }
                 }
             }
+            let width = Double(maxX - minX + 1) / Double(pixels.pixelsWide)
+            #expect((0.37...0.41).contains(width), "Resting AirPods must retain their original visual size inside the battery ring")
             #expect(ink > 0 && (dark ? brightness / ink > 0.8 : brightness / ink < 0.3),
                    "Reusing a symbol must still apply the current appearance's foreground color")
         }
@@ -367,7 +539,7 @@ final class IconTransitionTests {
             #expect(!chargingPowerChange, "Charging-only changes must stay silent")
         }
         power.centerEvent = .power
-        #expect(IconContent(power).kind == .plugged && power.powerHintText == "已插入电源，")
+        #expect(IconContent(power).kind == .plugged && power.centerHintText == "已插入电源，")
         var cableTransition = IconTransition()
         cableTransition.update(IconContent(kind: .wifi, priority: 1), at: 0, reducedMotion: false)
         cableTransition.update(IconContent(power), at: 1, reducedMotion: false)
@@ -380,7 +552,7 @@ final class IconTransitionTests {
         let unpluggedPowerChange = detector.update(onAC: power.plugged)
         #expect(unpluggedPowerChange, "Unplugging at charge limit must trigger a hint")
         power.centerEvent = .power
-        #expect(IconContent(power).kind == .unplugged && power.powerHintText == "已拔出电源，")
+        #expect(IconContent(power).kind == .unplugged && power.centerHintText == "已拔出电源，")
         let missingPowerChange = detector.update(onAC: nil)
         #expect(!missingPowerChange)
         let restoredPowerChange = detector.update(onAC: true)
@@ -430,17 +602,17 @@ final class IconTransitionTests {
         #expect(IconContent(Snapshot(symbol: "", output: "AirPods")).kind == .battery, "A name alone must not identify an AirPods output")
         #expect(IconContent(Snapshot(symbol: "", output: "AirPods", deviceKind: .bluetooth(.airPodsPro))).kind == .headphones)
         let bluetoothSpeaker = IconContent(Snapshot(symbol: "", output: "JBL Flip 5", deviceKind: .bluetooth(.speaker)))
-        #expect(bluetoothSpeaker.kind == .headphones && bluetoothSpeaker.glyph == .symbol("hifispeaker"),
+        #expect(bluetoothSpeaker.kind == .headphones && bluetoothSpeaker.glyph == .audio(.speaker),
                "A Bluetooth speaker must keep the resident device glyph, with its own symbol")
         let airPlay = IconContent(Snapshot(symbol: "wifi", output: "客厅", deviceKind: .airPlay(.appleTV)))
-        #expect(airPlay.kind == .headphones && airPlay.glyph == .symbol("appletv"))
-        #expect(IconContent(Snapshot(symbol: "wifi", output: "客厅", deviceKind: .airPlay(.homePod))).glyph == .symbol("homepod"))
-        #expect(IconContent(Snapshot(symbol: "wifi", output: "厨房", deviceKind: .airPlay(.homePodMini))).glyph == .symbol("homepod.mini"))
-        #expect(IconContent(Snapshot(symbol: "wifi", output: "Sonos", deviceKind: .airPlay(.other))).glyph == .symbol("airplay.audio"))
+        #expect(airPlay.kind == .headphones && airPlay.glyph == .audio(.appleTV))
+        #expect(IconContent(Snapshot(symbol: "wifi", output: "客厅", deviceKind: .airPlay(.homePod))).glyph == .audio(.homePod))
+        #expect(IconContent(Snapshot(symbol: "wifi", output: "厨房", deviceKind: .airPlay(.homePodMini))).glyph == .audio(.homePodMini))
+        #expect(IconContent(Snapshot(symbol: "wifi", output: "Sonos", deviceKind: .airPlay(.other))).glyph == .audio(.airPlay))
         #expect(IconContent(Snapshot(symbol: "wifi", output: "MacBook Air扬声器", deviceKind: .builtIn)).glyph == nil,
                "Built-in output must not take over the center")
-        #expect(Snapshot(deviceKind: .bluetooth(.speaker)).deviceGlyph == .symbol("hifispeaker"))
-        #expect(Snapshot(deviceKind: .airPlay(.other)).deviceGlyph == .symbol("airplay.audio"))
+        #expect(Snapshot(deviceKind: .bluetooth(.speaker)).deviceGlyph == .audio(.speaker))
+        #expect(Snapshot(deviceKind: .airPlay(.other)).deviceGlyph == .audio(.airPlay))
         #expect(Snapshot(deviceKind: .builtIn).deviceGlyph == nil && Snapshot(deviceKind: .other).deviceGlyph == nil,
                "Only Bluetooth and AirPlay expose a center device glyph")
         #expect(Snapshot(deviceKind: .bluetooth(.airPodsPro)).outputIsAirPods && !Snapshot(deviceKind: .bluetooth(.beats)).outputIsAirPods,
@@ -481,21 +653,40 @@ final class IconTransitionTests {
     @MainActor
     func testWiFiGeometrySignalAndPixelReference() throws {
         defer { recordArtifacts() }
-        // The menu bar, both settings previews and the panel share the same Wi-Fi proportions.
-        var wifiCoverage: [Double] = []
+        // Compare each density with the approved official symbol's box; SF Symbols hint their ink at small sizes.
         for size: CGFloat in [22, 68, 112] {
             let frame = IconTransition.Frame(layers: [.init(content: wifi)], peripheral: 0, ringOpacity: 0)
             let image = IconRenderer.image(Snapshot(), animate: false, size: size, transition: frame)
             let imageData = try #require(image.tiffRepresentation)
             let pixels = try #require(NSBitmapImageRep(data: imageData))
-            var ink = 0.0
-            for y in 0..<pixels.pixelsHigh {
-                for x in 0..<pixels.pixelsWide { ink += (try #require(pixels.colorAt(x: x, y: y))).alphaComponent }
+            let source = try #require(NSImage(systemSymbolName: "wifi", accessibilityDescription: nil)?
+                .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 64, weight: .medium)
+                    .applying(.init(paletteColors: [.white]))))
+            let reference = NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
+                let placement = NSAffineTransform()
+                placement.scale(by: size / 100)
+                placement.translateX(by: 50, yBy: 50)
+                placement.scale(by: 1.06)
+                placement.translateX(by: -50, yBy: -54.5)
+                placement.concat()
+                let fit = min(41 / source.size.width, 33 / source.size.height)
+                source.draw(in: NSRect(x: 50 - source.size.width * fit / 2, y: 54 - source.size.height * fit / 2,
+                                       width: source.size.width * fit, height: source.size.height * fit))
+                return true
             }
-            wifiCoverage.append(ink / Double(pixels.pixelsWide * pixels.pixelsHigh))
+            let referenceData = try #require(reference.tiffRepresentation)
+            let expected = try #require(NSBitmapImageRep(data: referenceData))
+            #expect(expected.pixelsWide == pixels.pixelsWide && expected.pixelsHigh == pixels.pixelsHigh)
+            var error = 0.0
+            for y in 0..<pixels.pixelsHigh {
+                for x in 0..<pixels.pixelsWide {
+                    error += abs((try #require(pixels.colorAt(x: x, y: y))).alphaComponent
+                        - (try #require(expected.colorAt(x: x, y: y))).alphaComponent)
+                }
+            }
+            #expect(error / Double(pixels.pixelsWide * pixels.pixelsHigh) < 0.5 / 255,
+                    "Wi-Fi must match the approved official-symbol geometry at \(size)pt")
         }
-        #expect((try #require(wifiCoverage.max())) / (try #require(wifiCoverage.min())) < 1.06,
-               "Wi-Fi proportions must match across the menu bar and previews")
 
         // Unknown signal stays dim; each additional level lights triangle, inner arc, then outer arc.
         for level in 0...3 {

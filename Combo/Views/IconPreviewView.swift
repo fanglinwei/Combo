@@ -30,7 +30,7 @@ struct IconPreviewView: View {
             HStack {
                 Text(L("效果预览")).font(.system(size: 13, weight: .semibold))
                 Spacer()
-                Text(L("33 种")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
+                Text(L("\(IconPreviewGroup.sceneCount) 种")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
             }
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 20) {

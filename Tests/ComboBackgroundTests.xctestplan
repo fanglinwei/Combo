@@ -17,6 +17,17 @@
         "name": "ComboTests"
       },
       "parallelizable": false
+    },
+    {
+      "target": {
+        "containerPath": "container:Combo.xcodeproj",
+        "identifier": "EF6AFA9CEDB31B8B568116FD",
+        "name": "ComboIntegrationTests"
+      },
+      "parallelizable": false,
+      "selectedTests": [
+        "IntegrationTests/StoreIsolationTests/testAudioOutputResetPreservesBatteryUntilAudioStoreClearsIt()"
+      ]
     }
   ],
   "version": 1

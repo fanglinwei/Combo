@@ -430,7 +430,7 @@
 "音量与播放" = "Volume & playback";
 "显示模式" = "Display mode";
 "菜单栏图标" = "Menu bar icon";
-"预览 33 种效果" = "Preview 33 effects";
+"预览 %lld 种效果" = "Preview %lld effects";
 "恢复显示偏好…" = "Reset display preferences…";
 "电池设置" = "Battery settings";
 "动态效果跟随 macOS“减少动态效果”设置。" = "Motion follows the macOS Reduce Motion setting.";
@@ -518,7 +518,7 @@
 
 "固定节奏，不录音" = "Fixed rhythm, no recording";
 
-"33 种" = "33 effects";
+"%lld 种" = "%lld effects";
 "Wi-Fi 连接" = "Wi-Fi connection";
 "无线接口已关闭" = "Wireless interface is off";
 "没有可用网络路径" = "No available network path";
@@ -596,3 +596,63 @@
 "面板已收起，随时可以再次打开" = "The panel is closed. Open it again anytime.";
 "准备好后，点击「开始使用」结束引导。" = "When you are ready, click Get Started to finish the guide.";
 "面板会从图标下方展开。" = "The panel opens below the icon.";
+
+"设备" = "Device";
+
+"双耳" = "Both earbuds";
+
+"，正在充电" = ", charging";
+
+"，已充满" = ", fully charged";
+
+"点击切换电量数字" = "Click to toggle battery numbers";
+
+"AirPods Pro 1" = "AirPods Pro 1";
+
+"AirPods Pro 2" = "AirPods Pro 2";
+
+"AirPods Pro 3" = "AirPods Pro 3";
+
+"AirPods 1/2" = "AirPods 1/2";
+
+"AirPods 3" = "AirPods 3";
+
+"AirPods 4" = "AirPods 4";
+
+"Beats 头戴式" = "Beats Headphones";
+
+"Powerbeats Pro" = "Powerbeats Pro";
+
+"Powerbeats Pro 2" = "Powerbeats Pro 2";
+
+"Beats Fit Pro" = "Beats Fit Pro";
+
+"Beats Studio Buds" = "Beats Studio Buds";
+
+"Beats Studio Buds +" = "Beats Studio Buds +";
+
+"Beats Solo Buds" = "Beats Solo Buds";
+
+"Beats 颈挂式" = "Beats Earphones";
+
+"Powerbeats" = "Powerbeats";
+
+"Powerbeats 3" = "Powerbeats 3";
+
+"Beats Pill" = "Beats Pill";
+
+"通用真无线" = "Generic Earbuds";
+
+"通用入耳式" = "Generic In-Ear Earbuds";
+
+"通用无柄式" = "Generic Stemless Earbuds";
+
+"通用骨传导" = "Generic Bone Conduction Earbuds";
+
+"预览 Beats 耳机与音箱的对应型号图标。" = "Preview the matching model icons for Beats headphones, earphones, and speakers.";
+
+"预览通用真无线、入耳式、无柄式与骨传导耳机图标。" = "Preview generic wireless, in-ear, stemless, and bone conduction earbud icons.";
+
+"连接中使用原有 Wi-Fi 放大与脉冲，连接完成后恢复当前中央内容。" = "Connecting uses the existing Wi-Fi enlargement and pulse; the current central content returns when it completes.";
+
+"音频输出已切换为%@，" = "Audio output switched to %@, ";

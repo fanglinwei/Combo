@@ -23,7 +23,7 @@ enum OutputDeviceKind: Equatable {
         return false
     }
 
-    /// 耳机专属控制（聆听模式、电量）目前只对 AirPods 家族开放。
+    /// 聆听模式等耳机专属控制只对 AirPods 家族开放。
     var isAirPods: Bool {
         switch self {
         case .bluetooth(.airPodsPro), .bluetooth(.airPods), .bluetooth(.airPodsMax): return true
@@ -34,7 +34,7 @@ enum OutputDeviceKind: Equatable {
 
 /// 蓝牙设备家族。新增厂商或型号：加一档 + 在 `glyph(for:)` 里给一行映射。
 enum BluetoothFamily: CaseIterable {
-    case airPodsPro, airPods, airPodsMax, beats, headphones, earbuds, speaker, car, hearingAid, unknown
+    case airPodsPro, airPods, airPodsMax, beats, headphones, earbuds, inEar, stemless, boneConduction, speaker, car, hearingAid, unknown
 }
 
 /// AirPlay 路由的机型档位。信号来自 `AVOutputDevice.modelID`（如 `AppleTV14,1`），
@@ -136,21 +136,6 @@ struct AirPlayRoute: Equatable {
     func model(for deviceID: AudioDeviceID) -> String? { info(for: deviceID)?.modelIdentifier }
 }
 
-/// 字形来源。SF Symbol 是当前唯一在用的来源；第三方厂商的 SVG 日后放进
-/// `Combo/App/Media.xcassets`，这里用 `.asset("名字")` 引用，两条绘制路径都已支持。
-enum DeviceGlyph: Equatable {
-    case symbol(String)
-    case asset(String)
-
-    /// 解析失败时的统一下限：中央与面板都退到这里，绝不留空白。
-    static let fallback = DeviceGlyph.symbol("headphones")
-
-    var symbolName: String? {
-        if case .symbol(let name) = self { return name }
-        return nil
-    }
-}
-
 /// 分类所需信号。CoD 在获蓝牙授权后由现有 helper 读取；为零或缺失时忽略。
 struct OutputSignals: Equatable {
     var transport: UInt32 = 0
@@ -180,38 +165,44 @@ enum OutputDeviceClassifier {
         }
     }
 
-    /// 品牌名保留型号族；可用的类别信号优先于通用名称关键字，最后兜底 unknown。
+    /// 品牌名保留型号族；CoD 耳机类别可按名称细分外形，其余类别优先，最后兜底 unknown。
     private static func family(_ signals: OutputSignals) -> BluetoothFamily {
         let named = BluetoothFamily.matching(name: signals.name)
         if let named, [.airPodsPro, .airPods, .airPodsMax, .beats].contains(named) { return named }
-        if let code = signals.classOfDevice, code != 0, let coded = BluetoothFamily.matching(classOfDevice: code) { return coded }
+        if let code = signals.classOfDevice, code != 0, let coded = BluetoothFamily.matching(classOfDevice: code) {
+            // CoD identifies headphones, but cannot distinguish their form factor.
+            if coded == .headphones, let named, [.earbuds, .inEar, .stemless, .boneConduction].contains(named) { return named }
+            return coded
+        }
         return named ?? .unknown
     }
 
     /// 所有类别都有字形（含输出列表要显示的内置扬声器、显示器）。
-    static func glyph(for kind: OutputDeviceKind) -> DeviceGlyph {
+    static func glyph(for kind: OutputDeviceKind, family: AudioIconFamily? = nil) -> AppIcon {
+        if kind.isBluetooth, let family { return .audio(family) }
         switch kind {
-        case .builtIn: return .symbol("laptopcomputer")
-        case .display: return .symbol("display")
-        case .other: return .symbol("speaker.wave.2")
+        case .builtIn: return .device(.computer)
+        case .display: return .device(.display)
+        case .other: return .device(.audioOutput)
         case .airPlay(let family):
             switch family {
-            case .appleTV: return .symbol("appletv")
-            case .homePod: return .symbol("homepod")
-            case .homePodMini: return .symbol("homepod.mini")
-            case .other: return .symbol("airplay.audio")
+            case .appleTV: return .audio(.appleTV)
+            case .homePod: return .audio(.homePod)
+            case .homePodMini: return .audio(.homePodMini)
+            case .other: return .audio(.airPlay)
             }
         case .bluetooth(let family):
             switch family {
-            case .airPodsPro: return .symbol("airpods.pro")
-            case .airPods: return .symbol("airpods")
-            case .airPodsMax: return .symbol("airpods.max")
-            case .beats: return .symbol("beats.headphones")
-            case .headphones, .unknown: return .symbol("headphones")
-            case .earbuds: return .symbol("earbuds")
-            case .speaker: return .symbol("hifispeaker")
-            case .car: return .symbol("car")
-            case .hearingAid: return .symbol("hearingdevice.ear")
+            case .airPodsPro, .airPods: return .audio(.earbuds)
+            case .airPodsMax: return .audio(.airPodsMax)
+            case .beats, .headphones, .unknown: return .audio(.headphones)
+            case .earbuds: return .audio(.earbuds)
+            case .inEar: return .audio(.inEar)
+            case .stemless: return .audio(.stemless)
+            case .boneConduction: return .audio(.boneConduction)
+            case .speaker: return .audio(.speaker)
+            case .car: return .audio(.car)
+            case .hearingAid: return .audio(.hearingDevice)
             }
         }
     }
@@ -231,6 +222,11 @@ extension BluetoothFamily {
         if value.contains("airpods pro") { return .airPodsPro }
         if value.contains("airpods") { return .airPods }
         if value.contains("beats") { return .beats }
+        let phrase = " " + words.joined(separator: " ") + " "
+        if phrase.contains(" bone conduction ") || value.contains("骨传导") { return .boneConduction }
+        if word("stemless") || value.contains("无柄") { return .stemless }
+        if (phrase.contains(" in ear ") && !phrase.contains(" non in ear ") && !phrase.contains(" not in ear "))
+            || word("inear") || (value.contains("入耳") && !value.contains("半入耳") && !value.contains("非入耳")) { return .inEar }
         if word("buds") || word("earbuds") || value.contains("freebuds") { return .earbuds }
         if word("speaker") || word("soundlink") || word("soundbar") { return .speaker }
         if word("car") || value.contains("车载") { return .car }

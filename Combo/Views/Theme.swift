@@ -44,11 +44,9 @@ struct ComboPalette {
     var selected: Color { .white.opacity(isDark ? 0.11 : 0.58) }
     var inset: Color { isDark ? .white.opacity(0.045) : themeColor(0x4B6A94).opacity(0.065) }
     var previewSurface: Color { .white.opacity(isDark ? 0.10 : 0.67) }
-    var panelGlass: Color { themeColor(isDark ? 0x1D222B : 0xF4F7FC).opacity(isDark ? 0.80 : 0.76) }
-    var panelRim: Color { .white.opacity(isDark ? 0.28 : 0.72) }
-    var settingsCanvas: Color { themeColor(isDark ? 0x202631 : 0xF4F8FD).opacity(isDark ? 0.87 : 0.83) }
+    var settingsCanvas: Color { themeColor(isDark ? 0x2C2C2C : 0xF5F5F5).opacity(isDark ? 0.87 : 0.83) }
     var onboardingGlass: Color { themeColor(isDark ? 0x1D222B : 0xF4F7FC).opacity(isDark ? 0.88 : 0.84) }
-    var settingsContent: Color { isDark ? themeColor(0x0F1620).opacity(0.24) : .white.opacity(0.24) }
+    var settingsContent: Color { isDark ? themeColor(0x141414).opacity(0.24) : .white.opacity(0.24) }
     var settingsToolbar: Color { .white.opacity(isDark ? 0.035 : 0.16) }
     let canvasTop: Color
     let canvasBottom: Color
@@ -75,7 +73,7 @@ struct ComboPalette {
         let palette = standard(isDark: isDark)
         return ComboPalette(primaryText: themeColor(isDark ? 0xF4F7FC : 0x222A35),
                             separator: isDark ? .white.opacity(0.13) : themeColor(0x2E3D54).opacity(0.14),
-                            canvasTop: themeColor(isDark ? 0x282F3A : 0xEDF2F8), canvasBottom: palette.canvasBottom,
+                            canvasTop: themeColor(isDark ? 0x303030 : 0xF2F2F2), canvasBottom: palette.canvasBottom,
                             surface: palette.surface, mutedText: themeColor(isDark ? 0xC2CAD6 : 0x4E5A6B),
                             accent: palette.accent, isDark: isDark)
     }
@@ -133,15 +131,12 @@ struct PanelSurface: ViewModifier {
             if reduceTransparency {
                 content.background(palette.canvasTop, in: RoundedRectangle(cornerRadius: radius))
             } else {
-                content.background {
-                    GlassBackdrop(blur: 28).overlay(palette.panelGlass)
-                        .clipShape(RoundedRectangle(cornerRadius: radius))
-                        .overlay { RoundedRectangle(cornerRadius: radius).strokeBorder(palette.panelRim, lineWidth: 1) }
-                }
+                content.glassEffect(.regular, in: RoundedRectangle(cornerRadius: radius))
             }
         }.overlay {
             if contrast == .increased { RoundedRectangle(cornerRadius: radius).strokeBorder(Color.primary, lineWidth: 1) }
         }
+        .clipShape(RoundedRectangle(cornerRadius: radius))
     }
 }
 

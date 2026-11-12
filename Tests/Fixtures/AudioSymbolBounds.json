@@ -1,0 +1,668 @@
+{
+  "airpod.gen3.left": {
+    "bounds": [
+      33,
+      21,
+      77,
+      91
+    ],
+    "canvas": 112
+  },
+  "airpod.gen3.right": {
+    "bounds": [
+      33,
+      21,
+      77,
+      91
+    ],
+    "canvas": 112
+  },
+  "airpod.left": {
+    "bounds": [
+      39,
+      22,
+      73,
+      92
+    ],
+    "canvas": 112
+  },
+  "airpod.right": {
+    "bounds": [
+      39,
+      22,
+      72,
+      92
+    ],
+    "canvas": 112
+  },
+  "airpods": {
+    "bounds": [
+      22,
+      22,
+      90,
+      90
+    ],
+    "canvas": 112
+  },
+  "airpods.chargingcase.fill": {
+    "bounds": [
+      26,
+      22,
+      86,
+      92
+    ],
+    "canvas": 112
+  },
+  "airpods.gen3": {
+    "bounds": [
+      21,
+      31,
+      91,
+      82
+    ],
+    "canvas": 112
+  },
+  "airpods.gen3.chargingcase.wireless.fill": {
+    "bounds": [
+      22,
+      27,
+      90,
+      85
+    ],
+    "canvas": 112
+  },
+  "airpods.gen4": {
+    "bounds": [
+      21,
+      30,
+      91,
+      82
+    ],
+    "canvas": 112
+  },
+  "airpods.gen4.chargingcase.wireless.fill": {
+    "bounds": [
+      23,
+      26,
+      88,
+      87
+    ],
+    "canvas": 112
+  },
+  "airpods.gen4.left": {
+    "bounds": [
+      35,
+      21,
+      77,
+      91
+    ],
+    "canvas": 112
+  },
+  "airpods.gen4.right": {
+    "bounds": [
+      35,
+      21,
+      77,
+      91
+    ],
+    "canvas": 112
+  },
+  "airpods.max": {
+    "bounds": [
+      22,
+      20,
+      90,
+      92
+    ],
+    "canvas": 112
+  },
+  "airpods.pro": {
+    "bounds": [
+      21,
+      32,
+      91,
+      83
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.chargingcase.wireless.fill": {
+    "bounds": [
+      22,
+      29,
+      90,
+      83
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.gen1": {
+    "bounds": [
+      19,
+      35,
+      93,
+      79
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.gen1.chargingcase.wireless.fill": {
+    "bounds": [
+      20,
+      28,
+      92,
+      84
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.gen1.left": {
+    "bounds": [
+      30,
+      25,
+      82,
+      91
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.gen1.right": {
+    "bounds": [
+      30,
+      25,
+      82,
+      91
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.gen3": {
+    "bounds": [
+      21,
+      32,
+      91,
+      83
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.gen3.chargingcase.wireless.fill": {
+    "bounds": [
+      22,
+      29,
+      90,
+      83
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.gen3.left": {
+    "bounds": [
+      32,
+      25,
+      78,
+      91
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.gen3.right": {
+    "bounds": [
+      33,
+      25,
+      78,
+      91
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.left": {
+    "bounds": [
+      32,
+      25,
+      78,
+      91
+    ],
+    "canvas": 112
+  },
+  "airpods.pro.right": {
+    "bounds": [
+      33,
+      25,
+      78,
+      91
+    ],
+    "canvas": 112
+  },
+  "beats.earphones": {
+    "bounds": [
+      21,
+      28,
+      91,
+      85
+    ],
+    "canvas": 112
+  },
+  "beats.fitpro": {
+    "bounds": [
+      20,
+      38,
+      92,
+      75
+    ],
+    "canvas": 112
+  },
+  "beats.fitpro.chargingcase.fill": {
+    "bounds": [
+      19,
+      33,
+      93,
+      80
+    ],
+    "canvas": 112
+  },
+  "beats.fitpro.left": {
+    "bounds": [
+      25,
+      21,
+      87,
+      91
+    ],
+    "canvas": 112
+  },
+  "beats.fitpro.right": {
+    "bounds": [
+      23,
+      21,
+      87,
+      91
+    ],
+    "canvas": 112
+  },
+  "beats.headphones": {
+    "bounds": [
+      22,
+      21,
+      90,
+      92
+    ],
+    "canvas": 112
+  },
+  "beats.pill.fill": {
+    "bounds": [
+      19,
+      40,
+      93,
+      74
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats": {
+    "bounds": [
+      21,
+      29,
+      91,
+      84
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.left": {
+    "bounds": [
+      34,
+      20,
+      77,
+      92
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.pro": {
+    "bounds": [
+      20,
+      33,
+      92,
+      81
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.pro.2": {
+    "bounds": [
+      19,
+      37,
+      93,
+      75
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.pro.2.chargingcase.fill": {
+    "bounds": [
+      22,
+      25,
+      90,
+      87
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.pro.2.left": {
+    "bounds": [
+      23,
+      22,
+      89,
+      90
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.pro.2.right": {
+    "bounds": [
+      23,
+      22,
+      89,
+      90
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.pro.chargingcase.fill": {
+    "bounds": [
+      22,
+      22,
+      90,
+      90
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.pro.left": {
+    "bounds": [
+      30,
+      21,
+      80,
+      91
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.pro.right": {
+    "bounds": [
+      30,
+      21,
+      80,
+      91
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats.right": {
+    "bounds": [
+      34,
+      20,
+      77,
+      92
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats3": {
+    "bounds": [
+      20,
+      32,
+      92,
+      81
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats3.left": {
+    "bounds": [
+      31,
+      21,
+      80,
+      92
+    ],
+    "canvas": 112
+  },
+  "beats.powerbeats3.right": {
+    "bounds": [
+      31,
+      21,
+      79,
+      92
+    ],
+    "canvas": 112
+  },
+  "beats.solobuds": {
+    "bounds": [
+      20,
+      40,
+      92,
+      74
+    ],
+    "canvas": 112
+  },
+  "beats.solobuds.chargingcase.fill": {
+    "bounds": [
+      19,
+      37,
+      93,
+      75
+    ],
+    "canvas": 112
+  },
+  "beats.solobuds.left": {
+    "bounds": [
+      24,
+      26,
+      88,
+      89
+    ],
+    "canvas": 112
+  },
+  "beats.solobuds.right": {
+    "bounds": [
+      24,
+      26,
+      88,
+      89
+    ],
+    "canvas": 112
+  },
+  "beats.studiobuds": {
+    "bounds": [
+      19,
+      40,
+      93,
+      73
+    ],
+    "canvas": 112
+  },
+  "beats.studiobuds.chargingcase.fill": {
+    "bounds": [
+      19,
+      29,
+      93,
+      84
+    ],
+    "canvas": 112
+  },
+  "beats.studiobuds.left": {
+    "bounds": [
+      23,
+      26,
+      89,
+      87
+    ],
+    "canvas": 112
+  },
+  "beats.studiobuds.plus": {
+    "bounds": [
+      19,
+      40,
+      93,
+      73
+    ],
+    "canvas": 112
+  },
+  "beats.studiobuds.plus.chargingcase.fill": {
+    "bounds": [
+      19,
+      29,
+      93,
+      84
+    ],
+    "canvas": 112
+  },
+  "beats.studiobuds.plus.left": {
+    "bounds": [
+      23,
+      26,
+      89,
+      87
+    ],
+    "canvas": 112
+  },
+  "beats.studiobuds.plus.right": {
+    "bounds": [
+      23,
+      26,
+      89,
+      87
+    ],
+    "canvas": 112
+  },
+  "beats.studiobuds.right": {
+    "bounds": [
+      23,
+      26,
+      89,
+      87
+    ],
+    "canvas": 112
+  },
+  "earbud.left": {
+    "bounds": [
+      33,
+      24,
+      78,
+      91
+    ],
+    "canvas": 112
+  },
+  "earbud.right": {
+    "bounds": [
+      32,
+      24,
+      77,
+      91
+    ],
+    "canvas": 112
+  },
+  "earbuds": {
+    "bounds": [
+      22,
+      34,
+      89,
+      81
+    ],
+    "canvas": 112
+  },
+  "earbuds.bone.conduction": {
+    "bounds": [
+      19,
+      37,
+      93,
+      76
+    ],
+    "canvas": 112
+  },
+  "earbuds.bone.conduction.left": {
+    "bounds": [
+      25,
+      21,
+      87,
+      91
+    ],
+    "canvas": 112
+  },
+  "earbuds.bone.conduction.right": {
+    "bounds": [
+      25,
+      21,
+      87,
+      91
+    ],
+    "canvas": 112
+  },
+  "earbuds.case.fill": {
+    "bounds": [
+      21,
+      32,
+      91,
+      81
+    ],
+    "canvas": 112
+  },
+  "earbuds.in.ear": {
+    "bounds": [
+      19,
+      34,
+      92,
+      81
+    ],
+    "canvas": 112
+  },
+  "earbuds.in.ear.left": {
+    "bounds": [
+      32,
+      25,
+      80,
+      91
+    ],
+    "canvas": 112
+  },
+  "earbuds.in.ear.right": {
+    "bounds": [
+      31,
+      25,
+      80,
+      91
+    ],
+    "canvas": 112
+  },
+  "earbuds.stemless": {
+    "bounds": [
+      19,
+      40,
+      92,
+      70
+    ],
+    "canvas": 112
+  },
+  "earbuds.stemless.left": {
+    "bounds": [
+      25,
+      27,
+      91,
+      82
+    ],
+    "canvas": 112
+  },
+  "earbuds.stemless.right": {
+    "bounds": [
+      23,
+      28,
+      87,
+      81
+    ],
+    "canvas": 112
+  },
+  "headphones": {
+    "bounds": [
+      22,
+      21,
+      90,
+      91
+    ],
+    "canvas": 112
+  },
+  "hearingdevice.ear": {
+    "bounds": [
+      30,
+      20,
+      83,
+      92
+    ],
+    "canvas": 112
+  },
+  "hifispeaker.fill": {
+    "bounds": [
+      29,
+      20,
+      82,
+      92
+    ],
+    "canvas": 112
+  }
+}
