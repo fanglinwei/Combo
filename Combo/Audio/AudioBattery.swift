@@ -115,6 +115,9 @@ extension OutputDeviceKind {
         switch family {
         case .airPods, .airPodsPro, .earbuds: return .earbuds
         case .airPodsMax: return .airPodsMax
+        case .inEar: return .inEar
+        case .stemless: return .stemless
+        case .boneConduction: return .boneConduction
         case .speaker: return .speaker
         case .hearingAid: return .hearingDevice
         case .car: return .car

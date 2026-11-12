@@ -34,7 +34,7 @@ enum OutputDeviceKind: Equatable {
 
 /// 蓝牙设备家族。新增厂商或型号：加一档 + 在 `glyph(for:)` 里给一行映射。
 enum BluetoothFamily: CaseIterable {
-    case airPodsPro, airPods, airPodsMax, beats, headphones, earbuds, speaker, car, hearingAid, unknown
+    case airPodsPro, airPods, airPodsMax, beats, headphones, earbuds, inEar, stemless, boneConduction, speaker, car, hearingAid, unknown
 }
 
 /// AirPlay 路由的机型档位。信号来自 `AVOutputDevice.modelID`（如 `AppleTV14,1`），
@@ -165,11 +165,15 @@ enum OutputDeviceClassifier {
         }
     }
 
-    /// 品牌名保留型号族；可用的类别信号优先于通用名称关键字，最后兜底 unknown。
+    /// 品牌名保留型号族；CoD 耳机类别可按名称细分外形，其余类别优先，最后兜底 unknown。
     private static func family(_ signals: OutputSignals) -> BluetoothFamily {
         let named = BluetoothFamily.matching(name: signals.name)
         if let named, [.airPodsPro, .airPods, .airPodsMax, .beats].contains(named) { return named }
-        if let code = signals.classOfDevice, code != 0, let coded = BluetoothFamily.matching(classOfDevice: code) { return coded }
+        if let code = signals.classOfDevice, code != 0, let coded = BluetoothFamily.matching(classOfDevice: code) {
+            // CoD identifies headphones, but cannot distinguish their form factor.
+            if coded == .headphones, let named, [.earbuds, .inEar, .stemless, .boneConduction].contains(named) { return named }
+            return coded
+        }
         return named ?? .unknown
     }
 
@@ -193,6 +197,9 @@ enum OutputDeviceClassifier {
             case .airPodsMax: return .audio(.airPodsMax)
             case .beats, .headphones, .unknown: return .audio(.headphones)
             case .earbuds: return .audio(.earbuds)
+            case .inEar: return .audio(.inEar)
+            case .stemless: return .audio(.stemless)
+            case .boneConduction: return .audio(.boneConduction)
             case .speaker: return .audio(.speaker)
             case .car: return .audio(.car)
             case .hearingAid: return .audio(.hearingDevice)
@@ -215,6 +222,11 @@ extension BluetoothFamily {
         if value.contains("airpods pro") { return .airPodsPro }
         if value.contains("airpods") { return .airPods }
         if value.contains("beats") { return .beats }
+        let phrase = " " + words.joined(separator: " ") + " "
+        if phrase.contains(" bone conduction ") || value.contains("骨传导") { return .boneConduction }
+        if word("stemless") || value.contains("无柄") { return .stemless }
+        if (phrase.contains(" in ear ") && !phrase.contains(" non in ear ") && !phrase.contains(" not in ear "))
+            || word("inear") || (value.contains("入耳") && !value.contains("半入耳") && !value.contains("非入耳")) { return .inEar }
         if word("buds") || word("earbuds") || value.contains("freebuds") { return .earbuds }
         if word("speaker") || word("soundlink") || word("soundbar") { return .speaker }
         if word("car") || value.contains("车载") { return .car }

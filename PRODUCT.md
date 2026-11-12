@@ -15,7 +15,7 @@ Combo 是 SwiftUI / AppKit 原生菜单栏应用。Impeccable 的平台枚举未
 ## Capabilities and Constraints
 
 - 总览采用一体式玻璃面板，集中显示媒体、电池、Wi-Fi 与声音；三页详情共用返回导航和系统设置入口。
-- 设置使用顶部「通用／外观／关于」工具栏；外观提供实时菜单栏预览及 33 种效果总览，演示预览不修改系统。
+- 设置使用顶部「通用／外观／关于」工具栏；外观提供实时菜单栏预览及 51 种效果总览，演示预览不修改系统。
 - 引导帮助用户找到菜单栏右上角的 Combo 图标，理解点击打开面板、再次点击收起的操作，并反馈面板当前状态。
 - 保留菜单栏排列示意及系统决定实际排列的说明；保留按住 Command 拖动图标的帮助，以及「设置 → 关于」的系统图标与其他说明指引。
 - 「开始使用」始终可用，可按回车结束引导；不强制先完成演示，不增加账号、授权或其他设置步骤。
@@ -24,7 +24,7 @@ Combo 是 SwiftUI / AppKit 原生菜单栏应用。Impeccable 的平台枚举未
 
 ## Brand Commitments
 
-采用已确认的蓝白 AppIcon：电量弧、Wi-Fi 双弧与圆弧音乐柱；唯一主稿与导出见[品牌资源](docs/assets/brand/README.md)。面板、详情、设置与引导沿用 Liquid Glass 设计风格。保持 macOS 原生结构与工具栏；使用系统图标，主操作按钮采用中性色。
+采用已确认的蓝白 AppIcon：电量弧、Wi-Fi 双弧与圆弧音乐柱；唯一主稿与导出见[品牌资源](docs/design/liquid-glass/icons/README.md)。面板、详情、设置与引导沿用 Liquid Glass 设计风格。保持 macOS 原生结构与工具栏；使用系统图标，主操作按钮采用中性色。
 
 ## Accessibility & Inclusion
 

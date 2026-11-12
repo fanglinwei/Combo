@@ -37,6 +37,38 @@ struct OutputDeviceTests {
 
     @Test
     @MainActor
+    func testEarphoneFormFactorsReachCentralGlyph() throws {
+        let names: [(String, BluetoothFamily, AudioIconFamily)] = [
+            ("In-ear Earbuds", .inEar, .inEar), ("IN–EAR HEADPHONES", .inEar, .inEar),
+            ("InEar buds", .inEar, .inEar), ("入耳式蓝牙耳机", .inEar, .inEar),
+            ("Stemless Earbuds", .stemless, .stemless), ("无柄蓝牙耳机", .stemless, .stemless),
+            ("In-ear Stemless Earbuds", .stemless, .stemless),
+            ("Bone-Conduction Headphones", .boneConduction, .boneConduction),
+            ("BONE CONDUCTION", .boneConduction, .boneConduction), ("骨传导耳机", .boneConduction, .boneConduction)
+        ]
+        for (name, family, icon) in names {
+            for transport in [kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE] {
+                for code: UInt32? in [nil, 0, 0x0404, 0x0408, 0x0418] {
+                    let output = kind(transport, name, code)
+                    #expect(output == .bluetooth(family), "Headphone CoD must preserve explicit form factors: \(name)")
+                    #expect(output.batteryIconFamily == icon, "Status refresh must not replace the central icon with generic headphones")
+                    let snapshot = Snapshot(symbol: "wifi", deviceKind: output)
+                    #expect(snapshot.deviceGlyph == .audio(icon))
+                    #expect(IconContent(snapshot).glyph == .audio(icon))
+                    #expect(AppIcons.image(OutputDeviceClassifier.glyph(for: output)) != nil)
+                    #expect(!output.isAirPods)
+                }
+                #expect(kind(transport, name, 0x0414) == .bluetooth(.speaker))
+                #expect(kind(transport, name, 0x0900) == .bluetooth(.hearingAid))
+            }
+            #expect(kind(kAudioDeviceTransportTypeUSB, name) == .other)
+            #expect(kind(kAudioDeviceTransportTypeBuiltIn, name) == .builtIn)
+        }
+        #expect(kind(kAudioDeviceTransportTypeBluetooth, "Galaxy Buds2 Pro", 0x0418) == .bluetooth(.earbuds))
+    }
+
+    @Test
+    @MainActor
     func testNameWordBoundaries() async throws {
         // 按键匹配：不能把 Carl's Headphones 当车机，也不能把 Rosebuds 当真无线
         #expect(kind(kAudioDeviceTransportTypeBluetooth, "Carl's Headphones") == .bluetooth(.headphones))
@@ -44,6 +76,15 @@ struct OutputDeviceTests {
         #expect(kind(kAudioDeviceTransportTypeBluetooth, "Cardo Packtalk") == .bluetooth(.unknown))
         #expect(kind(kAudioDeviceTransportTypeBluetooth, "Rosebuds") == .bluetooth(.unknown))
         #expect(kind(kAudioDeviceTransportTypeBluetooth, "Galaxy Buds2 Pro") == .bluetooth(.earbuds), "Generation suffixes must still match")
+        for name in ["Cheekbone Conduction Headphones", "Stemlessness Headphones", "Linearity Headphones",
+                     "Non-in-ear Headphones", "Not in ear Headphones", "Open-ear Headphones"] {
+            #expect(kind(kAudioDeviceTransportTypeBluetooth, name) == .bluetooth(.headphones))
+        }
+        for name in ["半入耳式耳机", "非入耳式耳机", "Shokz OpenFit"] {
+            #expect(kind(kAudioDeviceTransportTypeBluetooth, name) == .bluetooth(.unknown))
+        }
+        #expect(kind(kAudioDeviceTransportTypeBluetooth, "AirPods Pro In-ear") == .bluetooth(.airPodsPro))
+        #expect(kind(kAudioDeviceTransportTypeBluetooth, "Beats Stemless") == .bluetooth(.beats))
     }
 
     @Test

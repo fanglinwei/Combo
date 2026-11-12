@@ -169,7 +169,7 @@ struct SettingsView: View {
                     groupHeader(L("菜单栏图标"))
                     Spacer(minLength: 8)
                     Button { showingIconPreview = true } label: {
-                        Label(L("预览 33 种效果"), systemImage: "chevron.right").labelStyle(.trailingIcon)
+                        Label(L("预览 \(IconPreviewGroup.sceneCount) 种效果"), systemImage: "chevron.right").labelStyle(.trailingIcon)
                     }.buttonStyle(.plain).font(.system(size: 12)).foregroundStyle(palette.accent)
                         .focused($previewButtonFocused).accessibilityIdentifier("open-icon-preview")
                 }

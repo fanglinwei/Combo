@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A7C100000000000000000001 /* IconPreviewScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F20FB357F70A3DEA669D9E9 /* IconPreviewScene.swift */; };
 		E1A000000000000000000005 /* TestHostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A000000000000000000006 /* TestHostApp.swift */; };
 		E1A000000000000000000003 /* ComboCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A000000000000000000004 /* ComboCommands.swift */; };
 		E1A000000000000000000001 /* ComboApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A000000000000000000002 /* ComboApp.swift */; };
@@ -887,6 +888,7 @@
 			files = (
 				DDF6E51FAFC52C599B9437EA /* Localization.swift in Sources */,
 				B8473119097B64277AD07876 /* State.swift in Sources */,
+				A7C100000000000000000001 /* IconPreviewScene.swift in Sources */,
 				2CAC0E57C683F547763C2B18 /* OutputDevice.swift in Sources */,
 				0143E53A33C44F6296C2C893 /* AudioBatteryView.swift in Sources */,
 				7F6FCF438E6781229E9C02AD /* AudioBattery.swift in Sources */,

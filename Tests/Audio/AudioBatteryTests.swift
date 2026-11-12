@@ -143,6 +143,29 @@ struct AudioBatteryTests {
     }
 
     @Test
+    func testEarphoneFormFactorsSurviveBluetoothStatusRefresh() throws {
+        for (kind, family) in [(BluetoothFamily.inEar, AudioIconFamily.inEar), (.stemless, .stemless), (.boneConduction, .boneConduction)] {
+            var payload: [String: Any] = ["deviceID": 99, "target": String(repeating: "a", count: 64),
+                "available": true, "modes": [], "canSetMode": false, "canSetConversation": false,
+                "attempted": false, "verified": false, "single": 64, "classOfDevice": 0x0418,
+                "vendorID": 76, "productID": 0xffff]
+            func decode() throws -> AirPodsReply {
+                try JSONDecoder().decode(AirPodsReply.self, from: JSONSerialization.data(withJSONObject: payload))
+            }
+            let reply = try decode()
+            #expect(reply.valid && reply.iconFamily == nil)
+            let device = reply.batteryDevice(family: OutputDeviceKind.bluetooth(kind).batteryIconFamily, name: "Test", previous: nil)
+            #expect(device.family == family)
+            let snapshot = Snapshot(symbol: "wifi", deviceKind: .bluetooth(kind), audioIconFamily: device.family)
+            #expect(IconContent(snapshot).glyph == .audio(family))
+            payload["productID"] = 0x2014
+            let identified = try decode()
+            #expect(identified.batteryDevice(family: family, name: "Test", previous: device).family == .airPodsPro2,
+                    "A confirmed product identity must override a name-based form factor")
+        }
+    }
+
+    @Test
     func testDesignScenesAndBatteryBoundaries() throws {
         let scenes = try fixture("AudioDeviceScenes.json", as: [Scene].self)
         #expect(scenes.count == 39)

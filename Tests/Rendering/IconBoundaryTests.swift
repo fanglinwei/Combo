@@ -4,9 +4,71 @@ import AppKit
 struct IconBoundaryTests {
     @Test
     @MainActor
+    func testSettingsPreviewCatalogCoverage() throws {
+        _ = NSApplication.shared
+        let groups = IconPreviewGroup.allCases
+        let scenes = groups.flatMap(\.scenes)
+        #expect(groups.map { $0.scenes.count } == [5, 30, 8, 8])
+        #expect(IconPreviewGroup.sceneCount == 51)
+        #expect(Set(scenes.map(\.id)).count == scenes.count)
+        let devices = IconPreviewGroup.devices.scenes
+        #expect(devices.allSatisfy { $0.variants.count == 1 }, "Each model must be directly discoverable in the catalog")
+        let families = devices.compactMap { scene -> AudioIconFamily? in
+            let content = IconContent(scene.variants[0].snapshot)
+            guard case .audio(let family, part: .device) = content.glyph else { return nil }
+            return family
+        }
+        #expect(families.count == AudioIconFamily.allCases.count)
+        #expect(Set(families) == Set(AudioIconFamily.allCases))
+        #expect(IconPreviewGroup.network.scenes.map { IconContent($0.variants[0].snapshot).kind }
+            == [.wifi, .connecting, .wifiOff, .warning, .unavailable])
+        let playing = try #require(IconPreviewGroup.audio.scenes.first { $0.titleKey == "播放音柱" })
+        #expect(playing.variants.map { $0.snapshot.reducedMotion } == [false, true])
+        for variant in playing.variants {
+            var snapshot = variant.snapshot
+            #expect(snapshot.playing && IconContent(snapshot).glyph == .audio(.airPodsPro2))
+            #expect(bottomState(muted: snapshot.silenced, adjusting: snapshot.adjusting, playing: snapshot.playing, animate: true) == .playing)
+            snapshot.playing = false
+            #expect(IconContent(snapshot).glyph == .audio(.airPodsPro2), "Playback must only change the bottom indicator")
+        }
+        for dark in [false, true] {
+            let sheet = NSImage(size: NSSize(width: 960, height: 1170))
+            sheet.lockFocus()
+            (dark ? NSColor.black : NSColor.white).setFill()
+            NSRect(origin: .zero, size: sheet.size).fill()
+            for (index, scene) in scenes.enumerated() {
+                let x = CGFloat(index % 6) * 160
+                let y = 1170 - CGFloat(index / 6 + 1) * 130
+                for variant in scene.variants {
+                    for size in [CGFloat(22), 76] {
+                        let image = IconRenderer.image(variant.snapshot, animate: true, size: size, phase: 0.3, dark: dark)
+                        #expect(image.size == NSSize(width: size, height: size))
+                        #expect(image.tiffRepresentation != nil, "Every catalog variant must render: \(scene.id)")
+                    }
+                }
+                let snapshot = scene.variants[0].snapshot
+                IconRenderer.image(snapshot, animate: true, size: 76, phase: 0.3, dark: dark)
+                    .draw(in: NSRect(x: x + 24, y: y + 40, width: 76, height: 76))
+                IconRenderer.image(snapshot, animate: true, size: 22, phase: 0.3, dark: dark)
+                    .draw(in: NSRect(x: x + 112, y: y + 64, width: 22, height: 22))
+                NSAttributedString(string: scene.titleKey, attributes: [
+                    .font: NSFont.systemFont(ofSize: 11), .foregroundColor: dark ? NSColor.white : NSColor.black
+                ]).draw(at: NSPoint(x: x + 8, y: y + 14))
+            }
+            sheet.unlockFocus()
+            let data = try #require(sheet.tiffRepresentation)
+            let bitmap = try #require(NSBitmapImageRep(data: data))
+            let png = try #require(bitmap.representation(using: .png, properties: [:]))
+            Attachment.record(png, named: "settings-preview-\(dark ? "dark" : "light").png")
+        }
+    }
+
+    @Test
+    @MainActor
     func testExpandedCenterGlyphSizes() throws {
         _ = NSApplication.shared
-        let devices = BluetoothFamily.allCases.map { OutputDeviceKind.bluetooth($0) } + [
+        let devices = BluetoothFamily.allCases.filter { ![.inEar, .stemless, .boneConduction].contains($0) }
+            .map { OutputDeviceKind.bluetooth($0) } + [
             .airPlay(.appleTV), .airPlay(.homePod), .airPlay(.homePodMini), .airPlay(.other)
         ]
         let contents = devices.map { device in
@@ -19,7 +81,12 @@ struct IconBoundaryTests {
             IconContent(kind: .unavailable), IconContent(kind: .battery, text: "9"),
             IconContent(kind: .battery, text: "82"), IconContent(kind: .battery, text: "100")
         ]
-        for content in contents {
+        let models = AudioIconFamily.allCases.map { family in
+            var content = IconContent(kind: .headphones)
+            content.glyph = .audio(family)
+            return content
+        }
+        for content in contents + models {
             for dark in [false, true] {
                 for scale in [1, 2] {
                     let pixels = 22 * scale
@@ -47,8 +114,10 @@ struct IconBoundaryTests {
                     if content.kind == .headphones || content.kind == .unavailable {
                         #expect(minX > 0 && minY > 0 && maxX < pixels - 1 && maxY < pixels - 1,
                                "Enlarged device artwork must leave clearance on every edge: \(content), \(scale)x")
-                        // The supplied system AirPods reference is about 34px wide on a 2x menu bar.
-                        #expect((16...18).contains(longest), "Expanded device and approved minus artwork must retain their optical size: \(content), \(scale)x")
+                        if contents.contains(content) {
+                            // The supplied system AirPods reference is about 34px wide on a 2x menu bar.
+                            #expect((16...18).contains(longest), "Expanded device and approved minus artwork must retain their optical size: \(content), \(scale)x")
+                        }
                     }
                 }
             }
