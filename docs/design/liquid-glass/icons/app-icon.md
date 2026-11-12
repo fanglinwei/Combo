@@ -4,6 +4,8 @@
 
 ![浅深背景及尺寸预览](preview.png)
 
+[浏览器预览](https://fanglinwei.github.io/Combo/design/liquid-glass/icons/preview.html) 使用网页文字与现有图标资源，随窗口宽度重排；尺寸对照按 16–256 CSS 像素显示，不随整张预览图缩放。
+
 ## 文件与用途
 
 | 文件 | 用途 |

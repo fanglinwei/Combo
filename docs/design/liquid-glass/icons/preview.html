@@ -1,11 +1,53 @@
 <!doctype html>
 <html lang="zh-CN">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Combo · AppIcon 设计稿</title>
 <style>
-  body { margin: 0; background: #edf1f7; }
-  img { display: block; width: 100%; max-width: 1440px; height: auto; margin: 0 auto; }
+  :root { color-scheme: light dark; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; color: light-dark(#20252d, #f6f8fc); background: light-dark(#edf1f7, #191a1d); }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 24px 48px; }
+  h1 { margin: 0; font-size: 28px; font-weight: 600; }
+  p { margin: 8px 0 24px; color: light-dark(#414b59, #d2d9e5); }
+  h2 { margin: 32px 0 20px; font-size: 16px; font-weight: 600; }
+  figure { margin: 0; display: grid; justify-items: center; gap: 12px; }
+  img { display: block; max-width: 100%; height: auto; }
+  figcaption { font-size: 13px; color: light-dark(#414b59, #d2d9e5); }
+  .backgrounds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .backgrounds figure { padding: 24px 16px; border-radius: 16px; }
+  .light-preview { background: #f7f9fc; }
+  .light-preview figcaption { color: #414b59; }
+  .dark-preview { background: #282e38; }
+  .dark-preview figcaption { color: #d2d9e5; }
+  .sizes { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 32px 24px; }
+  .sizes figure { min-width: 64px; }
+  @media (max-width: 600px) { main { padding: 24px 16px 40px; } .backgrounds { gap: 12px; } .backgrounds figure { padding: 20px 12px; } }
 </style>
-<img src="preview.png" alt="Combo AppIcon：浅色和深色背景，以及 16、32、64、128、256px 尺寸对照">
+</head>
+<body>
+  <main>
+    <h1>Combo</h1>
+    <p>Wi-Fi、电池、声音，聚合为一。</p>
+    <section class="backgrounds" aria-label="浅深背景预览">
+      <figure class="light-preview">
+        <img src="combo-app-icon.png" width="240" height="240" alt="浅色背景上的 Combo 图标">
+        <figcaption>浅色背景</figcaption>
+      </figure>
+      <figure class="dark-preview">
+        <img src="combo-app-icon.png" width="240" height="240" alt="深色背景上的 Combo 图标">
+        <figcaption>深色背景</figcaption>
+      </figure>
+    </section>
+    <h2>尺寸对照</h2>
+    <div class="sizes">
+      <figure><img src="combo-app-icon.png" width="16" height="16" alt="16 像素 Combo 图标"><figcaption>16 px</figcaption></figure>
+      <figure><img src="combo-app-icon.png" width="32" height="32" alt="32 像素 Combo 图标"><figcaption>32 px</figcaption></figure>
+      <figure><img src="combo-app-icon.png" width="64" height="64" alt="64 像素 Combo 图标"><figcaption>64 px</figcaption></figure>
+      <figure><img src="combo-app-icon.png" width="128" height="128" alt="128 像素 Combo 图标"><figcaption>128 px</figcaption></figure>
+      <figure><img src="combo-app-icon.png" width="256" height="256" alt="256 像素 Combo 图标"><figcaption>256 px</figcaption></figure>
+    </div>
+  </main>
+</body>
 </html>
