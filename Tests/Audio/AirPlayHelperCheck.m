@@ -32,6 +32,9 @@ static TestAudioContext *testRouteContext;
 - (BluetoothClassOfDevice)classOfDevice;
 - (NSNumber *)batteryPercentLeft;
 - (NSNumber *)batteryPercentRight;
+- (NSNumber *)vendorID;
+- (NSNumber *)productID;
+- (NSString *)name;
 @end
 static TestBluetoothDevice *testBluetoothDevice;
 @implementation TestBluetoothDevice
@@ -39,6 +42,9 @@ static TestBluetoothDevice *testBluetoothDevice;
 - (BluetoothClassOfDevice)classOfDevice { return 0x240418; }
 - (NSNumber *)batteryPercentLeft { return @80; }
 - (NSNumber *)batteryPercentRight { return @79; }
+- (NSNumber *)vendorID { return @76; }
+- (NSNumber *)productID { return @0x2014; }
+- (NSString *)name { return @"Test AirPods"; }
 @end
 
 @interface TestAirPodsEndpoint : TestRouteEndpoint
@@ -130,6 +136,12 @@ int main(void) { @autoreleasepool {
     assert(RouteEndpoint(context) == nil);
     assert(BoolValue(nil) == NSNull.null && BoolValue(@1) == NSNull.null);
     assert([BoolValue(@NO) isEqual:@NO] && [BoolValue(@YES) isEqual:@YES]);
+    for (id invalid in @[NSNull.null, @YES, @0, @(-1), @1.5, @65536, @"76"]) {
+        assert(ProductNumber(invalid) == NSNull.null);
+    }
+    assert([ProductNumber(@76) isEqual:@76] && [ProductNumber(@65535) isEqual:@65535]);
+    assert(Percent(@0) == NSNull.null && Percent(@YES) == NSNull.null);
+    assert([Percent(@100) isEqual:@100]);
     testRouteContext = TestAudioContext.new;
     testRouteContext.associatedAudioDeviceID = @"test-route-uid";
     TestRouteEndpoint *endpoint = TestRouteEndpoint.new;
@@ -163,6 +175,9 @@ int main(void) { @autoreleasepool {
     reply = ReadHelper(4, readArguments, &status);
     assert(status == 0 && [reply[@"deviceID"] isEqual:@144] && [reply[@"available"] isEqual:@YES]);
     assert([reply[@"target"] isEqual:token] && [reply[@"modes"] count] == 3 && [reply[@"left"] isEqual:@80]);
+    assert([reply[@"vendorID"] isEqual:@76] && [reply[@"productID"] isEqual:@0x2014]);
+    assert([reply[@"deviceName"] isEqual:@"Test AirPods"]);
+    assert(reply[@"leftCharge"] == nil && reply[@"leftInCase"] == nil);
     const char *wrongTarget[] = {"helper", "--status", "144", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"};
     ReadHelper(4, wrongTarget, &status); assert(status != 0);
     for (NSString *invalid in @[@"0", @"-1", @"144x", @"4294967296"]) {

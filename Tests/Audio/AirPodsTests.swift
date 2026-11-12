@@ -61,10 +61,12 @@ struct AirPodsTests {
             var broken = payload; broken["classOfDevice"] = value
             #expect((try? decode(broken)) == nil, "Malformed Class of Device must fail decoding")
         }
-        for invalid in [0, 101, -1] {
+        for invalid in [101, -1] {
             var broken = payload; broken["left"] = invalid
             #expect(!(try decode(broken)).valid)
         }
+        var zero = payload; zero["left"] = 0
+        #expect((try decode(zero)).valid, "Explicit zero must remain distinct from unavailable")
         var broken = payload; broken["conversation"] = NSNull()
         #expect(!(try decode(broken)).valid)
         broken = payload; broken["target"] = "stale"

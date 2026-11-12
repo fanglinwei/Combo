@@ -5,7 +5,7 @@ import CoreAudio
 struct OutputChoice: Identifiable {
     let id: AudioDeviceID
     let name: String
-    let glyph: DeviceGlyph
+    let glyph: AppIcon
 }
 
 @MainActor final class AudioStore: ObservableObject {
@@ -14,15 +14,17 @@ struct OutputChoice: Identifiable {
     @Published var output: LocalizedText = ""
     /// 当前默认输出设备的类别，是中央图标与输出列表共用的唯一分类结果。
     @Published var deviceKind: OutputDeviceKind = .other
+    @Published private(set) var iconFamily: AudioIconFamily?
     var outputIsAirPods: Bool { deviceKind.isAirPods }
     @Published var outputDevices: [OutputChoice] = []
     @Published var canVolume = false
     @Published var canMute = false
     @Published var message: LocalizedText = "" { didSet { onMessage?(message) } }
-    let airpods = AirPodsControl()
+    let airpods: AirPodsControl
     let bluetoothPermission = BluetoothPermission()
     var onUpdate: (() -> Void)?
     var onVolumeChange: (() -> Void)?
+    var onOutputChange: (() -> Void)?
     var onAudioReset: ((Bool) -> Void)?
     var onMessage: ((LocalizedText) -> Void)?
     /// AirPlay 路由读取失败时自动重试，面板活动时持续确认接收端。
@@ -44,6 +46,7 @@ struct OutputChoice: Identifiable {
     private var bluetoothClassOfDevice: UInt32?
     private var deviceTarget: String?
     private var device: AudioDeviceID = 0
+    private var outputChange = AudioOutputChange()
     private var audioListeners: [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
     private(set) var listenersAvailable = false
     var selectedOutputID: AudioDeviceID { device }
@@ -57,8 +60,10 @@ struct OutputChoice: Identifiable {
         L(isRouteInfoUnavailable ? "连接状态未知 · 在系统声音设置中查看" : "在系统声音设置中选择")
     }
 
-    init(discovery: AirPlayDiscovery? = nil, routeProbe: AirPlayRouteProbe? = nil, initialOutputID: AudioDeviceID = 0) {
+    init(discovery: AirPlayDiscovery? = nil, routeProbe: AirPlayRouteProbe? = nil, initialOutputID: AudioDeviceID = 0,
+         airpods: AirPodsControl? = nil) {
         device = initialOutputID
+        self.airpods = airpods ?? AirPodsControl()
         self.discovery = discovery ?? AirPlayDiscovery()
         self.routeProbe = routeProbe ?? AirPlayRouteProbe()
         self.routeProbe.update = { [weak self] request, info in
@@ -74,12 +79,15 @@ struct OutputChoice: Identifiable {
         discoverySubscription = self.discovery.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }
-        bluetoothSubscription = airpods.$snapshot.sink { [weak self] reply in
+        bluetoothSubscription = self.airpods.$snapshot.sink { [weak self] reply in
             guard let self, let reply, reply.available, reply.valid,
                   self.bluetoothReadingActive, reply.deviceID == self.device,
-                  reply.target == self.deviceTarget,
-                  self.bluetoothClassOfDevice != reply.classOfDevice else { return }
+                  reply.target == self.deviceTarget else { return }
+            let family = reply.batteryDevice(family: self.deviceKind.batteryIconFamily, name: self.output.string,
+                                            previous: self.airpods.batteryDevice).family
+            guard self.bluetoothClassOfDevice != reply.classOfDevice || self.iconFamily != family else { return }
             self.bluetoothClassOfDevice = reply.classOfDevice
+            self.iconFamily = family
             self.refreshAudio(); self.refreshOutputs()
         }
     }
@@ -103,6 +111,7 @@ struct OutputChoice: Identifiable {
         guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &a, 0, nil, &size, &id) == noErr, id != 0 else {
             volume = nil; muted = false; output = "输出设备不可用"; canVolume = false; canMute = false
             deviceKind = .other
+            iconFamily = nil
             deviceTarget = nil
             clearRoute()
             setBluetoothReadingActive(bluetoothReadingActive)
@@ -112,6 +121,7 @@ struct OutputChoice: Identifiable {
         let target = AudioOutputIdentity.target(for: id)
         if deviceTarget != target {
             bluetoothClassOfDevice = nil
+            iconFamily = nil
             clearRoute()
         }
         deviceTarget = target
@@ -139,6 +149,7 @@ struct OutputChoice: Identifiable {
         muted = muteRead && mute != 0
         canMute = muteRead && AudioObjectIsPropertySettable(id, &a, &settable) == noErr && settable.boolValue
         onUpdate?()
+        if outputChange.update(deviceID: id) { onOutputChange?() }
         let volumeChanged = oldVolume.flatMap { previous in volume.map { abs(previous-$0) > 0.001 } } ?? false
         if oldDevice == id, volumeChanged || (muteRead && oldMuted != muted) { onVolumeChange?() }
 
@@ -169,14 +180,14 @@ struct OutputChoice: Identifiable {
         clearRoute(); refreshAudio(); refreshOutputs()
     }
 
-    /// 只在已获蓝牙授权且面板活动时读取。普通蓝牙设备一次，AirPods 电量每三秒刷新。
+    /// All Bluetooth audio batteries share the existing authorized status poll.
     func setBluetoothReadingActive(_ active: Bool) {
         bluetoothReadingActive = active
         guard active, bluetoothPermission.authorization == .allowedAlways,
               case .bluetooth = deviceKind, let target = deviceTarget else {
-            guard bluetoothTarget != nil || bluetoothRefresh != nil else { return }
+            guard bluetoothTarget != nil || bluetoothRefresh != nil || airpods.batteryDevice != nil else { return }
             bluetoothRefresh?.cancel(); bluetoothRefresh = nil; bluetoothTarget = nil; bluetoothDevice = nil
-            airpods.cancel()
+            airpods.cancel(preservingBattery: active && bluetoothPermission.authorization == .allowedAlways && !deviceKind.isBluetooth)
             return
         }
         guard bluetoothTarget != target || bluetoothDevice != device else { return }
@@ -184,12 +195,10 @@ struct OutputChoice: Identifiable {
         bluetoothTarget = target
         bluetoothDevice = device
         let id = device
-        let repeatRead = outputIsAirPods
         bluetoothRefresh = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self, self.device == id, self.deviceTarget == target else { return }
-                self.airpods.refresh(deviceID: id, target: target)
-                guard repeatRead else { return }
+                self.airpods.refresh(deviceID: id, target: target, family: self.deviceKind.batteryIconFamily, name: self.output.string)
                 do { try await Task.sleep(for: .seconds(3)) } catch { return }
             }
         }
@@ -221,7 +230,8 @@ struct OutputChoice: Identifiable {
             let signals = OutputSignals(transport: transport, name: title, model: route.model(for: id),
                                         classOfDevice: id == device ? bluetoothClassOfDevice : nil)
             let kind = OutputDeviceClassifier.classify(signals)
-            return OutputChoice(id: id, name: route.name(for: id).map { "\($0)\(L("（AirPlay）"))" } ?? title, glyph: OutputDeviceClassifier.glyph(for: kind))
+            return OutputChoice(id: id, name: route.name(for: id).map { "\($0)\(L("（AirPlay）"))" } ?? title,
+                                glyph: OutputDeviceClassifier.glyph(for: kind, family: id == device ? iconFamily : nil))
         }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
     func setOutput(_ id: AudioDeviceID) {

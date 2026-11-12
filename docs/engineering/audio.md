@@ -1,6 +1,6 @@
 # 音频：输出身份、AirPods、蓝牙与 AirPlay
 
-整理：2026-10-09。中央图标、声音面板和输出列表共用默认输出身份与分类；只有默认输出的蓝牙/BLE、AirPlay transport 进入设备图标分支。配对、连接和播放状态均不能替代默认输出身份。外圈始终表示 Mac 本机电量。历史硬件证据来自 macOS 27.0 build `26A428` 的 ad-hoc 原型，不替代当前发行版验收。
+整理：2026-11-12。中央图标、声音面板和输出列表共用默认输出身份与分类；只有默认输出的蓝牙/BLE、AirPlay transport 进入设备图标分支。配对、连接和播放状态均不能替代默认输出身份。外圈始终表示 Mac 本机电量。历史硬件证据来自 macOS 27.0 build `26A428` 的 ad-hoc 原型，不替代当前发行版验收。
 
 <a id="airpods"></a>
 
@@ -11,7 +11,7 @@
 | 功能 | 当前实现 | 验证边界 |
 | --- | --- | --- |
 | 输出设备、音量、静音 | CoreAudio；主通道不可读时回退左右声道；默认输出列表与事件监听 | 设备切换及不同硬件仍需实机回归 |
-| AirPods 电量 | IOBluetooth 私有左右耳/充电盒 getter | 字段独立；盒子休眠、歧义零值、不支持保留未知 |
+| 蓝牙音频电量 | IOBluetooth 私有整机/左右耳/充电盒 getter；总览和详情共用同一组圆环 | 字段独立；盒子休眠、歧义零值、不支持保留未知；未采集可靠充电/入仓信号 |
 | 聆听模式 | 通透、自适应、降噪；私有 AVOutputDevice 写后回读 | 本机往返切换曾通过；Normal/关闭模式未独立确认，面板不提供 |
 | 对话感知 | 两段关闭/打开，写后回读 | 本机关闭→开启→关闭曾通过 |
 | 空间音频 | 不监控、不展示、不提供写操作 | 早期写入未确认；最终已移除全部字段与查询 |
@@ -21,7 +21,7 @@
 
 ### 身份、生命周期与失败处理
 
-只在真实面板可见、屏幕活动且当前输出适用时读取；AirPods 每 3 秒一次。关闭面板、睡眠或设备变化会取消请求并清除旧快照。蓝牙类别复用同一 status 请求，见 [蓝牙分类](audio.md#bluetooth)。
+只在真实面板可见、屏幕活动且蓝牙已授权时读取；当前蓝牙音频输出每 3 秒一次。关闭面板、睡眠、权限失效或切换蓝牙设备会取消请求并清除旧快照。切回非蓝牙输出时，仅保留上一台设备最后一次读取的电量；15 秒后变为未知，不再显示旧值。蓝牙类别复用同一 status 请求，见 [蓝牙分类](audio.md#bluetooth)。
 
 helper 用 `IOBluetoothDevice.outputAudioDeviceID` 匹配默认输出，通过 associatedAudioDeviceID 与 CoreAudio UID translation 将 AV context 映射到同一输出；请求携带设备 ID 和 UID 的 SHA-256 摘要，不按名称匹配。写前复查 CoreAudio/UID/AV 端点，写后约 1.5 秒回读；设备变化、超时、损坏 JSON、未确认状态都不能显示成功。
 
@@ -34,6 +34,38 @@ helper 用 `IOBluetoothDevice.outputAudioDeviceID` 匹配默认输出，通过 a
 输出设备使用真实列表与共享类别，选中项强调色、整行悬浮背景；AirPods 可展开/收起，收起保留电量，关闭面板停止读取。
 
 聆听模式三段、对话感知两段：图标在胶囊内，名称在下方，单个选中胶囊以 220 ms ease-in-out 滑动；减少动态效果时停止滑动。水平拖动须从当前胶囊开始，只预览位置，松开按最近项提交一次请求，原项不写入，两端限位。保留点击、原生辅助功能按钮、确认期间禁用与失败回退。
+
+### 分类图标与电量显示（2026-11-12）
+
+`AppIcon` 按 audio、network、power、device、sound、status 分类。调用 `AppIcons.image(.audio(.airPodsPro2, part: .left))` 获取 AppKit 图像，或 `AppIcons.swiftUIImage` 获取保持字体上下文的 SwiftUI 图像。库只负责图标资源及系统缺失资源时的语义回退，不包含圆环、电量、业务优先级或交互。原图缓存不会被调用者修改；菜单栏外圈仍表示 Mac 本机电量。
+
+音频目录保留 25 类设备的 76 个型号/部件映射（74 个不同符号），包括没有电池的 Solo Buds 仓图标；资源存在不代表应创建电量槽位。参考来自 [音频设计稿](codex://threads/01a1ca08-c30b-7bd1-bfcf-8130d29f94b7) 和 [全部中央图标](codex://threads/01a1ca07-6564-7d40-bce3-3f3afabb99ef)，映射与 39 个状态保存在 `Tests/Fixtures/AudioSymbols.json`、`AudioDeviceScenes.json`。
+
+总览与详情均为 40pt，圆心半径 36/82、线宽 5.7/82，部件间距 34pt。设计稿的图标遮罩框为直径的 75%，框内原始素材还有 84/112 的留白比例；原生符号按两者相乘拟合，保留原始宽高比。`AudioSymbolBounds.json` 记录批准素材的实际可见边界，用于逐型号/左右/仓验证总览和详情的光学尺寸。阈值为 0–20 红、21–40 黄、41–100 绿；未知常显破折号；悬停显示无百分号数字，点击切换数字显示，控件不获取键盘焦点、不绘制焦点圈，减少动态效果时直接切换。
+
+`AudioBatteryDevice` 仅在双耳值均已知、明确均入仓、且同时充电或同时确认充满时合并，取较低电量；混合状态保持分耳。充电、充满和入仓均须独立信号，100 不推导充满。**当前 helper 只读取百分比及产品元数据，没有可靠的充电/入仓采集路径，因此真实设备不会显示推测的闪电或合并状态。** 模型与视图已覆盖这些状态，接入新来源时须先验证字段语义与设备身份。
+
+产品 ID 表覆盖 18 个图标族、34 个产品 ID；Apple vendor `76` / `1452` 才能命中，改名或粗略 CoD 不覆盖产品身份。另 7 个目录项（通用头戴、耳塞、入耳、无柄、骨传导、助听器、音箱）是类别资源，不代表能自动识别每个品牌型号。Beats Solo/Studio 等头戴型号共用设计稿指定的 `beats.headphones`，BeatsX/Flex 共用 `beats.earphones`，AirPods 1/2 共用 `airpods`；一一对应指型号落到其批准图标族和正确部件，不承诺每个产品 ID 有独立图形。
+
+2026-11-12 的对应关系复核补齐：
+
+| 产品 / 图标族 | 产品 ID | 证据 |
+| --- | --- | --- |
+| AirPods 4 | `2019 / 201B / 201C / 201E / 2020` | CoreTypes-0019 的 `com.apple.airpods-gen4`，含全部左右/仓符号；不按 ANC 分图 |
+| AirPods Pro 3 | `2027 / 2028` | 用户确认、本机报告与 helper 实读 `2027`；CoreTypes-0028；SFHeadphoneProduct 的 alternate ID `2028` |
+| Powerbeats Pro 2 | `201D` | CoreTypes-0016 的 `com.apple.power-beats-pro-gen2`；MagicPodsCore 及 omapods 交叉确认 |
+| Beats Solo Buds | `2026` | CoreTypes-0018 的 `com.apple.beats-solo-buds` 及完整部件符号；SFHeadphoneProduct 明确仓无电池 |
+| Beats Pill | `201A` | CoreTypes-0018 的 `com.apple.beats-pill`，指定 `beats.pill.fill` |
+| Beats Solo 4 / Beats 360 | `2025 / 2038` | CoreTypes-0015 / 0039；沿用 Beats 头戴图标族 |
+| AirPods Max 2 / Powerbeats Fit | `202D / 202F` | CoreTypes-0038 / 0027 分别继承 `com.apple.airpods-max` / `com.apple.beats-fit-pro` 的图标族 |
+
+以上 ID 以十六进制表示。本机只读证据来自 `/System/Library/CoreServices/CoreTypes.bundle/Contents/Library/CoreTypes-*.bundle/Contents/Info.plist` 的 `public.bluetooth-vendor-product-id`、`UTTypeIcons` 和 `UTTypeConformsTo`，以及 Sharing.framework 静态产品元数据；生产代码不依赖这些私有查询。既有型号参考 [AirBattery](https://github.com/lihaoyun6/AirBattery/blob/main/AirBattery/Supports/Supports.swift)；新增 Beats 交叉来源为 [MagicPodsCore](https://github.com/steam3d/MagicPodsCore/commit/7a74e68fec4a6a3c2dbc093b0b7a94926fadfa58)、[omapods](https://github.com/cempack/omapods/commit/887db96520f570b696d6e0b17fef261db4e23da4) 和 [pods-control](https://github.com/raulgg/pods-control/commit/48c3c2db0382f16f3922ceca09f260fac22f85a0)。其他未列入批准目录的代数或未知 ID 保持通用，不凭名字猜代际。
+
+助听器请求左右部件时保持助听器图标，没有仓的设备不返回虚构仓；系统缺失资源时，Apple TV、HomePod、车载和音箱维持各自类别。Solo Buds 仓图标保留，但忽略任何仓电量字段。`AudioProductIDs.json` 的回归逐项覆盖所有已确认 ID、两个 vendor、设备改名/误导 CoD、中央与电量部件一致性以及单电池/无仓电池语义。
+
+当前实机确认仅为 AirPods Pro 3：vendor `0x004C`、product `0x2027`、固件 `9B47`；其他型号映射证据不替代连接态测试。legacy getter 的 0 仍按未知处理；显式且可靠的 0 值可由数据边界接受。读取时间只表示主机最近成功查询，不能保证设备固件已刷新其缓存。
+
+后台验证覆盖符号映射/回退/副本隔离、39 个设计场景、144 组合的合并约束、阈值、过期、取消、异常元数据、原生辅助 helper，以及浅深色离屏渲染。后台测试不替代真实连接、充电/入仓、开合盖、休眠恢复或实际键盘焦点验收。
 
 ### 本机历史观测与验证
 
@@ -85,32 +117,37 @@ CoreAudio 默认输出的 transport 为 `'blue'` / `'blea'` 才进入蓝牙分�
 
 `classOfDevice` 已由现有 AirPods helper 的 `--status` 回复供给：读取对应已连接 `IOBluetoothDevice` 的公开 getter，复用 `outputAudioDeviceID` 与默认输出 UID SHA-256 token 匹配。回复在宿主复核设备 ID 与 token 后使用，避免给当前输出套上另一台已配对设备的类别。CoD 为 0、缺失或无效时忽略，既有名称分类仍可工作。
 
-读取需蓝牙已授权，且真实 live 面板活动、屏幕未休眠；普通蓝牙输出每次活动/目标变化读取一次，当前 AirPods 复用原有每 3 秒状态更新。不另起 `system_profiler`，不在主进程增加 IOBluetooth 设备枚举。共享状态读取由 Store 管理，避免两个 `PanelView` 实例争抢同一个取消任务。具体权限复用、连接设备字段与面板生命周期仍需实机回归。
+读取需蓝牙已授权，且真实 live 面板活动、屏幕未休眠；所有蓝牙音频输出复用每 3 秒的状态更新。不另起 `system_profiler`，不在主进程增加 IOBluetooth 设备枚举。共享状态读取由 Store 管理，避免两个 `PanelView` 实例争抢同一个取消任务。具体权限复用、连接设备字段与面板生命周期仍需实机回归。
 
 ### 3. 分类顺序与映射
 
-分类顺序为 AirPods / Beats 品牌名称 → 非 0 且可分类的 CoD → 通用名称关键字 → unknown。品牌名保留机型族；CoD 可以优先于通用名称，但它是设备自报的弱信号，仍可能错报或为空。不能据此承诺音箱、车载、助听器百分之百正确。
+分类顺序为 AirPods / Beats 品牌名称 → 非 0 且可分类的 CoD → 通用名称关键字 → unknown。CoD 只识别为耳机时，允许名称中的真无线、入耳式、无柄式或骨传导描述进一步细分；音箱、车载与助听设备的 CoD 分类仍优先。品牌名保留机型族；CoD 是设备自报的弱信号，仍可能错报或为空，不能据此承诺分类百分之百正确。
 
 | 类别 | 当前信号 | SF Symbol | 实机边界 |
 | --- | --- | --- | --- |
-| AirPods Pro | 名称含 `AirPods Pro` | `airpods.pro` | 型号族，不细分 Pro 代际 |
+| AirPods Pro | 名称含 `AirPods Pro` | 型号未知时 `earbuds` | 具体代数须有结构化产品 ID |
 | AirPods Max | 名称含 `AirPods Max` | `airpods.max` | 名称可被用户改变 |
-| 其它 AirPods | 名称含 `AirPods` | `airpods` | 不用未验证产品 ID 猜 3/4 代 |
-| Beats | 名称含 `Beats` | `beats.headphones` | 不细分各产品型号 |
+| 其它 AirPods | 名称含 `AirPods` | 型号未知时 `earbuds` | 不按名称猜 1/2/3/4 代 |
+| Beats | 名称含 `Beats` | 型号未知时 `headphones` | 结构化产品 ID 或独立左右数据可细分 |
 | 耳机 | Audio/Video CoD minor `0x01` / `0x02` / `0x06`；或 `Headphone` / `WH-` / `QC-` 等关键词 | `headphones` | CoD 自报弱信号 |
 | 真无线 | `Buds` / `Earbuds` / `FreeBuds` 关键词 | `earbuds` | 通用名称规则，未逐设备实测 |
-| 音箱 | Audio/Video CoD minor `0x05` / `0x0a`；或 `Speaker` / `SoundLink` / `Soundbar` | `hifispeaker` | 未实测蓝牙音箱 |
-| 车载 | Audio/Video CoD minor `0x08`；或 `Car` / `车载` 关键词 | `car` | 未实测车载设备 |
+| 入耳式 | `In-ear` / `InEar` / `入耳`；排除 `Non-in-ear`、`Not in ear`、`半入耳` 与 `非入耳` | `earbuds.in.ear` | 名称明确描述外形时识别，不按品牌推断 |
+| 无柄式 | `Stemless` / `无柄` | `earbuds.stemless` | 名称明确描述外形时识别，优先于泛称入耳式 |
+| 骨传导 | `Bone conduction` / `骨传导` | `earbuds.bone.conduction` | 不将所有开放式耳机或整个 Shokz 品牌视为骨传导 |
+| 音箱 | Audio/Video CoD minor `0x05` / `0x0a`；或 `Speaker` / `SoundLink` / `Soundbar` | `hifispeaker.fill` | 未实测蓝牙音箱 |
+| 车载 | Audio/Video CoD minor `0x08`；或 `Car` / `车载` 关键词 | `car.fill` | 未实测车载设备 |
 | 助听器 | CoD major `0x09` | `hearingdevice.ear` | 未实测；不是所有 Health 设备的可靠身份保证 |
 | 未知蓝牙 | 上述规则未命中 | `headphones` | 通用回退 |
 
 CoD 为 24 位：`major = (cod >> 8) & 0x1F`，`minor = (cod >> 2) & 0x3F`；表里的 Audio/Video minor 只在 `major == 0x04` 时有效。英文通用关键词按词边界匹配，避免把 `Carl's Headphones` 当车载、把 `Rosebuds` 当真无线；带数字后缀的 `Buds2` 可命中。
 
+外形描述忽略英文大小写，词间空格与连字符等分隔符按词边界处理；拿不到明确描述时仍用已有通用图标，不增加未经核实的第三方产品 ID。细分类别同时传入已有状态读取的图标家族回退，避免下一次蓝牙状态更新把中央符号覆盖成通用耳机。Apple / Beats 的可靠产品 ID 仍优先于名称描述。此处仅补整副设备的分类与中央图标映射，不新增单耳或充电盒功能，也不改变中央尺寸、位置、优先级与转场。
+
 ### 4. 绘制与开销
 
-设备类型符号仍位于音量/电源事件、Wi-Fi 连接/异常和优先电量之后，不改变状态机层级；仅连着耳机而默认输出在扬声器时不显示中央耳机符号。缺失资源统一退回 `headphones`，不能留下空白。
+常驻设备类型符号仍位于 P4 事件、Wi-Fi 连接/异常和优先电量之后；仅连着耳机而默认输出在扬声器时不显示中央耳机符号。默认输出设备 ID 实际改变时新增 P4 提示，暂时显示新输出已有的图标，包含内置、显示器及其他输出；首次读取与同设备元数据更新不触发，沿用现有单事件替换与电源提示时序。具体型号优先使用通过 vendor/product ID 确认的 `AudioIconFamily`，中央和电量区域共用结果；仅有名称时不选择具体代数。缺失资源按部件语义回退，保留左右部件标识。
 
-共享渲染缓存固定的 16 个 SF Symbol 原图，颜色在每次绘制时应用；未知符号名不缓存。没有新增第三方依赖、常驻分类 helper 或 `system_profiler` 查询；新增 CoD 字段复用已有 status 请求。耗电、CPU 与实际进程开销尚无测量，不写估算数字。
+`AppIcons` 缓存中性 SF Symbol 原图与缺失名称，每次返回独立配置副本；颜色在业务绘制时应用。没有新增第三方依赖、常驻分类 helper 或 `system_profiler` 查询；新增 CoD 字段复用已有 status 请求。耗电、CPU 与实际进程开销尚无测量，不写估算数字。
 
 ### 5. 检查与未实机验证项
 

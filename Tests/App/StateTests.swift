@@ -3,6 +3,16 @@ import Foundation
 
 struct StateTests {
     @Test
+    func testAudioOutputChangesIgnoreInitialAndRepeatedReads() {
+        var change = AudioOutputChange()
+        let reads: [(UInt32, Bool)] = [(11, false), (11, false), (22, true), (22, false), (33, true), (11, true)]
+        for (deviceID, expected) in reads {
+            let changed = change.update(deviceID: deviceID)
+            #expect(changed == expected, "Only a change from the last successful output read must show P4")
+        }
+    }
+
+    @Test
     @MainActor
     func testFullChargeEligibility() async throws {
         let eligibleCharge = #"{"supported":true,"accepted":false,"attempted":false,"manualState":1,"limit":80,"onAC":true,"charging":false,"percent":80,"limitBlocked":true}"#

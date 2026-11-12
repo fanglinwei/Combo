@@ -121,13 +121,12 @@ enum SystemPermissionAlert {
             self.live.muted = self.audio.muted
             self.live.output = self.audio.output
             self.live.deviceKind = self.audio.deviceKind
+            self.live.audioIconFamily = self.audio.iconFamily
             self.updateObservation()
         }
         audio.onVolumeChange = { [weak self] in self?.showVolumeHint() }
-        audio.onAudioReset = { [weak self] changed in
-            self?.clearVolumeHint()
-            if changed { self?.audio.airpods.cancel() }
-        }
+        audio.onOutputChange = { [weak self] in self?.showCenterHint(.output) }
+        audio.onAudioReset = { [weak self] _ in self?.clearVolumeHint() }
         audio.onMessage = { [weak self] in self?.message = $0 }
         network.update = { [weak self] name, symbol in self?.live.network = name; self?.live.symbol = symbol }
         mediaPlayback.update = { [weak self] state in

@@ -145,38 +145,6 @@ struct SoundOutputs: View {
     }
 }
 
-struct AirPodsBatterySummary: View {
-    let state: AirPodsReply
-    var detailed = false
-    @Environment(\.comboPalette) private var palette
-    private var values: [(String, Int)] {
-        var values: [(String, Int)] = []
-        if let left = state.left { values.append((L("左耳"), left)) }
-        if let right = state.right { values.append((L("右耳"), right)) }
-        if let charge = state.caseBattery { values.append((L("充电盒"), charge)) }
-        if values.isEmpty, let single = state.single { values.append((L("电量"), single)) }
-        return values
-    }
-    var body: some View {
-        HStack(spacing: 6) {
-            ForEach(values.indices, id: \.self) { index in
-                if detailed, index > 0 { Rectangle().fill(palette.separator).frame(width: 0.5) }
-                Group {
-                    if detailed {
-                        VStack(spacing: 4) {
-                            Text(values[index].0).font(.system(size: 11)).foregroundStyle(palette.mutedText)
-                            Text("\(values[index].1)%").font(.system(size: 12, weight: .medium))
-                        }
-                    } else {
-                        Text("\(values[index].0) \(values[index].1)%").font(.system(size: 11)).foregroundStyle(palette.mutedText)
-                    }
-                }.frame(maxWidth: .infinity)
-            }
-        }.fixedSize(horizontal: false, vertical: true).monospacedDigit()
-            .accessibilityElement(children: .ignore).accessibilityLabel(state.batteryText)
-    }
-}
-
 struct AirPodsSection: View {
     @ObservedObject private var localization = Localization.shared
     @ObservedObject var control: AirPodsControl
@@ -284,21 +252,13 @@ extension SoundOutputs {
     }
 }
 
-/// 设备字形在 SwiftUI 里的呈现：SF Symbol 走 `systemName`，第三方厂商矢量图走资源目录
-/// （`Media.xcassets` 里的 SVG/PDF imageset）。解析失败统一退到兜底符号，不留空白。
+/// The provider returns the same neutral symbol for SwiftUI and AppKit consumers.
 struct DeviceGlyphIcon: View {
-    let glyph: DeviceGlyph
+    let glyph: AppIcon
 
     var body: some View {
-        switch glyph {
-        case .symbol(let name):
-            Image(systemName: DeviceGlyphImage.symbolName(name))
-        case .asset(let name):
-            if let image = NSImage(named: name) {
-                Image(nsImage: image).renderingMode(.template).resizable().scaledToFit().frame(width: 25, height: 25)
-            } else {
-                Image(systemName: DeviceGlyphImage.fallbackName)
-            }
+        if let image = AppIcons.swiftUIImage(glyph) {
+            image.symbolRenderingMode(.monochrome)
         }
     }
 }

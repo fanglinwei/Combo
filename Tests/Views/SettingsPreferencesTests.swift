@@ -65,9 +65,9 @@ extension IntegrationTests {
         @MainActor
         func testIconPreviewCatalogAndVariants() throws {
             let groups = IconPreviewGroup.allCases
-            #expect(groups.map { $0.scenes.count } == [4, 13, 8, 8])
+            #expect(groups.map { $0.scenes.count } == [5, 30, 8, 8])
             let scenes = groups.flatMap(\.scenes)
-            #expect(scenes.count == 33 && Set(scenes.map(\.id)).count == 33)
+            #expect(scenes.count == 51 && Set(scenes.map(\.id)).count == IconPreviewGroup.sceneCount)
             let keys = groups.map(\.rawValue) + scenes.flatMap {
                 [$0.titleKey, $0.conditionKey, $0.descriptionKey] + $0.variants.map(\.titleKey) + $0.variants.compactMap(\.detailKey)
             }
@@ -79,6 +79,18 @@ extension IntegrationTests {
                 }
             }
             #expect(IconPreviewGroup.devices.scenes.allSatisfy { $0.variants[0].snapshot.deviceGlyph != nil })
+            let devices = IconPreviewGroup.devices.scenes.flatMap(\.variants)
+            #expect(devices.count == AudioIconFamily.allCases.count)
+            let families = devices.compactMap { variant -> AudioIconFamily? in
+                guard case .audio(let family, part: .device) = variant.snapshot.deviceGlyph else { return nil }
+                #expect(IconContent(variant.snapshot).glyph == .audio(family))
+                return family
+            }
+            #expect(Set(families) == Set(AudioIconFamily.allCases), "Every approved device must reach the real central icon resolver")
+            let wifi = try #require(IconPreviewGroup.network.scenes.first { $0.titleKey == "Wi-Fi 正常" })
+            #expect(wifi.variants.map { IconContent($0.snapshot).kind } == [.wifi])
+            let connecting = try #require(IconPreviewGroup.network.scenes.first { $0.titleKey == "Wi-Fi 正在连接" })
+            #expect(IconContent(connecting.variants[0].snapshot).kind == .connecting)
             let power = IconPreviewGroup.power.scenes
             let charging = try #require(power.first { $0.titleKey == "充电" })
             #expect(charging.variants.map { $0.snapshot.battery } == [0.5, 0.12, 0, 1, nil])

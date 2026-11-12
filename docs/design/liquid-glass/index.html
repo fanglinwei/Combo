@@ -25,6 +25,9 @@
       <a href="#panel" aria-controls="design-preview" aria-current="page">面板与详情</a>
       <a href="#settings" aria-controls="design-preview">设置</a>
       <a href="#onboarding" aria-controls="design-preview">使用引导</a>
+      <a href="#app-icon" aria-controls="design-preview">AppIcon</a>
+      <a href="#central" aria-controls="design-preview">中央图标</a>
+      <a href="#audio" aria-controls="design-preview">音频与充电</a>
     </nav>
   </header>
   <iframe id="design-preview" src="combo-panel-liquid-glass.html" title="面板与详情设计稿"></iframe>
@@ -32,7 +35,10 @@
     const designs = {
       panel: { file: 'combo-panel-liquid-glass.html', title: '面板与详情设计稿' },
       settings: { file: 'combo-settings-liquid-glass.html', title: '设置设计稿' },
-      onboarding: { file: 'combo-onboarding-liquid-glass.html', title: '使用引导设计稿' }
+      onboarding: { file: 'combo-onboarding-liquid-glass.html', title: '使用引导设计稿' },
+      'app-icon': { file: 'icons/preview.html', title: 'AppIcon 浅深背景与尺寸预览' },
+      central: { file: 'icons/central.html', title: '中央图标与状态汇总' },
+      audio: { file: 'icons/audio.html', title: '音频图标、电量与充电状态' }
     };
     const preview = document.getElementById('design-preview');
     function showDesign() {

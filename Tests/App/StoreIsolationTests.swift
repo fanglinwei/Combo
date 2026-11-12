@@ -8,6 +8,67 @@ extension IntegrationTests {
     struct StoreIsolationTests {
         @Test
         @MainActor
+        func testAudioOutputCallbackShowsLatestDeviceAndReplacesVolumeHint() {
+            let store = Store(monitorsSystem: false)
+            defer { store.stop() }
+            store.live.symbol = "wifi"
+            store.showVolumeHint()
+            store.audio.onAudioReset?(true)
+            store.audio.deviceKind = .bluetooth(.airPodsPro)
+            store.audio.output = "New Output"
+            store.audio.onUpdate?()
+            store.audio.onOutputChange?()
+            let first = store.snapshot
+            #expect(!first.adjusting && first.centerEvent == .output)
+            #expect(IconContent(first).priority == 4 && IconContent(first).glyph == .audio(.earbuds))
+            #expect(first.centerHintText.contains("New Output"))
+            store.audio.onUpdate?()
+            #expect(store.snapshot.eventSerial == first.eventSerial, "Metadata refreshes must not replay the hint")
+            store.audio.deviceKind = .builtIn
+            store.audio.onUpdate?()
+            store.audio.onOutputChange?()
+            #expect(store.snapshot.centerEvent == .output && store.snapshot.eventSerial > first.eventSerial)
+            #expect(IconContent(store.snapshot).glyph == .device(.computer))
+            store.showVolumeHint()
+            #expect(store.snapshot.centerEvent == .volume, "The most recent P4 event must win")
+        }
+
+        @Test
+        @MainActor
+        func testAudioOutputResetPreservesBatteryUntilAudioStoreClearsIt() async throws {
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Combo.StoreBattery.\(UUID())")
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: directory) }
+            let helper = directory.appendingPathComponent("helper")
+            let target = String(repeating: "a", count: 64)
+            let json = """
+            {"deviceID":99,"target":"\(target)","available":true,"modes":[],"canSetMode":false,
+             "canSetConversation":false,"attempted":false,"verified":false,"left":72,"right":64}
+            """
+            try ("#!/bin/sh\nprintf '%s' '" + json + "'\n").write(to: helper, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: helper.path)
+            let control = AirPodsControl(helperURL: helper, libraryURL: URL(fileURLWithPath: "/usr/lib/libSystem.B.dylib"))
+            let store = Store(audio: AudioStore(airpods: control), monitorsSystem: false)
+            defer { store.stop() }
+            control.refresh(deviceID: 99, target: target)
+            for _ in 0..<100 where control.refreshing { try await Task.sleep(for: .milliseconds(10)) }
+            let battery = try #require(control.batteryDevice)
+            let readAt = try #require(control.batteryReadAt)
+
+            store.showVolumeHint()
+            store.audio.onAudioReset?(true)
+            #expect(!store.live.adjusting && store.snapshot.centerEvent == nil)
+            #expect(control.batteryDevice == battery && control.batteryReadAt == readAt,
+                    "The output reset callback must leave battery retention to AudioStore")
+            control.cancel(preservingBattery: true)
+            #expect(control.snapshot == nil && control.batteryDevice == battery)
+            #expect(!control.batteryIsStale(at: readAt + 14.99) && control.batteryIsStale(at: readAt + 15))
+            store.audio.setBluetoothReadingActive(false)
+            #expect(control.batteryDevice == nil && control.batteryReadAt == nil)
+        }
+
+        @Test
+        @MainActor
         func testBatteryDisplayNotifiesStore() {
             let store = Store(monitorsSystem: false)
             defer { store.stop() }
