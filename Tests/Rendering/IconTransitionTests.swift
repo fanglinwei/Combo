@@ -281,13 +281,11 @@ final class IconTransitionTests {
         for name in ["airpods.pro", "airplay.audio", "appletv", "homepod", "homepod.mini", "hifispeaker", "car", "earbuds", "speaker.fill", "speaker.wave.1.fill", "speaker.wave.2.fill", "speaker.wave.3.fill", "questionmark"] {
             #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil, "Missing symbol: \(name)")
         }
-        #expect(DeviceGlyphImage.symbolName("definitely-not-a-symbol") == DeviceGlyphImage.fallbackName,
-               "An unresolvable SF Symbol must fall back instead of leaving a blank center")
-        #expect(DeviceGlyphImage.fallbackName == "headphones", "The shared fallback is the generic headphones symbol")
-        let resolvedFallback = DeviceGlyphImage.resolve("definitely-not-a-symbol")
-        #expect(resolvedFallback.name == DeviceGlyphImage.fallbackName && resolvedFallback.image != nil,
-               "The resolved image and SwiftUI name must use the same visible fallback")
-        func glyphImage(_ glyph: DeviceGlyph, dark: Bool = true) -> NSImage {
+        let resolvedFallback = AppIcons.resolve(.audio(.airPodsPro3), load: { name in
+            name == "headphones" ? NSImage(systemSymbolName: name, accessibilityDescription: nil) : nil
+        })
+        #expect(resolvedFallback?.name == "headphones" && resolvedFallback?.image != nil)
+        func glyphImage(_ glyph: AppIcon, dark: Bool = true) -> NSImage {
             var content = IconContent(kind: .headphones)
             content.glyph = glyph
             let frame = IconTransition.Frame(layers: [.init(content: content)], peripheral: 0, ringOpacity: 0)
@@ -328,13 +326,8 @@ final class IconTransitionTests {
                 }
             }
         }
-        let fallbackPixels = (try #require(glyphImage(.fallback).tiffRepresentation))
-        for glyph in [DeviceGlyph.symbol("definitely-not-a-symbol"), .asset("definitely-not-an-asset")] {
-            #expect((try #require(glyphImage(glyph).tiffRepresentation)) == fallbackPixels,
-                   "Missing symbols and assets must render exactly the shared fallback")
-        }
         for dark in [true, false, true] {
-            let glyphData = try #require(glyphImage(.symbol("airpods.pro"), dark: dark).tiffRepresentation)
+            let glyphData = try #require(glyphImage(.audio(.airPodsPro2), dark: dark).tiffRepresentation)
             let pixels = try #require(NSBitmapImageRep(data: glyphData))
             var brightness = 0.0, ink = 0.0
             for y in 0..<pixels.pixelsHigh {
@@ -430,17 +423,17 @@ final class IconTransitionTests {
         #expect(IconContent(Snapshot(symbol: "", output: "AirPods")).kind == .battery, "A name alone must not identify an AirPods output")
         #expect(IconContent(Snapshot(symbol: "", output: "AirPods", deviceKind: .bluetooth(.airPodsPro))).kind == .headphones)
         let bluetoothSpeaker = IconContent(Snapshot(symbol: "", output: "JBL Flip 5", deviceKind: .bluetooth(.speaker)))
-        #expect(bluetoothSpeaker.kind == .headphones && bluetoothSpeaker.glyph == .symbol("hifispeaker"),
+        #expect(bluetoothSpeaker.kind == .headphones && bluetoothSpeaker.glyph == .audio(.speaker),
                "A Bluetooth speaker must keep the resident device glyph, with its own symbol")
         let airPlay = IconContent(Snapshot(symbol: "wifi", output: "客厅", deviceKind: .airPlay(.appleTV)))
-        #expect(airPlay.kind == .headphones && airPlay.glyph == .symbol("appletv"))
-        #expect(IconContent(Snapshot(symbol: "wifi", output: "客厅", deviceKind: .airPlay(.homePod))).glyph == .symbol("homepod"))
-        #expect(IconContent(Snapshot(symbol: "wifi", output: "厨房", deviceKind: .airPlay(.homePodMini))).glyph == .symbol("homepod.mini"))
-        #expect(IconContent(Snapshot(symbol: "wifi", output: "Sonos", deviceKind: .airPlay(.other))).glyph == .symbol("airplay.audio"))
+        #expect(airPlay.kind == .headphones && airPlay.glyph == .audio(.appleTV))
+        #expect(IconContent(Snapshot(symbol: "wifi", output: "客厅", deviceKind: .airPlay(.homePod))).glyph == .audio(.homePod))
+        #expect(IconContent(Snapshot(symbol: "wifi", output: "厨房", deviceKind: .airPlay(.homePodMini))).glyph == .audio(.homePodMini))
+        #expect(IconContent(Snapshot(symbol: "wifi", output: "Sonos", deviceKind: .airPlay(.other))).glyph == .audio(.airPlay))
         #expect(IconContent(Snapshot(symbol: "wifi", output: "MacBook Air扬声器", deviceKind: .builtIn)).glyph == nil,
                "Built-in output must not take over the center")
-        #expect(Snapshot(deviceKind: .bluetooth(.speaker)).deviceGlyph == .symbol("hifispeaker"))
-        #expect(Snapshot(deviceKind: .airPlay(.other)).deviceGlyph == .symbol("airplay.audio"))
+        #expect(Snapshot(deviceKind: .bluetooth(.speaker)).deviceGlyph == .audio(.speaker))
+        #expect(Snapshot(deviceKind: .airPlay(.other)).deviceGlyph == .audio(.airPlay))
         #expect(Snapshot(deviceKind: .builtIn).deviceGlyph == nil && Snapshot(deviceKind: .other).deviceGlyph == nil,
                "Only Bluetooth and AirPlay expose a center device glyph")
         #expect(Snapshot(deviceKind: .bluetooth(.airPodsPro)).outputIsAirPods && !Snapshot(deviceKind: .bluetooth(.beats)).outputIsAirPods,
@@ -481,21 +474,40 @@ final class IconTransitionTests {
     @MainActor
     func testWiFiGeometrySignalAndPixelReference() throws {
         defer { recordArtifacts() }
-        // The menu bar, both settings previews and the panel share the same Wi-Fi proportions.
-        var wifiCoverage: [Double] = []
+        // Compare each density with the approved official symbol's box; SF Symbols hint their ink at small sizes.
         for size: CGFloat in [22, 68, 112] {
             let frame = IconTransition.Frame(layers: [.init(content: wifi)], peripheral: 0, ringOpacity: 0)
             let image = IconRenderer.image(Snapshot(), animate: false, size: size, transition: frame)
             let imageData = try #require(image.tiffRepresentation)
             let pixels = try #require(NSBitmapImageRep(data: imageData))
-            var ink = 0.0
-            for y in 0..<pixels.pixelsHigh {
-                for x in 0..<pixels.pixelsWide { ink += (try #require(pixels.colorAt(x: x, y: y))).alphaComponent }
+            let source = try #require(NSImage(systemSymbolName: "wifi", accessibilityDescription: nil)?
+                .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 64, weight: .medium)
+                    .applying(.init(paletteColors: [.white]))))
+            let reference = NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
+                let placement = NSAffineTransform()
+                placement.scale(by: size / 100)
+                placement.translateX(by: 50, yBy: 50)
+                placement.scale(by: 1.06)
+                placement.translateX(by: -50, yBy: -54.5)
+                placement.concat()
+                let fit = min(41 / source.size.width, 33 / source.size.height)
+                source.draw(in: NSRect(x: 50 - source.size.width * fit / 2, y: 54 - source.size.height * fit / 2,
+                                       width: source.size.width * fit, height: source.size.height * fit))
+                return true
             }
-            wifiCoverage.append(ink / Double(pixels.pixelsWide * pixels.pixelsHigh))
+            let referenceData = try #require(reference.tiffRepresentation)
+            let expected = try #require(NSBitmapImageRep(data: referenceData))
+            #expect(expected.pixelsWide == pixels.pixelsWide && expected.pixelsHigh == pixels.pixelsHigh)
+            var error = 0.0
+            for y in 0..<pixels.pixelsHigh {
+                for x in 0..<pixels.pixelsWide {
+                    error += abs((try #require(pixels.colorAt(x: x, y: y))).alphaComponent
+                        - (try #require(expected.colorAt(x: x, y: y))).alphaComponent)
+                }
+            }
+            #expect(error / Double(pixels.pixelsWide * pixels.pixelsHigh) < 0.5 / 255,
+                    "Wi-Fi must match the approved official-symbol geometry at \(size)pt")
         }
-        #expect((try #require(wifiCoverage.max())) / (try #require(wifiCoverage.min())) < 1.06,
-               "Wi-Fi proportions must match across the menu bar and previews")
 
         // Unknown signal stays dim; each additional level lights triangle, inner arc, then outer arc.
         for level in 0...3 {

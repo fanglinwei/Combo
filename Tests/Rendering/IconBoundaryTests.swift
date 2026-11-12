@@ -48,7 +48,7 @@ struct IconBoundaryTests {
                         #expect(minX > 0 && minY > 0 && maxX < pixels - 1 && maxY < pixels - 1,
                                "Enlarged device artwork must leave clearance on every edge: \(content), \(scale)x")
                         // The supplied system AirPods reference is about 34px wide on a 2x menu bar.
-                        #expect((16...18).contains(longest), "Expanded device ink must match the system's 17pt size: \(content), \(scale)x")
+                        #expect((16...18).contains(longest), "Expanded device and approved minus artwork must retain their optical size: \(content), \(scale)x")
                     }
                 }
             }

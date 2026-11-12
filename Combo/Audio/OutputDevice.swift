@@ -23,7 +23,7 @@ enum OutputDeviceKind: Equatable {
         return false
     }
 
-    /// 耳机专属控制（聆听模式、电量）目前只对 AirPods 家族开放。
+    /// 聆听模式等耳机专属控制只对 AirPods 家族开放。
     var isAirPods: Bool {
         switch self {
         case .bluetooth(.airPodsPro), .bluetooth(.airPods), .bluetooth(.airPodsMax): return true
@@ -136,21 +136,6 @@ struct AirPlayRoute: Equatable {
     func model(for deviceID: AudioDeviceID) -> String? { info(for: deviceID)?.modelIdentifier }
 }
 
-/// 字形来源。SF Symbol 是当前唯一在用的来源；第三方厂商的 SVG 日后放进
-/// `Combo/App/Media.xcassets`，这里用 `.asset("名字")` 引用，两条绘制路径都已支持。
-enum DeviceGlyph: Equatable {
-    case symbol(String)
-    case asset(String)
-
-    /// 解析失败时的统一下限：中央与面板都退到这里，绝不留空白。
-    static let fallback = DeviceGlyph.symbol("headphones")
-
-    var symbolName: String? {
-        if case .symbol(let name) = self { return name }
-        return nil
-    }
-}
-
 /// 分类所需信号。CoD 在获蓝牙授权后由现有 helper 读取；为零或缺失时忽略。
 struct OutputSignals: Equatable {
     var transport: UInt32 = 0
@@ -189,29 +174,28 @@ enum OutputDeviceClassifier {
     }
 
     /// 所有类别都有字形（含输出列表要显示的内置扬声器、显示器）。
-    static func glyph(for kind: OutputDeviceKind) -> DeviceGlyph {
+    static func glyph(for kind: OutputDeviceKind, family: AudioIconFamily? = nil) -> AppIcon {
+        if kind.isBluetooth, let family { return .audio(family) }
         switch kind {
-        case .builtIn: return .symbol("laptopcomputer")
-        case .display: return .symbol("display")
-        case .other: return .symbol("speaker.wave.2")
+        case .builtIn: return .device(.computer)
+        case .display: return .device(.display)
+        case .other: return .device(.audioOutput)
         case .airPlay(let family):
             switch family {
-            case .appleTV: return .symbol("appletv")
-            case .homePod: return .symbol("homepod")
-            case .homePodMini: return .symbol("homepod.mini")
-            case .other: return .symbol("airplay.audio")
+            case .appleTV: return .audio(.appleTV)
+            case .homePod: return .audio(.homePod)
+            case .homePodMini: return .audio(.homePodMini)
+            case .other: return .audio(.airPlay)
             }
         case .bluetooth(let family):
             switch family {
-            case .airPodsPro: return .symbol("airpods.pro")
-            case .airPods: return .symbol("airpods")
-            case .airPodsMax: return .symbol("airpods.max")
-            case .beats: return .symbol("beats.headphones")
-            case .headphones, .unknown: return .symbol("headphones")
-            case .earbuds: return .symbol("earbuds")
-            case .speaker: return .symbol("hifispeaker")
-            case .car: return .symbol("car")
-            case .hearingAid: return .symbol("hearingdevice.ear")
+            case .airPodsPro, .airPods: return .audio(.earbuds)
+            case .airPodsMax: return .audio(.airPodsMax)
+            case .beats, .headphones, .unknown: return .audio(.headphones)
+            case .earbuds: return .audio(.earbuds)
+            case .speaker: return .audio(.speaker)
+            case .car: return .audio(.car)
+            case .hearingAid: return .audio(.hearingDevice)
             }
         }
     }

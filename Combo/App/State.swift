@@ -105,8 +105,9 @@ struct Snapshot {
     /// 当前默认输出设备的类别。`outputIsAirPods` 与中央字形都由它派生，
     /// 这样中央图标与输出列表不会各判一套。
     var deviceKind: OutputDeviceKind = .other
+    var audioIconFamily: AudioIconFamily?
     var outputIsAirPods: Bool { deviceKind.isAirPods }
-    var deviceGlyph: DeviceGlyph? { deviceKind.showsDeviceGlyph ? OutputDeviceClassifier.glyph(for: deviceKind) : nil }
+    var deviceGlyph: AppIcon? { deviceKind.showsDeviceGlyph ? OutputDeviceClassifier.glyph(for: deviceKind, family: audioIconFamily) : nil }
     var playing = false
     var adjusting = false
     var reducedMotion = false

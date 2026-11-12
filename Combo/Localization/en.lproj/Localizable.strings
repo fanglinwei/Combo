@@ -596,3 +596,13 @@
 "面板已收起，随时可以再次打开" = "The panel is closed. Open it again anytime.";
 "准备好后，点击「开始使用」结束引导。" = "When you are ready, click Get Started to finish the guide.";
 "面板会从图标下方展开。" = "The panel opens below the icon.";
+
+"设备" = "Device";
+
+"双耳" = "Both earbuds";
+
+"，正在充电" = ", charging";
+
+"，已充满" = ", fully charged";
+
+"点击切换电量数字" = "Click to toggle battery numbers";

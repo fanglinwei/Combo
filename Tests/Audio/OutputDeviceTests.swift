@@ -89,10 +89,10 @@ struct OutputDeviceTests {
         #expect(kind(kAudioDeviceTransportTypeAirPlay, "", nil, "AudioAccessory5,1") == .airPlay(.homePodMini))
         #expect(kind(kAudioDeviceTransportTypeAirPlay, "", nil, "Sonos-Playbar") == .airPlay(.other))
         #expect(kind(kAudioDeviceTransportTypeAirPlay) == .airPlay(.other), "Without a modelID AirPlay stays generic")
-        #expect(OutputDeviceClassifier.glyph(for: .airPlay(.appleTV)) == .symbol("appletv"))
-        #expect(OutputDeviceClassifier.glyph(for: .airPlay(.homePod)) == .symbol("homepod"))
-        #expect(OutputDeviceClassifier.glyph(for: .airPlay(.homePodMini)) == .symbol("homepod.mini"))
-        #expect(OutputDeviceClassifier.glyph(for: .airPlay(.other)) == .symbol("airplay.audio"))
+        #expect(OutputDeviceClassifier.glyph(for: .airPlay(.appleTV)) == .audio(.appleTV))
+        #expect(OutputDeviceClassifier.glyph(for: .airPlay(.homePod)) == .audio(.homePod))
+        #expect(OutputDeviceClassifier.glyph(for: .airPlay(.homePodMini)) == .audio(.homePodMini))
+        #expect(OutputDeviceClassifier.glyph(for: .airPlay(.other)) == .audio(.airPlay))
     }
 
     @Test
@@ -178,18 +178,8 @@ struct OutputDeviceTests {
     @Test
     @MainActor
     func testSystemGlyphResolution() async throws {
-        // 每一档都有字形，而且字形必须能被系统解析——解析失败会退到 headphones，但不该发生。
-        var names: [String] = []
-        for family in BluetoothFamily.allCases {
-            if case .symbol(let name) = OutputDeviceClassifier.glyph(for: .bluetooth(family)) { names.append(name) }
-            else { Issue.record("Every Bluetooth family needs a symbol") }
-        }
-        for passive: OutputDeviceKind in [.builtIn, .display, .airPlay(.other), .other] {
-            if case .symbol(let name) = OutputDeviceClassifier.glyph(for: passive) { names.append(name) }
-            else { Issue.record("Non-Bluetooth categories need a list symbol") }
-        }
-        for name in names + ["headphones"] {
-            #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil, "SF Symbol \(name) must resolve")
+        for kind in BluetoothFamily.allCases.map({ OutputDeviceKind.bluetooth($0) }) + [.builtIn, .display, .airPlay(.other), .other] {
+            #expect(AppIcons.image(OutputDeviceClassifier.glyph(for: kind)) != nil)
         }
     }
 }

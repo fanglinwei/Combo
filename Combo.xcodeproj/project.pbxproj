@@ -153,6 +153,16 @@
 		944393F50B9D7FA86DA6EEA1 /* BatteryCapacityReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87195CA84E4E6C07C5BF0E9 /* BatteryCapacityReader.swift */; };
 		DFA8A599BC8D3270DB7B4FD9 /* BatteryCapacityReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87195CA84E4E6C07C5BF0E9 /* BatteryCapacityReader.swift */; };
 		818779FDEB11DC796C3B90D7 /* BatteryCapacityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F02CABCF5389C56D3D8AF0 /* BatteryCapacityTests.swift */; };
+		C10A603F2D8037A2F4315CB1 /* AppIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAAEB492D432BE8224574437 /* AppIcons.swift */; };
+		3B742D506BA071201E9DDCD3 /* AppIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAAEB492D432BE8224574437 /* AppIcons.swift */; };
+		9089D8D16BB97F83BB2A2377 /* AppIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAAEB492D432BE8224574437 /* AppIcons.swift */; };
+		7F6FCF438E6781229E9C02AD /* AudioBattery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEC7AF58FE7A3E7B92162565 /* AudioBattery.swift */; };
+		CB0741FD5CE3EF4D672E08EE /* AudioBattery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEC7AF58FE7A3E7B92162565 /* AudioBattery.swift */; };
+		5738B9E85DD92398D7D21791 /* AudioBattery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEC7AF58FE7A3E7B92162565 /* AudioBattery.swift */; };
+		0143E53A33C44F6296C2C893 /* AudioBatteryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6ADBBF6DECCB5F6D377526 /* AudioBatteryView.swift */; };
+		74BAF420A0F9BDE534FB15F0 /* AudioBatteryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6ADBBF6DECCB5F6D377526 /* AudioBatteryView.swift */; };
+		82BF0B2C74C08EDAF7D60498 /* AudioBatteryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6ADBBF6DECCB5F6D377526 /* AudioBatteryView.swift */; };
+		06F5C8DAD1613BFCB52A28D4 /* AudioBatteryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4CC5817B8DD733F85050697 /* AudioBatteryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -287,6 +297,10 @@
 		C3B4CD7B2FBDC031D294F7A9 /* IconPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconPreviewView.swift; sourceTree = "<group>"; };
 		E87195CA84E4E6C07C5BF0E9 /* BatteryCapacityReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryCapacityReader.swift; sourceTree = "<group>"; };
 		43F02CABCF5389C56D3D8AF0 /* BatteryCapacityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryCapacityTests.swift; sourceTree = "<group>"; };
+		BAAEB492D432BE8224574437 /* AppIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcons.swift; sourceTree = "<group>"; };
+		CEC7AF58FE7A3E7B92162565 /* AudioBattery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioBattery.swift; sourceTree = "<group>"; };
+		DD6ADBBF6DECCB5F6D377526 /* AudioBatteryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioBatteryView.swift; sourceTree = "<group>"; };
+		F4CC5817B8DD733F85050697 /* AudioBatteryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioBatteryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -471,6 +485,7 @@
 				3279D63259E9338C19EA9023 /* AirPlayRouteTests.swift */,
 				C91D4F02ADB781E9898C2241 /* AirPlayDiscoveryTests.swift */,
 				04EB105D62837F47C7A677E0 /* AirPodsTests.swift */,
+				F4CC5817B8DD733F85050697 /* AudioBatteryTests.swift */,
 				920AE4A0B7EA8995B918A327 /* HelperProcessTests.swift */,
 				82A834BC0E9DAFCA12B0C7A8 /* MediaPlaybackHelperCheck.m */,
 				9D52094C15F002CB00E1A49E /* AirPlayHelperCheck.m */,
@@ -561,6 +576,7 @@
 				C3B4CD7B2FBDC031D294F7A9 /* IconPreviewView.swift */,
 				560A84B06FED44A09CBCC0AD /* PanelView.swift */,
 				724FA7F8C78C449A93434865 /* SoundSections.swift */,
+				DD6ADBBF6DECCB5F6D377526 /* AudioBatteryView.swift */,
 				B18CFAB0D2474FDBB947237D /* BatterySections.swift */,
 				76685DF749374187A6431997 /* WiFiSections.swift */,
 			);
@@ -585,6 +601,7 @@
 				F6CE5149DF92562886DF166F /* AirPodsHelper.m */,
 				65AB810D175E8E2FDC9963F3 /* AudioVolume.swift */,
 				0DD0C0DE0000000000000001 /* OutputDevice.swift */,
+				CEC7AF58FE7A3E7B92162565 /* AudioBattery.swift */,
 				0DD0C0DE0000000000000003 /* AirPlayRoute.swift */,
 				0DD0C0DE0000000000000005 /* AirPlayDiscovery.swift */,
 				7752B4A18FC0CFD837A4DB35 /* MediaPlayback.swift */,
@@ -623,6 +640,7 @@
 				2F951B1AB68E4AC17144EF10 /* IconTransition.swift */,
 				63A53F65B5F04D42AA0B9FAD /* WiFiIcon.swift */,
 				360D743C5A0F4A49B67622DA /* IconRenderer.swift */,
+				BAAEB492D432BE8224574437 /* AppIcons.swift */,
 				52A5C2F85FA14564B18A7AD4 /* ComboIcon.swift */,
 				4F20FB357F70A3DEA669D9E9 /* IconPreviewScene.swift */,
 			);
@@ -870,6 +888,9 @@
 				DDF6E51FAFC52C599B9437EA /* Localization.swift in Sources */,
 				B8473119097B64277AD07876 /* State.swift in Sources */,
 				2CAC0E57C683F547763C2B18 /* OutputDevice.swift in Sources */,
+				0143E53A33C44F6296C2C893 /* AudioBatteryView.swift in Sources */,
+				7F6FCF438E6781229E9C02AD /* AudioBattery.swift in Sources */,
+				C10A603F2D8037A2F4315CB1 /* AppIcons.swift in Sources */,
 				45CFFB8532F11C6781D65183 /* AirPlayRoute.swift in Sources */,
 				67C9825B22EBF8E314BF8AE5 /* AirPlayDiscovery.swift in Sources */,
 				7D15CBC53FDD096FA7309E42 /* MediaPlayback.swift in Sources */,
@@ -892,6 +913,7 @@
 				2C9F7F5B041826B590DBFF1C /* AirPlayRouteTests.swift in Sources */,
 				C760545B21E0C0B2F48B3A4E /* AirPlayDiscoveryTests.swift in Sources */,
 				9D6D2E6C0C972F4EAE0616D2 /* AirPodsTests.swift in Sources */,
+				06F5C8DAD1613BFCB52A28D4 /* AudioBatteryTests.swift in Sources */,
 				D42FC522642069B373310A50 /* ChargeControlTests.swift in Sources */,
 				19E4769D45D3871AB2A2B3B6 /* AppUpdater.swift in Sources */,
 				B9C6A35EC515E70F007FB19C /* IconTransition.swift in Sources */,
@@ -950,6 +972,9 @@
 				8916AEC4AA95CCE6EB2B924E /* AirPodsControl.swift in Sources */,
 				6C74CABA6CF5033FA7B8715C /* AudioVolume.swift in Sources */,
 				0DD0C0DE0000000000000002 /* OutputDevice.swift in Sources */,
+				74BAF420A0F9BDE534FB15F0 /* AudioBatteryView.swift in Sources */,
+				CB0741FD5CE3EF4D672E08EE /* AudioBattery.swift in Sources */,
+				3B742D506BA071201E9DDCD3 /* AppIcons.swift in Sources */,
 				0DD0C0DE0000000000000004 /* AirPlayRoute.swift in Sources */,
 				0DD0C0DE0000000000000006 /* AirPlayDiscovery.swift in Sources */,
 				3C51CA291C9706E570038C6B /* ChargeControl.swift in Sources */,
@@ -994,6 +1019,9 @@
 				85CABACBB3F63095E35CF6F0 /* AirPodsControl.swift in Sources */,
 				9EED0588CECBCFF9FC46C2AA /* AudioVolume.swift in Sources */,
 				D81AE7E9933AFE7A2A711833 /* OutputDevice.swift in Sources */,
+				82BF0B2C74C08EDAF7D60498 /* AudioBatteryView.swift in Sources */,
+				5738B9E85DD92398D7D21791 /* AudioBattery.swift in Sources */,
+				9089D8D16BB97F83BB2A2377 /* AppIcons.swift in Sources */,
 				824AA8883EF6894C1346601B /* AirPlayRoute.swift in Sources */,
 				A627BDD7EFD0377036789FE8 /* AirPlayDiscovery.swift in Sources */,
 				E2AE1D571B0F9406BDAE2EE3 /* ChargeControl.swift in Sources */,

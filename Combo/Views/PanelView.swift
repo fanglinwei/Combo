@@ -202,11 +202,20 @@ struct PanelView: View {
             }
         }
     }
-    private var airPodsBattery: AirPodsReply? {
-        guard store.panelExpanded, store.scene == .live, store.snapshot.outputIsAirPods,
-              let state = airpods.snapshot, state.available, state.deviceID == audio.selectedOutputID,
-              state.left != nil || state.right != nil || state.caseBattery != nil || state.single != nil else { return nil }
-        return state
+    @ViewBuilder private func audioBattery(detailed: Bool = false) -> some View {
+        if store.panelExpanded, store.scene == .live, let device = airpods.batteryDevice, !device.readings.isEmpty {
+            TimelineView(.periodic(from: .now, by: 1)) { _ in
+                VStack(alignment: .leading, spacing: 0) {
+                    if airpods.snapshot == nil, !device.name.isEmpty {
+                        Text(device.name).font(.system(size: 12)).foregroundStyle(palette.mutedText)
+                            .lineLimit(1).help(device.name).accessibilityLabel(device.name)
+                    }
+                    AudioBatterySummary(device: device, detailed: detailed,
+                                        stale: airpods.batteryIsStale(at: ProcessInfo.processInfo.systemUptime),
+                                        reduceMotion: store.reduceMotion)
+                }
+            }
+        }
     }
     private func sectionEntry(_ section: PanelSection, snapshot: Snapshot) -> some View {
         Button { store.detailSection = section } label: {
@@ -234,7 +243,7 @@ struct PanelView: View {
         VStack(alignment: .leading, spacing: 13) {
             Button { store.detailSection = .sound } label: {
                 HStack(spacing: 13) {
-                    DeviceGlyphIcon(glyph: OutputDeviceClassifier.glyph(for: snapshot.deviceKind))
+                    DeviceGlyphIcon(glyph: OutputDeviceClassifier.glyph(for: snapshot.deviceKind, family: snapshot.audioIconFamily))
                         .font(.system(size: 31)).symbolRenderingMode(.hierarchical).foregroundStyle(.white)
                         .frame(width: 48, height: 48).background(palette.iconPurple, in: RoundedRectangle(cornerRadius: 14))
                         .accessibilityHidden(true)
@@ -256,7 +265,7 @@ struct PanelView: View {
                     .frame(width: 34, alignment: .trailing).allowsHitTesting(false)
             }
             if store.scene == .live && !audio.canVolume { volumeNote }
-            if let state = airPodsBattery { AirPodsBatterySummary(state: state) }
+            audioBattery()
         }
     }
     private func muteButton(snapshot: Snapshot, size: CGFloat) -> some View {
@@ -304,10 +313,10 @@ struct PanelView: View {
                     }
                     volumeSlider(snapshot: snapshot)
                     HStack(spacing: 7) {
-                        DeviceGlyphIcon(glyph: OutputDeviceClassifier.glyph(for: snapshot.deviceKind)).font(.system(size: 15))
-                        Text(snapshot.output.string).lineLimit(2)
+                        DeviceGlyphIcon(glyph: OutputDeviceClassifier.glyph(for: snapshot.deviceKind, family: snapshot.audioIconFamily)).font(.system(size: 15))
+                        Text(snapshot.output.string).lineLimit(1).help(snapshot.output.string).accessibilityLabel(snapshot.output.string)
                     }.font(.system(size: 12)).foregroundStyle(palette.mutedText)
-                    if let state = airPodsBattery { AirPodsBatterySummary(state: state, detailed: true).padding(.top, 6) }
+                    audioBattery(detailed: true)
                     if store.scene != .live {
                         Text(L("演示数据 · 不改变系统状态")).font(.system(size: 11)).foregroundStyle(palette.mutedText)
                     } else if !audio.canVolume { volumeNote }

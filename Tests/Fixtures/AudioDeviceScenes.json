@@ -1,0 +1,789 @@
+[
+  {
+    "id": "pro",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpods.pro.left",
+        "value": 23
+      },
+      {
+        "label": "右耳",
+        "icon": "airpods.pro.right",
+        "value": 52
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 17
+      }
+    ],
+    "variant": "AirPods Pro 2",
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "both-charging",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "state": "双耳在盒内充电",
+    "variant": "双耳在盒内充电",
+    "items": [
+      {
+        "label": "双耳（取较低值）",
+        "icon": "airpods.pro",
+        "value": 68,
+        "charge": "charging"
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 82
+      }
+    ],
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "both-case-charging",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "state": "双耳与盒同时充电",
+    "variant": "双耳与盒同时充电",
+    "items": [
+      {
+        "label": "双耳（取较低值）",
+        "icon": "airpods.pro",
+        "value": 68,
+        "charge": "charging"
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 82,
+        "charge": "charging"
+      }
+    ],
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "left-charging",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "state": "仅左耳充电",
+    "variant": "仅左耳充电",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpods.pro.left",
+        "value": 23,
+        "charge": "charging"
+      },
+      {
+        "label": "右耳",
+        "icon": "airpods.pro.right",
+        "value": 52
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 17
+      }
+    ],
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "right-charging",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "state": "仅右耳充电",
+    "variant": "仅右耳充电",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpods.pro.left",
+        "value": 52
+      },
+      {
+        "label": "右耳",
+        "icon": "airpods.pro.right",
+        "value": 23,
+        "charge": "charging"
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 17
+      }
+    ],
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "empty-case",
+    "name": "AirPods Pro 2 充电盒",
+    "icon": "airpods.pro.chargingcase.wireless.fill",
+    "state": "空盒充电",
+    "variant": "空盒充电",
+    "items": [
+      {
+        "label": "空充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 35,
+        "charge": "charging"
+      }
+    ],
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "all-full",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "state": "双耳与盒确认充满",
+    "variant": "双耳与盒确认充满",
+    "items": [
+      {
+        "label": "双耳",
+        "icon": "airpods.pro",
+        "value": 100,
+        "charge": "full"
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 100,
+        "charge": "full"
+      }
+    ],
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "mixed-full",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "state": "一耳已满 · 一耳充电",
+    "variant": "一耳已满 · 一耳充电",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpods.pro.left",
+        "value": 100,
+        "charge": "full"
+      },
+      {
+        "label": "右耳",
+        "icon": "airpods.pro.right",
+        "value": 82,
+        "charge": "charging"
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 61
+      }
+    ],
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "hundred-idle",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "state": "100 · 充电状态未知",
+    "variant": "100 · 充电状态未知",
+    "items": [
+      {
+        "label": "双耳",
+        "icon": "airpods.pro",
+        "value": 100
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 100
+      }
+    ],
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "max-charging",
+    "name": "AirPods Max",
+    "icon": "airpods.max",
+    "state": "AirPods Max 充电",
+    "variant": "AirPods Max 充电",
+    "items": [
+      {
+        "label": "耳机",
+        "icon": "airpods.max",
+        "value": 76,
+        "charge": "charging"
+      }
+    ],
+    "family": "airPodsMax"
+  },
+  {
+    "id": "beats-full",
+    "name": "Beats Studio Pro",
+    "icon": "beats.headphones",
+    "state": "Beats 头戴式充满",
+    "variant": "Beats 头戴式充满",
+    "items": [
+      {
+        "label": "耳机",
+        "icon": "beats.headphones",
+        "value": 100,
+        "charge": "full"
+      }
+    ],
+    "family": "beatsHeadphones"
+  },
+  {
+    "id": "speaker-charging",
+    "name": "便携蓝牙音箱",
+    "icon": "hifispeaker.fill",
+    "state": "蓝牙音箱充电",
+    "variant": "蓝牙音箱充电",
+    "items": [
+      {
+        "label": "音箱",
+        "icon": "hifispeaker.fill",
+        "value": 35,
+        "charge": "charging"
+      }
+    ],
+    "family": "speaker"
+  },
+  {
+    "id": "thresholds",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "state": "电量阈值 20 / 40 / 41",
+    "variant": "电量阈值 20 / 40 / 41",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpods.pro.left",
+        "value": 20
+      },
+      {
+        "label": "右耳",
+        "icon": "airpods.pro.right",
+        "value": 40
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 41
+      }
+    ],
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "zero",
+    "name": "蓝牙耳机",
+    "icon": "headphones",
+    "state": "0 · 已耗尽",
+    "variant": "0 · 已耗尽",
+    "items": [
+      {
+        "label": "耳机",
+        "icon": "headphones",
+        "value": 0
+      }
+    ],
+    "family": "headphones"
+  },
+  {
+    "id": "airpods",
+    "name": "AirPods 1/2",
+    "icon": "airpods",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpod.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "airpod.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.chargingcase.fill",
+        "value": 35
+      }
+    ],
+    "variant": "AirPods 1/2",
+    "family": "airPods"
+  },
+  {
+    "id": "airpods3",
+    "name": "AirPods 3",
+    "icon": "airpods.gen3",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpod.gen3.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "airpod.gen3.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.gen3.chargingcase.wireless.fill",
+        "value": 35
+      }
+    ],
+    "variant": "AirPods 3",
+    "family": "airPods3"
+  },
+  {
+    "id": "airpods4",
+    "name": "AirPods 4",
+    "icon": "airpods.gen4",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpods.gen4.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "airpods.gen4.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.gen4.chargingcase.wireless.fill",
+        "value": 35
+      }
+    ],
+    "variant": "AirPods 4",
+    "family": "airPods4"
+  },
+  {
+    "id": "pro1",
+    "name": "AirPods Pro 1",
+    "icon": "airpods.pro.gen1",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpods.pro.gen1.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "airpods.pro.gen1.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.gen1.chargingcase.wireless.fill",
+        "value": 35
+      }
+    ],
+    "variant": "AirPods Pro 1",
+    "family": "airPodsPro1"
+  },
+  {
+    "id": "pro3",
+    "name": "AirPods Pro 3",
+    "icon": "airpods.pro.gen3",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpods.pro.gen3.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "airpods.pro.gen3.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.gen3.chargingcase.wireless.fill",
+        "value": 35
+      }
+    ],
+    "variant": "AirPods Pro 3",
+    "family": "airPodsPro3"
+  },
+  {
+    "id": "max",
+    "name": "AirPods Max",
+    "icon": "airpods.max",
+    "items": [
+      {
+        "label": "耳机",
+        "icon": "airpods.max",
+        "value": 76
+      }
+    ],
+    "variant": "AirPods Max",
+    "family": "airPodsMax"
+  },
+  {
+    "id": "beats-buds",
+    "name": "Powerbeats Pro",
+    "icon": "beats.powerbeats.pro",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "beats.powerbeats.pro.left",
+        "value": 56
+      },
+      {
+        "label": "右耳",
+        "icon": "beats.powerbeats.pro.right",
+        "value": 32
+      },
+      {
+        "label": "充电盒",
+        "icon": "beats.powerbeats.pro.chargingcase.fill",
+        "value": 18
+      }
+    ],
+    "variant": "Powerbeats Pro",
+    "family": "powerbeatsPro"
+  },
+  {
+    "id": "powerbeats2",
+    "name": "Powerbeats Pro 2",
+    "icon": "beats.powerbeats.pro.2",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "beats.powerbeats.pro.2.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "beats.powerbeats.pro.2.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "beats.powerbeats.pro.2.chargingcase.fill",
+        "value": 35
+      }
+    ],
+    "variant": "Powerbeats Pro 2",
+    "family": "powerbeatsPro2"
+  },
+  {
+    "id": "fitpro",
+    "name": "Beats Fit Pro",
+    "icon": "beats.fitpro",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "beats.fitpro.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "beats.fitpro.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "beats.fitpro.chargingcase.fill",
+        "value": 35
+      }
+    ],
+    "variant": "Beats Fit Pro",
+    "family": "beatsFitPro"
+  },
+  {
+    "id": "studiobuds",
+    "name": "Beats Studio Buds",
+    "icon": "beats.studiobuds",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "beats.studiobuds.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "beats.studiobuds.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "beats.studiobuds.chargingcase.fill",
+        "value": 35
+      }
+    ],
+    "variant": "Beats Studio Buds",
+    "family": "beatsStudioBuds"
+  },
+  {
+    "id": "studiobudsplus",
+    "name": "Beats Studio Buds +",
+    "icon": "beats.studiobuds.plus",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "beats.studiobuds.plus.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "beats.studiobuds.plus.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "beats.studiobuds.plus.chargingcase.fill",
+        "value": 35
+      }
+    ],
+    "variant": "Beats Studio Buds +",
+    "family": "beatsStudioBudsPlus"
+  },
+  {
+    "id": "solobuds",
+    "name": "Beats Solo Buds",
+    "icon": "beats.solobuds",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "beats.solobuds.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "beats.solobuds.right",
+        "value": 76
+      }
+    ],
+    "variant": "Beats Solo Buds",
+    "family": "beatsSoloBuds"
+  },
+  {
+    "id": "beats-headphones",
+    "name": "Beats Studio Pro",
+    "icon": "beats.headphones",
+    "items": [
+      {
+        "label": "耳机",
+        "icon": "beats.headphones",
+        "value": 76
+      }
+    ],
+    "variant": "Beats 头戴式",
+    "family": "beatsHeadphones"
+  },
+  {
+    "id": "earbuds",
+    "name": "蓝牙真无线耳机",
+    "icon": "earbuds",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "earbud.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "earbud.right",
+        "value": 76
+      },
+      {
+        "label": "充电盒",
+        "icon": "earbuds.case.fill",
+        "value": 35
+      }
+    ],
+    "variant": "通用真无线",
+    "family": "earbuds"
+  },
+  {
+    "id": "headphones",
+    "name": "蓝牙耳机",
+    "icon": "headphones",
+    "items": [
+      {
+        "label": "耳机",
+        "icon": "headphones",
+        "value": 35
+      }
+    ],
+    "variant": "通用头戴式",
+    "family": "headphones"
+  },
+  {
+    "id": "pill",
+    "name": "Beats Pill",
+    "icon": "beats.pill.fill",
+    "items": [
+      {
+        "label": "音箱",
+        "icon": "beats.pill.fill",
+        "value": 76
+      }
+    ],
+    "variant": "Beats Pill",
+    "family": "beatsPill"
+  },
+  {
+    "id": "speaker",
+    "name": "便携蓝牙音箱",
+    "icon": "hifispeaker.fill",
+    "items": [
+      {
+        "label": "音箱",
+        "icon": "hifispeaker.fill",
+        "value": 76
+      }
+    ],
+    "variant": "通用蓝牙音箱",
+    "family": "speaker"
+  },
+  {
+    "id": "partial",
+    "name": "AirPods Pro 2",
+    "icon": "airpods.pro",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "airpods.pro.left",
+        "value": 23
+      },
+      {
+        "label": "右耳",
+        "icon": "airpods.pro.right",
+        "value": null
+      },
+      {
+        "label": "充电盒",
+        "icon": "airpods.pro.chargingcase.wireless.fill",
+        "value": 17
+      }
+    ],
+    "variant": "电量不完整",
+    "family": "airPodsPro2"
+  },
+  {
+    "id": "extra-32",
+    "name": "Beats 颈挂式",
+    "icon": "beats.earphones",
+    "variant": "Beats 颈挂式",
+    "items": [
+      {
+        "label": "设备",
+        "icon": "beats.earphones",
+        "value": 68
+      }
+    ],
+    "family": "beatsEarphones"
+  },
+  {
+    "id": "extra-33",
+    "name": "Powerbeats",
+    "icon": "beats.powerbeats",
+    "variant": "Powerbeats",
+    "items": [
+      {
+        "label": "设备",
+        "icon": "beats.powerbeats",
+        "value": 68
+      }
+    ],
+    "family": "powerbeats"
+  },
+  {
+    "id": "extra-34",
+    "name": "Powerbeats 3",
+    "icon": "beats.powerbeats3",
+    "variant": "Powerbeats 3",
+    "items": [
+      {
+        "label": "设备",
+        "icon": "beats.powerbeats3",
+        "value": 68
+      }
+    ],
+    "family": "powerbeats3"
+  },
+  {
+    "id": "extra-35",
+    "name": "通用入耳式",
+    "icon": "earbuds.in.ear",
+    "variant": "通用入耳式",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "earbuds.in.ear.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "earbuds.in.ear.right",
+        "value": 56
+      },
+      {
+        "label": "充电盒",
+        "icon": "earbuds.case.fill",
+        "value": 35
+      }
+    ],
+    "family": "inEar"
+  },
+  {
+    "id": "extra-36",
+    "name": "通用无柄式",
+    "icon": "earbuds.stemless",
+    "variant": "通用无柄式",
+    "items": [
+      {
+        "label": "左耳",
+        "icon": "earbuds.stemless.left",
+        "value": 78
+      },
+      {
+        "label": "右耳",
+        "icon": "earbuds.stemless.right",
+        "value": 56
+      },
+      {
+        "label": "充电盒",
+        "icon": "earbuds.case.fill",
+        "value": 35
+      }
+    ],
+    "family": "stemless"
+  },
+  {
+    "id": "extra-37",
+    "name": "通用骨传导",
+    "icon": "earbuds.bone.conduction",
+    "variant": "通用骨传导",
+    "items": [
+      {
+        "label": "设备",
+        "icon": "earbuds.bone.conduction",
+        "value": 68
+      }
+    ],
+    "family": "boneConduction"
+  },
+  {
+    "id": "extra-38",
+    "name": "助听设备",
+    "icon": "hearingdevice.ear",
+    "variant": "助听设备",
+    "items": [
+      {
+        "label": "设备",
+        "icon": "hearingdevice.ear",
+        "value": 68
+      }
+    ],
+    "family": "hearingDevice"
+  }
+]

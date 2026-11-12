@@ -17,7 +17,13 @@ static id Value(id object, NSString *key) {
 static id Percent(id value) {
     if (![value isKindOfClass:NSNumber.class] || CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID()) return NSNull.null;
     double n = [value doubleValue];
+    // These legacy getters use zero for unavailable; only explicit sources can prove an exhausted battery.
     return isfinite(n) && n == floor(n) && n > 0 && n <= 100 ? value : NSNull.null;
+}
+static id ProductNumber(id value) {
+    if (![value isKindOfClass:NSNumber.class] || CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID()) return NSNull.null;
+    double n = [value doubleValue];
+    return isfinite(n) && n == floor(n) && n > 0 && n <= UINT16_MAX ? value : NSNull.null;
 }
 static id BoolValue(id value) {
     return [value isKindOfClass:NSNumber.class] && CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID() ? value : NSNull.null;
@@ -158,6 +164,10 @@ int main(int argc, const char *argv[]) {
             reply[@"right"] = Percent(Value(bluetooth, @"batteryPercentRight"));
             reply[@"caseBattery"] = Percent(Value(bluetooth, @"batteryPercentCase"));
             reply[@"single"] = Percent(Value(bluetooth, @"batteryPercentSingle"));
+            reply[@"vendorID"] = ProductNumber(Value(bluetooth, @"vendorID"));
+            reply[@"productID"] = ProductNumber(Value(bluetooth, @"productID"));
+            id name = Value(bluetooth, @"name");
+            if ([name isKindOfClass:NSString.class] && [name length] > 0 && [name length] <= 512) reply[@"deviceName"] = name;
         }
         id context = SystemAudioContext();
         id output = Value(context, @"outputDevice");

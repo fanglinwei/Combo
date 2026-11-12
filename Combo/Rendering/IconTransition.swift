@@ -12,7 +12,7 @@ struct IconContent: Equatable {
     var eventSerial = 0
     /// 设备字形。中央只画 `Snapshot.deviceGlyph` 给出的这一个，来源可能是 SF Symbol，
     /// 也可能是资源目录里的矢量图（第三方厂商 SVG，见 OutputDevice.swift）。
-    var glyph: DeviceGlyph?
+    var glyph: AppIcon?
     var networkState: String?
 
     init(kind: Kind, text: String = "", priority: Int = 2) {
@@ -22,7 +22,7 @@ struct IconContent: Equatable {
         case .wifiOff: networkState = "wifi.slash"
         case .connecting: networkState = "connecting"
         case .warning: networkState = "exclamationmark"
-        case .headphones: glyph = .symbol("headphones")
+        case .headphones: glyph = .audio(.headphones)
         default: break
         }
     }

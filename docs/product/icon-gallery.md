@@ -152,7 +152,7 @@ AirPods 播放中调到 75%：中央临时显示 `75`，底部显示三颗亮点
 
 ```sh
 mkdir -p build
-xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -target arm64-apple-macosx26.0 -swift-version 5 -parse-as-library Combo/App/Localization.swift Combo/App/State.swift Combo/Audio/OutputDevice.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift docs/assets/render_current_states.swift -o build/render-current-states
+xcrun swiftc -sdk "$(xcrun --sdk macosx --show-sdk-path)" -target arm64-apple-macosx26.0 -swift-version 5 -parse-as-library Combo/App/Localization.swift Combo/App/State.swift Combo/Audio/OutputDevice.swift Combo/Rendering/AppIcons.swift Combo/Rendering/IconTransition.swift Combo/Rendering/WiFiIcon.swift Combo/Rendering/IconRenderer.swift docs/assets/render_current_states.swift -o build/render-current-states
 ./build/render-current-states
 ```
 
