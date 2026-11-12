@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/fanglinwei/Combo"><img src="https://img.shields.io/badge/GitHub-Combo-181717?style=flat-square&amp;logo=github&amp;logoColor=white" alt="GitHub"></a>
-  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/UI-1.3.0%20preview-007EC6?style=flat-square" alt="1.3.0 界面预览"></a>
+  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-1.3.1-007EC6?style=flat-square" alt="Combo 1.3.1"></a>
   <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/downloads-Releases-44CC11?style=flat-square" alt="GitHub Releases 下载入口"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-007EC6?style=flat-square" alt="MIT 开源协议"></a>
   <a href="#系统要求与安装"><img src="https://img.shields.io/badge/platform-macOS%2026%2B-999999?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="macOS 26 或更新版本"></a>
@@ -48,9 +48,9 @@ Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用�
 | :---: | :---: |
 | <img src="docs/assets/ui-1.3.0/panel.jpg" width="352" alt="1.3.0 总览设计稿：媒体播放、电池、Wi-Fi、AirPods 电量与音量"> | <img src="docs/assets/ui-1.3.0/settings.jpg" width="420" alt="1.3.0 浅色设置设计稿：顶部工具栏、显示模式、33 种图标效果入口和显示偏好"> |
 
-以上图片截自最新设计稿，使用示例数据；英文 README 也保留稿件原有中文。新 AppIcon 采用蓝白底座、电量弧、Wi-Fi 双弧和圆弧排列的四条音乐柱。
+以上图片保留 1.3.0 设计快照，使用示例数据；英文 README 也保留稿件原有中文。新 AppIcon 采用蓝白底座、电量弧、Wi-Fi 双弧和圆弧排列的四条音乐柱。
 
-[设计说明与全部详情截图](docs/design/liquid-glass/README.md) · [可交互总设计稿](docs/design/liquid-glass/index.html)（下载后用浏览器打开） · [AppIcon 源稿与尺寸预览](docs/design/liquid-glass/icons/app-icon.md)
+[设计说明与全部详情截图](docs/design/liquid-glass/README.md) · [可交互总设计稿](docs/design/liquid-glass/index.html)（下载后用浏览器打开） · [图标设计汇总](docs/design/liquid-glass/icons/README.md)
 
 ### 菜单栏图标动效
 
@@ -65,9 +65,9 @@ Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用�
 - **状态图标**：外圈显示电量，中央显示网络或音频设备，底部显示音量或播放状态。低电量变红，充电时变绿。
 - **电池**：查看电量、充电状态、健康信息和可读取的充电上限，切换支持的能耗模式。接通电源且手动充电上限暂停充电时，可用「立即充满电」临时解除上限，之后由 macOS 管理恢复。
 - **Wi-Fi**：查看当前网络、附近网络、信号与安全信息。点击网络或个人热点打开 macOS Wi-Fi 设置，连接与开关均在系统中完成。
-- **声音与 AirPods**：切换输出、调节音量和静音；在设备支持时查看 AirPods 电量、切换降噪等模式。可查找附近 AirPlay 设备，并通过 macOS 声音设置连接。
+- **声音与 AirPods**：切换输出、调节音量和静音；在支持的蓝牙设备上，通过圆环查看整机、左右耳与充电盒电量；支持的 AirPods 还可切换降噪等模式。菜单栏、电量圆环与输出列表共用设备图标，切换输出时显示短暂提示。可查找附近 AirPlay 设备，并通过 macOS 声音设置连接。
 - **媒体控制**：查看曲目、封面和来源应用，控制上一首、播放／暂停和下一首，也可打开来源应用。需要播放器向 macOS 提供媒体信息和对应控制。
-- **个性化**：深浅外观、中英界面和登录时启动。播放音柱按固定节奏循环，可关闭动效，并遵循系统的「减少动态效果」设置。「外观」提供实时菜单栏预览和独立的 33 种效果预览，可查看状态说明与变体。
+- **个性化**：深浅外观、中英界面和登录时启动。播放音柱按固定节奏循环，可关闭动效，并遵循系统的「减少动态效果」设置。「外观」提供实时菜单栏预览和独立的 51 种效果预览，可查看状态说明与变体。
 
 部分功能取决于设备和 macOS 版本，详见[兼容性说明](#兼容性说明)；授权说明见[权限与隐私](#权限与隐私)。
 
@@ -81,11 +81,11 @@ Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用�
 
 在 [GitHub Releases](https://github.com/fanglinwei/Combo/releases) 查看已发布的安装包和版本说明。
 
-**此处展示 1.3.0 的界面更新；仓库应用版本目前仍为 `1.3.1 / 104`。** 安装包是否可用以 Releases 为准；开发版本可按下方[源码构建方式](#从源码构建)运行。下载前请核对对应版本的架构支持和签名状态。
+**仓库应用版本为 `1.3.1 / 104`。** 上方配图保留 1.3.0 设计快照；[设计汇总](docs/design/liquid-glass/README.md)另收录当前图标与电量设计。安装包是否可用以 Releases 为准；开发版本可按下方[源码构建方式](#从源码构建)运行。下载前请核对对应版本的架构支持和签名状态。
 
 ### 手动下载安装
 
-Release 安装包发布后，可按以下步骤安装：
+可按以下步骤安装已发布的 Release：
 
 1. 从 [Releases](https://github.com/fanglinwei/Combo/releases) 下载适合你的 Mac 的安装包。Apple Silicon 选择标注为 `arm64` 或 Apple Silicon 的版本；Intel 支持目前尚未验证，仅在对应版本明确提供并支持 Intel 安装包时使用。
 2. 根据实际发布格式，解压 `.zip` 或打开 `.dmg`。
@@ -230,7 +230,7 @@ Release 安装包发布后，可按以下步骤安装：
 
 ### 开发环境
 
-使用包含 macOS 26 SDK 或更新 SDK 的完整 Xcode。目前开发环境为 **Xcode 27.0**。项目使用 Swift、SwiftUI、AppKit，并打包 Objective-C/C 辅助程序；没有第三方 Swift 包依赖。
+使用包含 macOS 26 SDK 或更新 SDK 的完整 Xcode。目前开发环境为 **Xcode 27.0**。项目使用 Swift、SwiftUI、AppKit，并打包 Objective-C/C 辅助程序；通过 Swift Package Manager 使用 Sparkle 2.10.0 提供软件更新。
 
 ```sh
 git clone https://github.com/fanglinwei/Combo.git
@@ -262,7 +262,7 @@ COMBO_CONFIGURATION=Release ./build.sh
 ./verify.sh
 ```
 
-脚本会构建 Debug，并运行状态、本地化、图标、面板、网络、电池、媒体及辅助程序检查，最后验证代码签名与品牌资源。真实设备连接、硬件相关控制和系统权限弹窗仍需要手动验证。
+脚本会构建 Debug，并运行覆盖状态、本地化、图标、网络、电池、媒体及辅助程序的后台测试计划，最后验证代码签名与品牌资源；不会启动应用窗口，不覆盖窗口、焦点和视觉交互。真实设备连接、硬件相关控制和系统权限弹窗仍需要手动验证。
 
 ## 反馈与贡献
 

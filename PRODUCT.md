@@ -33,6 +33,6 @@ Combo 是 SwiftUI / AppKit 原生菜单栏应用。Impeccable 的平台枚举未
 ## Evidence on Hand
 
 - 产品功能与约束：[当前产品行为](docs/product/behavior.md)、项目 AGENTS.md，以及 `PanelView.swift`、`SettingsView.swift` 和 `OnboardingView.swift` 的当前实现。
-- 设计原稿、交互与验证边界：[1.3.0 设计说明](docs/design/liquid-glass/README.md)。
+- 设计原稿、交互与验证边界：[界面与图标设计汇总](docs/design/liquid-glass/README.md)。
 - [README 配图来源](docs/assets/ui-1.3.0/README.md)：从当前设计导出版截取总览、详情、设置和引导，使用示例数据。
-- 资料整理于 2026-11-06；应用源码版本仍为 `1.2.0 / 102`，设计版本不等于发布状态。
+- 设计资料整理于 2026-11-12；面板配图保留 1.3.0 快照，图标与音频设计持续更新，设计编号不代表当前发布状态。

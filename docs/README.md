@@ -4,7 +4,7 @@
 
 | 分类 | 文档 | 内容 |
 | --- | --- | --- |
-| 界面设计 | [1.3.0 当前设计](design/liquid-glass/README.md) | 总览、三页详情、设置、引导、AppIcon、中央／音频／充电图标及 README 配图来源 |
+| 界面设计 | [界面与图标设计汇总](design/liquid-glass/README.md) | 总览、三页详情、设置、引导、AppIcon、中央／音频／充电图标及 README 配图来源 |
 | 产品规格 | [产品行为与设置](product/behavior.md) | 图标语义、优先级与时序、设置默认值、持久化、权限与恢复 |
 | 产品规格 | [图标状态示例](product/icon-gallery.md) | 原生图标演示 GIF、当前规则入口与重绘命令 |
 | 工程实现 | [应用入口与窗口](engineering/app.md) | SwiftUI App / Settings / Commands、AppKit 面板和测试宿主隔离 |
