@@ -1,6 +1,6 @@
 # Combo 中央图标设计提案
 
-更新：2026-11-11。已归入[统一图标设计稿](../index.html#central)，与 AppIcon、音频电量和充电状态一起查看。这是待实现的设计，不替代项目当前行为规格。
+更新：2026-11-11。已归入[统一图标设计稿](https://fanglinwei.github.io/Combo/design/liquid-glass/#central)，与 AppIcon、音频电量和充电状态一起查看。这是待实现的设计，不替代项目当前行为规格。
 
 ## 覆盖范围
 

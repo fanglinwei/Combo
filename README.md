@@ -50,7 +50,7 @@ The updated glass panel groups media, battery, Wi-Fi, and sound in one surface. 
 
 These images preserve the 1.3.0 design snapshot with sample data; their original Chinese labels are retained. The new AppIcon combines a blue and white base, battery arc, Wi-Fi arcs, and four music bars arranged along a curve.
 
-[Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](docs/design/liquid-glass/index.html) (download and open in a browser) · [Icon design summary](docs/design/liquid-glass/icons/README.md)
+[Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](https://fanglinwei.github.io/Combo/design/liquid-glass/) · [Icon design summary](docs/design/liquid-glass/icons/README.md)
 
 ### Menu bar icon in motion
 

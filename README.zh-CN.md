@@ -50,7 +50,7 @@ Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用�
 
 以上图片保留 1.3.0 设计快照，使用示例数据；英文 README 也保留稿件原有中文。新 AppIcon 采用蓝白底座、电量弧、Wi-Fi 双弧和圆弧排列的四条音乐柱。
 
-[设计说明与全部详情截图](docs/design/liquid-glass/README.md) · [可交互总设计稿](docs/design/liquid-glass/index.html)（下载后用浏览器打开） · [图标设计汇总](docs/design/liquid-glass/icons/README.md)
+[设计说明与全部详情截图](docs/design/liquid-glass/README.md) · [可交互总设计稿](https://fanglinwei.github.io/Combo/design/liquid-glass/) · [图标设计汇总](docs/design/liquid-glass/icons/README.md)
 
 ### 菜单栏图标动效
 

@@ -103,8 +103,8 @@
 
 ## 来源
 
-- [统一图标设计入口](../index.html#audio)
-- [音频与充电预览](audio.html)
+- [统一图标设计入口](https://fanglinwei.github.io/Combo/design/liquid-glass/#audio)
+- [音频与充电预览](https://fanglinwei.github.io/Combo/design/liquid-glass/icons/audio.html)
 - [可编辑源稿](sources/audio.html)
 - [25 类音频设备符号映射](audio-symbols.json)
 - [汇总音频设备显示设计稿](codex://threads/01a1ca08-c30b-7bd1-bfcf-8130d29f94b7)

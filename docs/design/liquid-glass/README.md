@@ -4,18 +4,18 @@
 
 ## 预览与原稿
 
-统一入口：[打开总设计稿](index.html)。顶部导航可切换「面板与详情」「设置」「使用引导」「AppIcon」「中央图标」「音频与充电」；也可[直接查看引导页](index.html#onboarding)。图标资料统一见[图标设计汇总](icons/README.md)。
+统一入口：[打开总设计稿](https://fanglinwei.github.io/Combo/design/liquid-glass/)。顶部导航可切换「面板与详情」「设置」「使用引导」「AppIcon」「中央图标」「音频与充电」；也可[直接查看引导页](https://fanglinwei.github.io/Combo/design/liquid-glass/#onboarding)。图标资料统一见[图标设计汇总](icons/README.md)。
 
 | 内容 | 可交互预览 | 可编辑原稿 |
 | --- | --- | --- |
-| 总览面板及详情 | [打开面板设计](combo-panel-liquid-glass.html) | [面板源稿](sources/combo-panel-liquid-glass.html) |
-| 独立设置窗口 | [打开设置页设计](combo-settings-liquid-glass.html) | [设置页源稿](sources/combo-settings-liquid-glass.html) |
-| 使用引导 | [打开引导设计](combo-onboarding-liquid-glass.html) | [引导源稿](sources/combo-onboarding-liquid-glass.html) |
-| AppIcon | [浅深背景与尺寸预览](icons/preview.html) | [SVG 主稿与导出说明](icons/app-icon.md) |
-| 中央图标 | [49 个设备与状态](icons/central.html) | [源稿](icons/sources/central.html) · [设计与符号映射](icons/central.md) |
-| 音频与充电 | [39 个设备、电量与充电场景](icons/audio.html) | [源稿](icons/sources/audio.html) · [最终设计说明](icons/audio.md) |
+| 总览面板及详情 | [打开面板设计](https://fanglinwei.github.io/Combo/design/liquid-glass/combo-panel-liquid-glass.html) | [面板源稿](sources/combo-panel-liquid-glass.html) |
+| 独立设置窗口 | [打开设置页设计](https://fanglinwei.github.io/Combo/design/liquid-glass/combo-settings-liquid-glass.html) | [设置页源稿](sources/combo-settings-liquid-glass.html) |
+| 使用引导 | [打开引导设计](https://fanglinwei.github.io/Combo/design/liquid-glass/combo-onboarding-liquid-glass.html) | [引导源稿](sources/combo-onboarding-liquid-glass.html) |
+| AppIcon | [浅深背景与尺寸预览](https://fanglinwei.github.io/Combo/design/liquid-glass/icons/preview.html) | [SVG 主稿与导出说明](icons/app-icon.md) |
+| 中央图标 | [49 个设备与状态](https://fanglinwei.github.io/Combo/design/liquid-glass/icons/central.html) | [源稿](icons/sources/central.html) · [设计与符号映射](icons/central.md) |
+| 音频与充电 | [39 个设备、电量与充电场景](https://fanglinwei.github.io/Combo/design/liquid-glass/icons/audio.html) | [源稿](icons/sources/audio.html) · [最终设计说明](icons/audio.md) |
 
-用浏览器打开预览文件即可查看。面板默认展示「融合面板」，底部可切换「控制中心」作对照；设置页默认展示「外观」。按钮、链接、音量滑杆和选中态采用中性石墨灰／银白色；开关以绿色表示开启、灰色表示关闭。
+预览链接通过 GitHub Pages 直接打开网页，无需下载；「源稿」链接保留仓库文件入口，供查看和编辑代码。Pages 从 `main` 分支的 `docs/` 目录发布，预览内容随该分支更新。面板默认展示「融合面板」，底部可切换「控制中心」作对照；设置页默认展示「外观」。按钮、链接、音量滑杆和选中态采用中性石墨灰／银白色；开关以绿色表示开启、灰色表示关闭。
 
 ## 设计范围与配图
 
