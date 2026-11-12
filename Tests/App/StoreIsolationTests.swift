@@ -8,6 +8,33 @@ extension IntegrationTests {
     struct StoreIsolationTests {
         @Test
         @MainActor
+        func testAudioOutputCallbackShowsLatestDeviceAndReplacesVolumeHint() {
+            let store = Store(monitorsSystem: false)
+            defer { store.stop() }
+            store.live.symbol = "wifi"
+            store.showVolumeHint()
+            store.audio.onAudioReset?(true)
+            store.audio.deviceKind = .bluetooth(.airPodsPro)
+            store.audio.output = "New Output"
+            store.audio.onUpdate?()
+            store.audio.onOutputChange?()
+            let first = store.snapshot
+            #expect(!first.adjusting && first.centerEvent == .output)
+            #expect(IconContent(first).priority == 4 && IconContent(first).glyph == .audio(.earbuds))
+            #expect(first.centerHintText.contains("New Output"))
+            store.audio.onUpdate?()
+            #expect(store.snapshot.eventSerial == first.eventSerial, "Metadata refreshes must not replay the hint")
+            store.audio.deviceKind = .builtIn
+            store.audio.onUpdate?()
+            store.audio.onOutputChange?()
+            #expect(store.snapshot.centerEvent == .output && store.snapshot.eventSerial > first.eventSerial)
+            #expect(IconContent(store.snapshot).glyph == .device(.computer))
+            store.showVolumeHint()
+            #expect(store.snapshot.centerEvent == .volume, "The most recent P4 event must win")
+        }
+
+        @Test
+        @MainActor
         func testAudioOutputResetPreservesBatteryUntilAudioStoreClearsIt() async throws {
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Combo.StoreBattery.\(UUID())")
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

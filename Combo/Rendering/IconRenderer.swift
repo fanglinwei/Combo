@@ -72,18 +72,10 @@ enum IconRenderer {
             case .warning: icon = .warning
             default: icon = .wifi
             }
-            let open = min(1, max(0, layer.networkOpen))
-            guard open > 0 else { return }
-            NSGraphicsContext.saveGraphicsState()
-            let context = NSGraphicsContext.current!.cgContext
-            context.translateBy(x: 50, y: 54)
-            context.scaleBy(x: 1, y: open)
-            context.translateBy(x: -50, y: -54)
             let loading = layer.content.kind == .connecting && !s.reducedMotion && transition?.reduced != true
             let loadingPhase = layer.loadingPhase ?? phase * 1.2 / IconTransition.NetworkTiming.cycle
             let opacity = loading ? 0.25 + 0.75 * pow(max(0, cos(2 * .pi * loadingPhase)), 2) : 1
             symbol(.network(icon), in: rect(29.5, 29.5, 41, 33), opacity: opacity)
-            NSGraphicsContext.restoreGraphicsState()
         }
         let frame = transition ?? IconTransition.Frame(layers: [.init(content: IconContent(s))])
         func beginLayer(scale: Double, opacity: Double) {
@@ -129,7 +121,7 @@ enum IconRenderer {
                 default: expanded = 2.0
                 }
             }
-            let resting = numeric ? 1.05 : 1.0
+            let resting = content.kind == .headphones ? 1.1 : numeric ? 1.05 : 1.0
             beginLayer(scale: (resting + (expanded-resting) * layer.emphasis) * layer.scale, opacity: layer.opacity)
             if content.kind == .plugged || content.kind == .unplugged {
                 drawPower(connected: content.kind == .plugged)
@@ -150,7 +142,8 @@ enum IconRenderer {
         }
         NSGraphicsContext.restoreGraphicsState()
         beginLayer(scale: peripheralScale, opacity: frame.peripheral)
-        if s.charging { symbol(.power(.charging), in: rect(76, 8, 12, 24)) }
+        // Match the former 24-unit bolt height after SF Symbol padding.
+        if s.charging { symbol(.power(.charging), in: rect(70.5, 4, 21, 32)) }
         let bottom = bottomState(muted: s.silenced, adjusting: s.adjusting, playing: s.playing, animate: animate)
         if bottom == .muted {
             symbol(.sound(.muted), in: rect(36, 70, 28, 17))

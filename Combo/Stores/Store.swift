@@ -125,6 +125,7 @@ enum SystemPermissionAlert {
             self.updateObservation()
         }
         audio.onVolumeChange = { [weak self] in self?.showVolumeHint() }
+        audio.onOutputChange = { [weak self] in self?.showCenterHint(.output) }
         audio.onAudioReset = { [weak self] _ in self?.clearVolumeHint() }
         audio.onMessage = { [weak self] in self?.message = $0 }
         network.update = { [weak self] name, symbol in self?.live.network = name; self?.live.symbol = symbol }

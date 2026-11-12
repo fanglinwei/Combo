@@ -153,7 +153,7 @@ final class ComboPanel: NSPanel {
         status.button?.image = image
         let highlight = panelHighlight.value(at: now)
         status.button?.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.22 * highlight).cgColor
-        let description = L("\(store.scene == .live ? "" : L("演示 · "))\(s.powerHintText)电量 \(s.batteryText) · \(LKey(s.network)) · 音量 \(s.volumeText)")
+        let description = L("\(store.scene == .live ? "" : L("演示 · "))\(s.centerHintText)电量 \(s.batteryText) · \(LKey(s.network)) · 音量 \(s.volumeText)")
         if status.button?.toolTip != description {
             status.button?.toolTip = description
             status.button?.setAccessibilityLabel(description)

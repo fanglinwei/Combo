@@ -24,6 +24,7 @@ struct OutputChoice: Identifiable {
     let bluetoothPermission = BluetoothPermission()
     var onUpdate: (() -> Void)?
     var onVolumeChange: (() -> Void)?
+    var onOutputChange: (() -> Void)?
     var onAudioReset: ((Bool) -> Void)?
     var onMessage: ((LocalizedText) -> Void)?
     /// AirPlay 路由读取失败时自动重试，面板活动时持续确认接收端。
@@ -45,6 +46,7 @@ struct OutputChoice: Identifiable {
     private var bluetoothClassOfDevice: UInt32?
     private var deviceTarget: String?
     private var device: AudioDeviceID = 0
+    private var outputChange = AudioOutputChange()
     private var audioListeners: [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
     private(set) var listenersAvailable = false
     var selectedOutputID: AudioDeviceID { device }
@@ -147,6 +149,7 @@ struct OutputChoice: Identifiable {
         muted = muteRead && mute != 0
         canMute = muteRead && AudioObjectIsPropertySettable(id, &a, &settable) == noErr && settable.boolValue
         onUpdate?()
+        if outputChange.update(deviceID: id) { onOutputChange?() }
         let volumeChanged = oldVolume.flatMap { previous in volume.map { abs(previous-$0) > 0.001 } } ?? false
         if oldDevice == id, volumeChanged || (muteRead && oldMuted != muted) { onVolumeChange?() }
 

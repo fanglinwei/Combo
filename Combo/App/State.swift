@@ -73,7 +73,7 @@ enum Scene: String, CaseIterable, Identifiable {
     case plug = "插入电源", unplug = "拔出电源"
     case wifiOff = "Wi-Fi 已关闭"
 }
-enum CenterEvent { case power, volume }
+enum CenterEvent { case power, volume, output }
 
 // One active event: replaced events never return. All times use a monotonic clock.
 struct CenterHint {
@@ -152,7 +152,21 @@ struct Snapshot {
     }
     var batteryText: String { battery.map { "\(Int(($0 * 100).rounded()))%" } ?? "—" }
     var volumeText: String { volume.map { "\(Int(($0 * 100).rounded()))%" } ?? L("由设备控制") }
-    var powerHintText: String { centerEvent == .power ? (plugged ? L("已插入电源，") : L("已拔出电源，")) : "" }
+    var centerHintText: String {
+        switch centerEvent {
+        case .power: plugged ? L("已插入电源，") : L("已拔出电源，")
+        case .output: L("音频输出已切换为\(output.string)，")
+        default: ""
+        }
+    }
+}
+
+struct AudioOutputChange {
+    private var previousDeviceID: UInt32?
+    mutating func update(deviceID: UInt32) -> Bool {
+        defer { previousDeviceID = deviceID }
+        return previousDeviceID.map { $0 != deviceID } ?? false
+    }
 }
 
 struct PowerChange {
