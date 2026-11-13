@@ -91,15 +91,7 @@
 - 浅色、深色、减少动态效果、减少透明度、增强对比度、长名称、鼠标及键盘辅助功能。
 - 各代设备识别、真实充电信号、开合盖与休眠后的更新及时性、数据过期判定。
 
-本次只整理设计稿与预览；未修改 Combo 源码。前稿引用的系统数据与开源采集实现不能替代 Combo 本机验证，也不能保证所有设备都会上报充电信号。
-
-## 原设计阶段预览验证
-
-以下为原聊天的历史检查记录；本次归档不据此声明原生界面或设备采集已验收。
-
-已在浏览器深色外观查看总览、详情、双耳合并充电和数字切换；检查 39 个场景均生成圆环，164 个圆环均有图标资源引用，包含 18 个充电中标记、8 个充满标记和 2 个未知电量槽位。电量阈值自检与机械设计检查通过。
-
-未逐场景目视核对；浅色外观、窄宽度、系统辅助功能及原生 SwiftUI/AppKit 尚未验证。
+上述是浏览器设计验收要求；与当前原生交互、尺寸及采集能力的差异见页首说明和工程文档，不能据设计预览承诺硬件支持。
 
 ## 来源
 
@@ -115,32 +107,4 @@
 - [Apple HIG — Icons](https://developer.apple.com/design/human-interface-guidelines/icons)
 - [SF Symbols 官方资源](https://developer.apple.com/sf-symbols/)
 
-以下资源表继承图标汇总稿的本机系统目录核对结果。最低系统版本仅指资源可用性，不表示设备采集能力；较新符号仍需在目标部署系统验证并提供通用资源降级。
-
-| 设备 | 设备符号 | 左耳 | 右耳 | 盒子 | 最低 macOS（同序） |
-|---|---|---|---|---|---|
-| AirPods 1/2 | `airpods` | `airpod.left` | `airpod.right` | `airpods.chargingcase.fill` | 11.0 / 11.0 / 11.0 / 12.0 |
-| AirPods 3 | `airpods.gen3` | `airpod.gen3.left` | `airpod.gen3.right` | `airpods.gen3.chargingcase.wireless.fill` | 12.1 / 12.1 / 12.1 / 12.1 |
-| AirPods 4 | `airpods.gen4` | `airpods.gen4.left` | `airpods.gen4.right` | `airpods.gen4.chargingcase.wireless.fill` | 15.2 / 15.2 / 15.2 / 15.2 |
-| AirPods Pro 1 | `airpods.pro.gen1` | `airpods.pro.gen1.left` | `airpods.pro.gen1.right` | `airpods.pro.gen1.chargingcase.wireless.fill` | 27.0 / 27.0 / 27.0 / 27.0 |
-| AirPods Pro 2 | `airpods.pro` | `airpods.pro.left` | `airpods.pro.right` | `airpods.pro.chargingcase.wireless.fill` | 15.0 / 15.0 / 15.0 / 15.0 |
-| AirPods Pro 3 | `airpods.pro.gen3` | `airpods.pro.gen3.left` | `airpods.pro.gen3.right` | `airpods.pro.gen3.chargingcase.wireless.fill` | 27.0 / 27.0 / 27.0 / 27.0 |
-| AirPods Max | `airpods.max` | — | — | — | 15.0 / — / — / — |
-| Powerbeats Pro | `beats.powerbeats.pro` | `beats.powerbeats.pro.left` | `beats.powerbeats.pro.right` | `beats.powerbeats.pro.chargingcase.fill` | 15.0 / 15.0 / 15.0 / 15.0 |
-| Powerbeats Pro 2 | `beats.powerbeats.pro.2` | `beats.powerbeats.pro.2.left` | `beats.powerbeats.pro.2.right` | `beats.powerbeats.pro.2.chargingcase.fill` | 15.5 / 15.5 / 15.5 / 15.5 |
-| Beats Fit Pro | `beats.fitpro` | `beats.fitpro.left` | `beats.fitpro.right` | `beats.fitpro.chargingcase.fill` | 14.0 / 14.0 / 14.0 / 14.0 |
-| Beats Studio Buds | `beats.studiobuds` | `beats.studiobuds.left` | `beats.studiobuds.right` | `beats.studiobuds.chargingcase.fill` | 12.0 / 15.0 / 15.0 / 12.0 |
-| Beats Studio Buds + | `beats.studiobuds.plus` | `beats.studiobuds.plus.left` | `beats.studiobuds.plus.right` | `beats.studiobuds.plus.chargingcase.fill` | 15.0 / 15.0 / 15.0 / 15.0 |
-| Beats Solo Buds | `beats.solobuds` | `beats.solobuds.left` | `beats.solobuds.right` | `beats.solobuds.chargingcase.fill` | 14.6 / 14.6 / 14.6 / 14.6 |
-| Beats 头戴式 | `beats.headphones` | — | — | — | 12.0 / — / — / — |
-| Beats 颈挂式 | `beats.earphones` | — | — | — | 12.0 / — / — / — |
-| Powerbeats | `beats.powerbeats` | `beats.powerbeats.left` | `beats.powerbeats.right` | — | 12.0 / 13.3 / 13.3 / — |
-| Powerbeats 3 | `beats.powerbeats3` | `beats.powerbeats3.left` | `beats.powerbeats3.right` | — | 12.0 / 13.3 / 13.3 / — |
-| Beats Pill | `beats.pill.fill` | — | — | — | 14.6 / — / — / — |
-| 通用头戴式 | `headphones` | — | — | — | 10.15 / — / — / — |
-| 通用真无线 | `earbuds` | `earbud.left` | `earbud.right` | `earbuds.case.fill` | 12.0 / 26.0 / 26.0 / 12.0 |
-| 通用入耳式 | `earbuds.in.ear` | `earbuds.in.ear.left` | `earbuds.in.ear.right` | `earbuds.case.fill` | 26.0 / 26.0 / 26.0 / 12.0 |
-| 通用无柄式 | `earbuds.stemless` | `earbuds.stemless.left` | `earbuds.stemless.right` | `earbuds.case.fill` | 26.0 / 26.0 / 26.0 / 12.0 |
-| 通用骨传导 | `earbuds.bone.conduction` | `earbuds.bone.conduction.left` | `earbuds.bone.conduction.right` | — | 26.0 / 26.0 / 26.0 / — |
-| 助听设备 | `hearingdevice.ear` | — | — | — | 12.0 / — / — / — |
-| 通用蓝牙音箱 | `hifispeaker.fill` | — | — | — | 10.15 / — / — / — |
+型号、左右耳、充电盒符号及最低 macOS 版本统一维护在 [audio-symbols.json](audio-symbols.json)，浏览器稿提供逐项预览。最低版本只表示符号资源可用性，不表示设备采集能力；目标系统缺少专用符号时仍需通用降级。

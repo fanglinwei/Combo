@@ -1,6 +1,6 @@
-# Combo 中央图标设计提案
+# Combo 中央图标设计参考
 
-更新：2026-11-11。已归入[统一图标设计稿](https://fanglinwei.github.io/Combo/design/liquid-glass/#central)，与 AppIcon、音频电量和充电状态一起查看。这是待实现的设计，不替代项目当前行为规格。
+更新：2026-11-11。已归入[统一图标设计稿](https://fanglinwei.github.io/Combo/design/liquid-glass/#central)，与 AppIcon、音频电量和充电状态一起查看。本页描述设计素材；当前原生采用范围与状态选择见[产品规格](../../../product/behavior.md)和[音频实现](../../../engineering/audio.md)，不将整份设计表视为待实现清单。
 
 ## 覆盖范围
 
@@ -26,6 +26,4 @@
 - [Apple HIG：Icons](https://developer.apple.com/design/human-interface-guidelines/icons)
 - [SF Symbols](https://developer.apple.com/sf-symbols/)
 
-49 个条目的符号均通过本机 NSImage 解析并离屏绘制。浏览器检查了条目数量、分组、选中状态更新、图像加载和浅深色切换，无捕获到的控制台错误。合并后已在浏览器确认两个页签可切换，原音频页的 19 个场景入口、左右耳和充电盒圆环正常显示，无捕获到的控制台错误。
-
-未改 Combo 项目源码。未在原生菜单栏验证光学尺寸、实时状态与动效；新型号资源受 macOS 版本限制，资源存在不代表设备识别或电量采集已支持。
+符号映射与浏览器导出由[设计资源检查](../../../../Tests/Views/DesignAssetsCheck.py)维护。原生光学尺寸、实时状态、动效和硬件识别需独立验证；符号可用不代表设备识别或电量采集已支持。

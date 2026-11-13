@@ -7,6 +7,38 @@ extension IntegrationTests {
     struct PanelMotionTests {
         @Test
         @MainActor
+        func testLargeContentRefreshInterruptsSmallResizeAnimation() async throws {
+            let fixture = PanelTestCase()
+            defer { fixture.cleanUp() }
+            let delegate = try await fixture.makeDelegate()
+            try await fixture.open(delegate)
+            let panel = try #require(delegate.panel)
+            delegate.store.reduceMotion = true
+            delegate.updatePanelHeight(450)
+            try await Task.sleep(for: .milliseconds(50))
+            delegate.store.reduceMotion = false
+            delegate.updatePanelHeight(400)
+            try await Task.sleep(for: .milliseconds(30))
+            delegate.updatePanelHeight(800)
+            try await Task.sleep(for: .milliseconds(350))
+            let visible = try #require(panel.screen?.visibleFrame)
+            #expect(abs(panel.frame.height - min(800, visible.height - 16)) < 1,
+                    "An earlier empty-result resize must not overwrite the restored device list's height: \(panel.frame)")
+            #expect(abs(panel.frame.maxY - (visible.maxY - 8)) < 1)
+
+            delegate.store.reduceMotion = true
+            delegate.updatePanelHeight(450)
+            try await Task.sleep(for: .milliseconds(50))
+            delegate.store.reduceMotion = false
+            delegate.updatePanelHeight(400)
+            delegate.updatePanelHeight(450)
+            try await Task.sleep(for: .milliseconds(350))
+            #expect(abs(panel.frame.height - 450) < 1,
+                    "Restoring the current frame before the first animation tick must cancel the pending shrink")
+        }
+
+        @Test
+        @MainActor
         func testEntranceGrowthReversalAndReducedMotion() async throws {
             let fixture = PanelTestCase()
             defer { fixture.cleanUp() }

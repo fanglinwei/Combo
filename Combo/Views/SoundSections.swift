@@ -115,7 +115,7 @@ struct SoundOutputs: View {
                 if !store.message.isEmpty || !control.message.isEmpty || !audio.message.isEmpty {
                     Button(L("重新查找")) { discovery.request() }.font(.caption).disabled(!active)
                 }
-            case .ready:
+            case .ready, .refreshing:
                 if audio.nearbyAirPlay.isEmpty {
                     Text(L("未发现附近的 AirPlay 设备"))
                         .font(.caption).foregroundStyle(palette.mutedText)
@@ -139,7 +139,8 @@ struct SoundOutputs: View {
                     .accessibilityValue(audio.nearbyAirPlayCaption)
                     .padding(.vertical, 1)
                 }
-                Button(L("重新查找")) { discovery.request() }.font(.caption).disabled(!active)
+                Button(L(discovery.state == .refreshing ? "正在查找附近 AirPlay 设备…" : "重新查找")) { discovery.request() }
+                    .font(.caption).disabled(!active || discovery.state == .refreshing)
             }
         }.buttonStyle(PanelButtonStyle())
     }
