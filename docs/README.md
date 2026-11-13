@@ -13,7 +13,7 @@
 | 工程实现 | [音频](engineering/audio.md) | 默认输出身份、AirPods 读写、蓝牙分类、AirPlay 路由和附近发现 |
 | 工程实现 | [媒体](engineering/media.md) | 系统媒体 helper、显示与隐私、未采用方案和兼容限制 |
 | 后续研究 | [路线图与研究](research/roadmap.md) | 关联电量来源、iPhone 查询、已废弃的菜单栏自动折叠研究 |
-| 技术调研 | [Xcode 测试迁移](research/xcode-testing.md) | 现有检查迁入测试 target 的范围、隔离条件与迁移顺序 |
+| 测试设计 | [测试设计与问题记录](research/xcode-testing.md) | 已采用的框架与隔离边界、可复用排查结论、待复核的历史问题 |
 | 发布维护 | [更新发布](release/updates.md) | Sparkle 行为、候选准备、发布顺序、签名备份恢复与验收 |
 
 ## 阅读与维护规则
@@ -25,6 +25,6 @@
 
 ## 资源与验证入口
 
-[界面设计目录](design/liquid-glass/README.md) 统一管理面板、设置、引导与 [图标设计汇总](design/liquid-glass/icons/README.md)；[1.3.0 配图](assets/ui-1.3.0/README.md) 记录从当前设计稿截取的图片和来源。历史审查截图、校验稿、旧透明标志、闲置 AirPods 素材及文档侧多余的图标副本已清理；保留当前设计源稿、完整导出版、原生图标动图及有效检查。`assets/render_design.py` 仍作为当前 Wi-Fi 轮廓的几何参考保留，不作为 UI 配图入口。[更新源目录](updates/README.md) 保存部署资源，其清单、公钥、版本说明及 `.nojekyll` 不按知识文档移动。
+[界面设计目录](design/liquid-glass/README.md) 管理可编辑源稿、Pages 导出版及[配图来源](assets/ui-1.3.0/README.md)；[图标状态示例](product/icon-gallery.md)管理原生绘图动图。`assets/render_design.py` 是当前 Wi-Fi 轮廓的几何参考。[更新源目录](updates/README.md) 是客户端部署资源，清单、公钥、版本说明及 `.nojekyll` 保持原路径。
 
 自动检查入口为仓库根目录 `./verify.sh`，具体测试与实机命令见 [Tests/README.md](../Tests/README.md)。文档整理只检查内容、路径与引用，不代替运行应用、真实授权、设备控制或发布演练。
