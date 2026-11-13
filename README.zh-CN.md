@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/fanglinwei/Combo"><img src="https://img.shields.io/badge/GitHub-Combo-181717?style=flat-square&amp;logo=github&amp;logoColor=white" alt="GitHub"></a>
-  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-1.3.2-007EC6?style=flat-square" alt="Combo 1.3.2"></a>
+  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-1.3.3-007EC6?style=flat-square" alt="Combo 1.3.3"></a>
   <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/downloads-Releases-44CC11?style=flat-square" alt="GitHub Releases 下载入口"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-007EC6?style=flat-square" alt="MIT 开源协议"></a>
   <a href="#系统要求与安装"><img src="https://img.shields.io/badge/platform-macOS%2026%2B-999999?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="macOS 26 或更新版本"></a>
@@ -81,7 +81,7 @@ Combo 主要面向以 MacBook 为日常办公工具、同时热爱听歌的用�
 
 在 [GitHub Releases](https://github.com/fanglinwei/Combo/releases) 查看已发布的安装包和版本说明。
 
-**仓库应用版本为 `1.3.2 / 105`。** 上方配图保留 1.3.0 设计快照；[设计汇总](docs/design/liquid-glass/README.md)另收录当前图标与电量设计。安装包是否可用以 Releases 为准；开发版本可按下方[源码构建方式](#从源码构建)运行。下载前请核对对应版本的架构支持和签名状态。
+**仓库应用版本为 `1.3.3 / 106`。** 上方配图保留 1.3.0 设计快照；[设计汇总](docs/design/liquid-glass/README.md)另收录当前图标与电量设计。安装包是否可用以 Releases 为准；开发版本可按下方[源码构建方式](#从源码构建)运行。下载前请核对对应版本的架构支持和签名状态。
 
 ### 手动下载安装
 
