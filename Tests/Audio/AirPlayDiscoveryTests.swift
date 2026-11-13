@@ -7,6 +7,40 @@ import dnssd
 struct AirPlayDiscoveryTests {
     @Test
     @MainActor
+    func testRefreshPreservesPublishedResultsAndDoesNotReturnToInitialSearch() throws {
+        let suite = "Combo.AirPlayRefresh.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var browsers: [NWBrowser] = []
+        let discovery = AirPlayDiscovery(defaults: defaults, startBrowser: { browsers.append($0) })
+        defer { discovery.setActive(false) }
+        discovery.setActive(true)
+        discovery.request()
+        let first = try #require(browsers.first)
+        first.stateUpdateHandler?(.ready)
+        var resultPublications = 0
+        var states: [AirPlayDiscovery.State] = []
+        let results = discovery.$devices.dropFirst().sink { _ in resultPublications += 1 }
+        let state = discovery.$state.dropFirst().sink { states.append($0) }
+        defer { results.cancel(); state.cancel() }
+
+        discovery.request()
+        #expect(browsers.count == 2)
+        #expect(discovery.state == .refreshing)
+        #expect(resultPublications == 0, "Refreshing must keep the displayed list until fresh results arrive")
+        #expect(!states.contains(.idle) && !states.contains(.searching),
+                "Refreshing must not hide the list or insert the initial-search banner")
+        first.stateUpdateHandler?(.cancelled)
+        #expect(discovery.state == .refreshing, "Cancellation of the old browser must not erase the refresh")
+        let second = try #require(browsers.last)
+        second.stateUpdateHandler?(.ready)
+        #expect(discovery.state == .ready && resultPublications == 0)
+        second.browseResultsChangedHandler?([], [])
+        #expect(resultPublications == 1, "Fresh empty results must still replace the previous list")
+    }
+
+    @Test
+    @MainActor
     func testOptInLifecyclePermissionFailuresAndLateCallbacks() async throws {
         let suite = "Combo.AirPlayDiscoveryCheck.\(UUID())"
         let defaults = try #require(UserDefaults(suiteName: suite))

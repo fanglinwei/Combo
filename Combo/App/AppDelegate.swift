@@ -26,6 +26,7 @@ final class ComboPanel: NSPanel {
     var status: NSStatusItem!
     var panel: ComboPanel?
     private var overviewHeight: CGFloat = 0
+    private var panelTargetFrame: NSRect?
     /// 开合进行中冻结 frame 更新，避免内容测量打断运动。
     private var revealing = false
     private var panelLocalMonitor: Any?
@@ -202,6 +203,7 @@ final class ComboPanel: NSPanel {
             let height = min(overviewHeight > 0 ? overviewHeight : 500, visible.height - 16)
             let frame = NSRect(x: visible.maxX - PanelView.width - 12, y: visible.maxY - height - 8,
                                width: PanelView.width, height: height)
+            panelTargetFrame = nil
             revealing = true
             revealTask?.cancel()
             // Reverse a closing panel in place, preserving its live frame, alpha and card state.
@@ -245,7 +247,7 @@ final class ComboPanel: NSPanel {
             updatePanelHeight(overviewHeight)
         }
     }
-    private func updatePanelHeight(_ value: CGFloat) {
+    func updatePanelHeight(_ value: CGFloat) {
         guard value.isFinite, value > 0 else { return }
         let hadMeasurement = overviewHeight > 0
         overviewHeight = ceil(value)
@@ -276,13 +278,18 @@ final class ComboPanel: NSPanel {
         let height = min(max(1, overviewHeight > 0 ? overviewHeight : panel.frame.height), max(1, visible.height - 16))
         let frame = NSRect(x: visible.maxX - PanelView.width - 12, y: visible.maxY - height - 8, width: PanelView.width, height: height)
         let growth = abs(panel.frame.height - frame.height)
-        guard growth > 0.5 || abs(panel.frame.minY - frame.minY) > 0.5 else { return }
+        guard panelTargetFrame != frame else { return }
+        panelTargetFrame = frame
         // The first measurement after opening is the panel's real size — snap. Later content changes
         // (media card, message) ease in instead of teleporting.
         // 首次定位直接落定；之后内容变化（媒体卡出现、提示行）才 0.18s 缓动，避免高度瞬跳。
         // growth 上限 120pt 是安全阀：异常大的跳变（首次测量）不走动画。
         guard animated, !store.reduceMotion, growth < 120 else {
-            panel.setFrame(frame, display: true)
+            // Retarget the animator even when snapping, so an older resize cannot finish over this frame.
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0
+                panel.animator().setFrame(frame, display: true)
+            }
             return
         }
         NSAnimationContext.runAnimationGroup { context in
