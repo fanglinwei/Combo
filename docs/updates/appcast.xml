@@ -7,6 +7,17 @@
         <language>en</language>
         <!-- Initial feed skeleton. Add verified release items with Sparkle generate_appcast. -->
         <item>
+            <title>1.3.3</title>
+            <pubDate>Fri, 13 Nov 2026 15:21:39 +0800</pubDate>
+            <link>https://github.com/fanglinwei/Combo/releases</link>
+            <sparkle:version>106</sparkle:version>
+            <sparkle:shortVersionString>1.3.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <sparkle:releaseNotesLink>https://fanglinwei.github.io/Combo/updates/notes/Combo-1.3.3-arm64.html</sparkle:releaseNotesLink>
+            <enclosure url="https://github.com/fanglinwei/Combo/releases/download/1.3.3/Combo-1.3.3-arm64.dmg" length="2606609" type="application/octet-stream" sparkle:edSignature="I+HCbbkAyZssPpHksCcgarHGn2rsNM+02RUoTkaJMA2zJ4ZptLzt0IS6Ae8oxaes86WxyzYdSXP9XJhsMXS4CA=="/>
+        </item>
+        <item>
             <title>1.3.2</title>
             <pubDate>Thu, 12 Nov 2026 18:37:41 +0800</pubDate>
             <link>https://github.com/fanglinwei/Combo/releases</link>
