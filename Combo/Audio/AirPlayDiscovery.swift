@@ -24,7 +24,7 @@ struct DiscoveredAirPlay: Identifiable, Equatable {
 /// 需要本地网络授权（Info.plist 的 `NSLocalNetworkUsageDescription` + `NSBonjourServices`）。
 /// 只在用户主动发现后浏览；权限拒绝与网络故障分别呈现。
 @MainActor final class AirPlayDiscovery: ObservableObject {
-    enum State: Equatable { case idle, searching, ready, denied, failed }
+    enum State: Equatable { case idle, searching, refreshing, ready, denied, failed }
 
     @Published private(set) var devices: [DiscoveredAirPlay] = []
     @Published private(set) var state: State = .idle
@@ -58,8 +58,8 @@ struct DiscoveredAirPlay: Identifiable, Equatable {
     func request() {
         hasRequested = true
         defaults.set(true, forKey: "airPlayDiscoveryRequested")
-        stop()
-        guard active else { return }
+        guard active else { stop(); return }
+        cancelBrowser()
         askedAt = ProcessInfo.processInfo.systemUptime
         start()
     }
@@ -103,15 +103,19 @@ struct DiscoveredAirPlay: Identifiable, Equatable {
             }
         }
         self.browser = browser
-        state = .searching
+        state = state == .ready || state == .refreshing ? .refreshing : .searching
         startBrowser(browser)
     }
 
-    private func stop() {
+    private func cancelBrowser() {
         let previous = browser
         browser = nil
         askedAt = nil
         previous?.cancel()
+    }
+
+    private func stop() {
+        cancelBrowser()
         devices = []
         state = .idle
     }

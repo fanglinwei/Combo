@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/fanglinwei/Combo"><img src="https://img.shields.io/badge/GitHub-Combo-181717?style=flat-square&amp;logo=github&amp;logoColor=white" alt="GitHub"></a>
-  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-1.3.2-007EC6?style=flat-square" alt="Combo 1.3.2"></a>
+  <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/version-1.3.3-007EC6?style=flat-square" alt="Combo 1.3.3"></a>
   <a href="https://github.com/fanglinwei/Combo/releases"><img src="https://img.shields.io/badge/downloads-Releases-44CC11?style=flat-square" alt="Downloads on GitHub Releases"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-007EC6?style=flat-square" alt="MIT License"></a>
   <a href="#requirements-and-installation"><img src="https://img.shields.io/badge/platform-macOS%2026%2B-999999?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="macOS 26 or later"></a>
@@ -50,7 +50,7 @@ The updated glass panel groups media, battery, Wi-Fi, and sound in one surface. 
 
 These images preserve the 1.3.0 design snapshot with sample data; their original Chinese labels are retained. The new AppIcon combines a blue and white base, battery arc, Wi-Fi arcs, and four music bars arranged along a curve.
 
-[Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](docs/design/liquid-glass/index.html) (download and open in a browser) · [Icon design summary](docs/design/liquid-glass/icons/README.md)
+[Design notes and detail screenshots](docs/design/liquid-glass/README.md) · [Interactive design](https://fanglinwei.github.io/Combo/design/liquid-glass/) · [Icon design summary](docs/design/liquid-glass/icons/README.md)
 
 ### Menu bar icon in motion
 
@@ -81,7 +81,7 @@ Some features depend on your device and macOS version. See [Compatibility](#comp
 
 [Visit GitHub Releases](https://github.com/fanglinwei/Combo/releases) for published packages and release notes.
 
-**The repository app version is `1.3.2 / 105`.** Screenshots above preserve the 1.3.0 design; the [design summary](docs/design/liquid-glass/README.md) also covers the current icon and battery designs. Check Releases for available packages, or use the [source build instructions](#build-from-source) for the development version. Verify the package's architecture and signing status before downloading.
+**The repository app version is `1.3.3 / 106`.** Screenshots above preserve the 1.3.0 design; the [design summary](docs/design/liquid-glass/README.md) also covers the current icon and battery designs. Check Releases for available packages, or use the [source build instructions](#build-from-source) for the development version. Verify the package's architecture and signing status before downloading.
 
 ### Manual installation
 
